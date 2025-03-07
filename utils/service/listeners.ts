@@ -1,7 +1,7 @@
 import { TSocketMessageListener } from "../../typings";
 import { HandlerRegistry } from "./handler-registry";
 
-type TProcessRegister = {
+type THandlerRegister = {
 	on_message: string;
 	key: string;
 };
@@ -11,21 +11,22 @@ export abstract class ListenerService {
 
 	protected static p_handlers: Map<
 		typeof ListenerService,
-		TProcessRegister[]
+		THandlerRegister[]
 	> = new Map();
 
-	public static Handler(
-		action: Omit<TProcessRegister, "chain" | "caller" | "key">
-	) {
-		return function (target: ListenerService, key: string, _descriminator: TypedPropertyDescriptor<TSocketMessageListener>) {
-
+	public static Handler(listener: Omit<THandlerRegister, "key">) {
+		return function (
+			target: ListenerService,
+			key: string,
+			_descriminator: TypedPropertyDescriptor<TSocketMessageListener>
+		) {
 			const constructor = target.constructor as typeof ListenerService;
 			if (!ListenerService.p_handlers.has(constructor))
 				ListenerService.p_handlers.set(constructor, []);
 
 			ListenerService.p_handlers
 				.get(constructor)!
-				.push({ ...action, key });
+				.push({ ...listener, key });
 		};
 	}
 

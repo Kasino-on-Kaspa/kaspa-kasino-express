@@ -6,8 +6,7 @@ import {
 	NetworkId,
 	PaymentOutput,
 	RpcClient,
-	SendKasParams,
-	UtxoEntryReference,
+	SignableTransaction,
 } from "@kcoin/kaspa-web3.js";
 
 interface UtxoStoreParams {
@@ -72,8 +71,20 @@ export class UtxoStore {
 
 		const generator = new Generator(generatorSettings);
 
-        const tx = generator.generateTransaction()
+		const tx = generator.generateTransaction();
 
-		return;
+		if (tx) {
+			this.markUtxosInUse(
+				this.utxos.filter((utxo) =>
+					tx.entries.some(
+						(entry) =>
+							utxo.utxoEntry &&
+							entry.toString() === utxo.utxoEntry.toString()
+					)
+				)
+			);
+
+			return tx;
+		}
 	}
 }
