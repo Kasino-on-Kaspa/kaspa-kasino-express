@@ -12,13 +12,13 @@ type TSesisonStateProducerFunction = () => BetSessionBaseState;
 
 export abstract class BetBaseSessionStateFactory {
   public GetStartState(): BetSessionBaseState {
-    return this.StartState();
+    return this.BetStartState();
   }
 
   public abstract GameSettleState: TSesisonStateProducerFunction;
   public BetSettleState = () => new BetSessionSettleState();
-  public StartState = () => new BetSessionStartState();
-  public PendingState = () => new BetSessionPendingState();
+  public BetStartState = () => new BetSessionStartState();
+  public BetPendingState = () => new BetSessionPendingState();
+  public BetFullfilledState = () => new BetSessionFullfilledState();
   public ErrorState = () => new BetSessionErrorState();
-  public FullfilledState = () => new BetSessionFullfilledState();
 }

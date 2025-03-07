@@ -8,7 +8,7 @@ export class BetSessionStartState extends BetSessionBaseState {
   public EnterState(manager: BetSessionStateMachine): void {
     console.log(`Entered ${this._stateName} State`);
     this.timeout(1000).then(() => {
-      manager.ChangeCurrentState(manager.SessionStates.PendingState());
+      manager.ChangeCurrentState(manager.SessionStates.BetPendingState());
     });
   }
 

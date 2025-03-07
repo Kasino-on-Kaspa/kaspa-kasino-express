@@ -12,14 +12,34 @@ class DieRollService extends Service {
 
   public override Handler(io: Server, socket: Socket): void {
     socket.on("dieroll:bet", (bet_data: z.infer<typeof DieRollBetType>) => {
-      let parsed_data = this.ParseParams(bet_data, DieRollBetType, socket);
-
-      if (!parsed_data) return;
-      let { sSeed, sSeedHash } = this.GenerateServerSeed();
-      
-      let {session_id} = this.Model.AddSession(sSeed, sSeedHash, bet_data.client_seed);
-      this.Model.GetSession(session_id).Start();
+      this.HandleBetCreate(io, socket, bet_data);
     });
+  }
+
+  private HandleBetCreate(
+    io: Server,
+    socket: Socket,
+    bet_data: z.infer<typeof DieRollBetType>
+  ) {
+    let parsed_data = this.ParseParams(bet_data, DieRollBetType, socket);
+
+    if (!parsed_data) return;
+    let { sSeed, sSeedHash } = this.GenerateServerSeed();
+
+    let { session_id } = this.Model.AddSession(
+      sSeed,
+      sSeedHash,
+      parsed_data.client_seed,
+      parsed_data.condition,
+      parsed_data.target
+    );
+    let session = this.Model.GetSession(session_id);
+    let resultListner = session.SessionContext.result.AddListener(
+      async (new_result) => {
+        socket.emit("dieroll:result", new_result);
+      }
+    );
+    session.Start();
   }
 
   private GenerateServerSeed() {
