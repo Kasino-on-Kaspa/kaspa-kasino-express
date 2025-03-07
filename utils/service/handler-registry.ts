@@ -1,36 +1,20 @@
-import {
-	TSocketMessageListener,
-	TSocketMessageListenerParams,
-} from "../../typings";
+import { Server, Socket } from "socket.io";
+import { Service } from "./service";
 
-export class HandlerRegistry {
-	private static _instance: HandlerRegistry;
+ export class ServiceRegistry {
 
-	private listeners: { [key: string]: TSocketMessageListener } = {};
+  private services: Service[] = [];
 
-	public static get Instance() {
-		if (!this._instance) {
-			this._instance = new this();
-		}
-		return this._instance;
-	}
 
-	public OnNewConnection(
-		io: TSocketMessageListenerParams["io"],
-		socket: TSocketMessageListenerParams["socket"]
-	) {
-		Object.entries(this.listeners).forEach(([on_message, handler]) => {
-			socket.on(on_message, (...args) => handler(io, socket, args));
-		});
-	}
+  public RegisterService(service: Service) {
+    this.services.push(service);
+  }
 
-	public RegisterAction({
-		on_message,
-		caller,
-	}: {
-		on_message: string;
-		caller: any;
-	}) {
-		this.listeners[on_message] = caller;
-	}
+  
+  public OnNewConnection(io: Server, socket: Socket) {
+    for (let service of this.services) {
+      service.Handler(io, socket);
+    }
+  }
 }
+

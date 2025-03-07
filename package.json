@@ -24,6 +24,7 @@
     "pg-connection-string": "^2.7.0",
     "socket.io": "^4.8.1",
     "tsc-watch": "^6.2.1",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "zod": "^3.24.2"
   }
 }
