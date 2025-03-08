@@ -9,6 +9,7 @@ type TDieRollGameCondition = z.infer<typeof DieRollBetType.shape.condition>;
 type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.amount>;
 
 export class DieRollModel {
+
   private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
   private stateFactory = new DierollSessionStateFactory();
 
@@ -20,6 +21,7 @@ export class DieRollModel {
     target: TDieRollGameTarget
   ) {
     let session_id = crypto.randomUUID();
+
     let context = new DieRollSessionContext(
       session_id,
       serverSeed,
@@ -32,6 +34,7 @@ export class DieRollModel {
     let session = new BetSessionStateMachine(this.stateFactory, context);
 
     this.dieRollSessionStore.AddSession(session_id, session);
+    
     return { session_id };
   }
 

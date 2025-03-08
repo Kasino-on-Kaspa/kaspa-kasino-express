@@ -45,7 +45,10 @@ export class UtxoStore {
 	}
 
 	public addUtxo(utxo: RpcUtxosByAddressesEntry) {
-		if (this.utxos.find((u) => u == utxo)) return;
+		if (!utxo.outpoint) return;
+		const key = `${utxo.outpoint.transactionId}-${utxo.outpoint.index}`;
+		if (this.utxos.some(u => u.outpoint && 
+			`${u.outpoint.transactionId}-${u.outpoint.index}` === key)) return;
 		this.utxos.push(utxo);
 	}
 
@@ -61,12 +64,13 @@ export class UtxoStore {
 		return this.utxos.filter((utxo) => !this.utxosInUse.includes(utxo));
 	}
 
-	public async generateTransaction(outputs: PaymentOutput[]) {
+	public async generateTransaction(outputs: PaymentOutput[], changeAddress: string) {
 		const generatorSettings = new GeneratorSettings(
 			outputs,
-			Address.fromString(this.utxos[0].address),
+			Address.fromString(changeAddress),
 			this.getUnusedUtxos,
-			NetworkId.Testnet10
+			NetworkId.Testnet10,
+			
 		);
 
 		const generator = new Generator(generatorSettings);

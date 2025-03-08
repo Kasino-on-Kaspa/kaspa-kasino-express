@@ -5,11 +5,13 @@ import { DieRollSessionContext } from "../entities/session-context";
 import crypto from "node:crypto";
 
 export class DieRollSettleState extends BetSessionBaseState {
+
   protected _stateName: TSessionState = "GAME_SETTLE";
 
   public EnterState(
     manager: BetSessionStateMachine<DieRollSessionContext>
   ): void {
+
     const gameHashSeed = `${manager.SessionContext.ServerSeed}${manager.SessionContext.ClientSeed}`;
     const gameHash = crypto
       .createHash("sha512")
@@ -22,7 +24,7 @@ export class DieRollSettleState extends BetSessionBaseState {
 
     const resultNumber = parseInt(gameHashHmac.substring(0, 13), 16);
 
-    const result = resultNumber % 100;
+    const result = (resultNumber % 98 ) + 1;
 
     let condition = manager.SessionContext.GameCondition;
     let target = manager.SessionContext.GameTarget;
@@ -31,7 +33,7 @@ export class DieRollSettleState extends BetSessionBaseState {
     
     switch (condition) {
       case "OVER":
-        isWon = target > result;
+        isWon = target < result;
       case "UNDER":
         isWon = result > target;
     }

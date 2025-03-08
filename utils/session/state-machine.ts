@@ -1,10 +1,11 @@
-import { BetSessionContext } from "./context";
+import { BetSessionContext } from "./entities/session-context";
 import { BetSessionBaseState } from "./state";
-import { BetBaseSessionStateFactory } from "./state-factory";
+import { BetBaseSessionStateFactory } from "./entities/state-factory";
 
 export class BetSessionStateMachine<
   TBetContext extends BetSessionContext = BetSessionContext
 > {
+  
   private _stateFactory: BetBaseSessionStateFactory;
   private _context: TBetContext;
 
@@ -17,7 +18,6 @@ export class BetSessionStateMachine<
   }
 
   public Start() {
-    console.log("Starting State")
     this._currentState.EnterState(this);
   }
 

@@ -1,12 +1,12 @@
-import { BetSessionContext } from "./context";
-import { BetSessionBaseState } from "./state";
+import { BetSessionContext } from "./session-context";
+import { BetSessionBaseState } from "../state";
 import {
   BetSessionErrorState,
   BetSessionFullfilledState,
   BetSessionPendingState,
   BetSessionSettleState,
   BetSessionStartState,
-} from "./states/";
+} from "../states";
 
 type TSesisonStateProducerFunction = () => BetSessionBaseState;
 

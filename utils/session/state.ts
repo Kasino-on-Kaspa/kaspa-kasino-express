@@ -6,6 +6,7 @@ export abstract class BetSessionBaseState {
   public get StateName() {
     return this._stateName;
   }
+  
   public abstract EnterState(
     manager: BetSessionStateMachine<any>
   ): void;

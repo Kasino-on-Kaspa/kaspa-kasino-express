@@ -35,6 +35,9 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.21.2
+      kaspa-wasm:
+        specifier: ^0.13.0
+        version: 0.13.0
       pg:
         specifier: ^8.13.3
         version: 8.13.3
@@ -726,6 +729,9 @@ packages:
   isexe@3.1.1:
     resolution: {integrity: sha512-LpB/54B+/2J5hqQ7imZHfdU31OlgQqx7ZicVlkm9kzg9/w8GKLEcFfJl/t7DCEDueOyBAD6zCCwTO6Fzs0NoEQ==}
     engines: {node: '>=16'}
+
+  kaspa-wasm@0.13.0:
+    resolution: {integrity: sha512-PvHeFWezBnX5xAwOwnWGl2Xxu7rvynfd4FGTgkQrPK2nWWdysLZyx7TuFld/keQ89E6ndhsUpWUAAG/0itMksg==}
 
   map-stream@0.1.0:
     resolution: {integrity: sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==}
@@ -1622,6 +1628,8 @@ snapshots:
   isexe@2.0.0: {}
 
   isexe@3.1.1: {}
+
+  kaspa-wasm@0.13.0: {}
 
   map-stream@0.1.0: {}
 

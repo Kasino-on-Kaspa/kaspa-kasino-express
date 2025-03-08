@@ -1,4 +1,4 @@
-import { BetSessionContext } from "./context";
+import { BetSessionContext } from "./entities/session-context";
 import { BetSessionStateMachine } from "./state-machine";
 
 export class SessionStore<TBetContext extends BetSessionContext> {
