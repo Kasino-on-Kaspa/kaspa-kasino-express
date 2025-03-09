@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1741521204397,
-      "tag": "0000_brief_solo",
+      "when": 1741535781075,
+      "tag": "0000_chubby_shadowcat",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1741535850124,
+      "tag": "0001_rapid_miracleman",
       "breakpoints": true
     }
   ]

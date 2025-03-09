@@ -57,6 +57,11 @@ class KaspaWalletProvider {
 	public getDepositAddressByIndex(index: number) {
 		return this.wallet.addressManager.getAddresses(1, "receive", index)[0];
 	}
+
+	public async getUtxos(address: string) {
+		const utxos = await this.wallet.findUtxos([address])
+		console.log(utxos)
+	}
 }
 
 let WalletProvider: KaspaWalletProvider;

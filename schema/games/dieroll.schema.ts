@@ -6,7 +6,7 @@ export const E_DICEROLL_CONDITION = p.pgEnum("DicerollCondition", [
 	"UNDER",
 ]);
 
-export const dicerollTable = p.pgTable("diceroll_games", {
+export const dierollTable = p.pgTable("dieroll_result", {
 	id: p.uuid().primaryKey().defaultRandom(),
 	// Reference to the session
 	sessionId: p
@@ -19,10 +19,9 @@ export const dicerollTable = p.pgTable("diceroll_games", {
 	condition: E_DICEROLL_CONDITION().notNull(),
 	// Result of the roll (only set when game is settled)
 	result: p.integer(),
-	// Multiplier for the bet
-	multiplier: p.decimal().notNull(),
-	// Created at
-	createdAt: p.timestamp().notNull().defaultNow(),
+	client_won: p.boolean(),
+	// Multiplier for the bet in basis points
+	multiplier: p.integer().notNull(),
 	// Settled at
 	settledAt: p.timestamp(),
 });

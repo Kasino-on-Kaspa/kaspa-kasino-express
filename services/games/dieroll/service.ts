@@ -46,6 +46,7 @@ class DieRollService extends Service {
     }
 
     let { sSeed, sSeedHash } = this.GenerateServerSeed();
+    
 
     let { session_id } = await this.Model.AddSession(
       sSeed,
@@ -76,6 +77,7 @@ class DieRollService extends Service {
       sSeedHash,
     };
   }
+  
 }
 
 export function Initialize(Handler: ServiceRegistry) {

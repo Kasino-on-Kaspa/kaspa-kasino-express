@@ -1,48 +1,11 @@
 {
-  "id": "00000000-0000-0000-0000-000000000000",
-  "prevId": "",
+  "id": "7264d437-84d1-45ac-a113-37d187f260f3",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.utxos": {
-      "name": "utxos",
-      "schema": "",
-      "columns": {
-        "txid": {
-          "name": "txid",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "vout": {
-          "name": "vout",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "address": {
-          "name": "address",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "value": {
-          "name": "value",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {},
-      "policies": {},
-      "isRLSEnabled": false
-    },
-    "public.wallets": {
-      "name": "wallets",
+    "public.dieroll_result": {
+      "name": "dieroll_result",
       "schema": "",
       "columns": {
         "id": {
@@ -52,32 +15,70 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "address": {
-          "name": "address",
-          "type": "varchar",
+        "sessionId": {
+          "name": "sessionId",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "index": {
-          "name": "index",
-          "type": "varchar",
+        "target": {
+          "name": "target",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "createdAt": {
-          "name": "createdAt",
+        "condition": {
+          "name": "condition",
+          "type": "DicerollCondition",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_won": {
+          "name": "client_won",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "multiplier": {
+          "name": "multiplier",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "settledAt": {
+          "name": "settledAt",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "dieroll_result_sessionId_sessions_id_fk": {
+          "name": "dieroll_result_sessionId_sessions_id_fk",
+          "tableFrom": "dieroll_result",
+          "tableTo": "sessions",
+          "columnsFrom": [
+            "sessionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {},
       "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.sessions": {
@@ -134,12 +135,12 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {},
       "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": true
     },
-    "public.diceroll_games": {
-      "name": "diceroll_games",
+    "public.users": {
+      "name": "users",
       "schema": "",
       "columns": {
         "id": {
@@ -149,36 +150,36 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "sessionId": {
-          "name": "sessionId",
+        "address": {
+          "name": "address",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "publicKey": {
+          "name": "publicKey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "depositAddress": {
+          "name": "depositAddress",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "target": {
-          "name": "target",
-          "type": "integer",
+        "balance": {
+          "name": "balance",
+          "type": "bigint",
           "primaryKey": false,
-          "notNull": true
-        },
-        "condition": {
-          "name": "condition",
-          "type": "DicerollCondition",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "result": {
-          "name": "result",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "multiplier": {
-          "name": "multiplier",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": 0
         },
         "createdAt": {
           "name": "createdAt",
@@ -186,23 +187,16 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "settledAt": {
-          "name": "settledAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "diceroll_games_sessionId_sessions_id_fk": {
-          "name": "diceroll_games_sessionId_sessions_id_fk",
-          "tableFrom": "diceroll_games",
-          "tableTo": "sessions",
-          "schemaTo": "public",
+        "users_depositAddress_wallets_id_fk": {
+          "name": "users_depositAddress_wallets_id_fk",
+          "tableFrom": "users",
+          "tableTo": "wallets",
           "columnsFrom": [
-            "sessionId"
+            "depositAddress"
           ],
           "columnsTo": [
             "id"
@@ -213,27 +207,72 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {},
       "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wallets": {
+      "name": "wallets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "index": {
+          "name": "index",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "privateKey": {
+          "name": "privateKey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     }
   },
   "enums": {
     "public.DicerollCondition": {
       "name": "DicerollCondition",
+      "schema": "public",
       "values": [
         "OVER",
         "UNDER"
-      ],
-      "schema": "public"
+      ]
     },
     "public.GameType": {
       "name": "GameType",
+      "schema": "public",
       "values": [
         "DICEROLL",
         "COINFLIP"
-      ],
-      "schema": "public"
+      ]
     }
   },
   "schemas": {},
@@ -242,11 +281,8 @@
   "policies": {},
   "views": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
-  },
-  "internal": {
     "tables": {}
   }
 }

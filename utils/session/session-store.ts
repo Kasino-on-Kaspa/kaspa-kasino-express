@@ -13,4 +13,7 @@ export class SessionStore<TBetContext extends BetSessionContext> {
   public GetSession(id: string) {
     return this._sessions[id];
   }
+  public GetAllSession() {
+    return this._sessions;
+  }
 }

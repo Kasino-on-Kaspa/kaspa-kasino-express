@@ -7,7 +7,7 @@ import crypto from "node:crypto";
 export class DieRollSettleState extends BetSessionBaseState {
 
   protected _stateName: TSessionState = "GAME_SETTLE";
-
+  
   public EnterState(
     manager: BetSessionStateMachine<DieRollSessionContext>
   ): void {
