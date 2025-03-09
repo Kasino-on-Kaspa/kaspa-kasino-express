@@ -17,12 +17,13 @@
     "@kaspa/wallet": "^1.4.26",
     "@kcoin/kaspa-web3.js": "^1.0.0",
     "@types/dotenv": "^8.2.3",
-    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.9",
     "@types/pg": "^8.11.11",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.0",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "kaspa-wasm": "^0.13.0",
     "pg": "^8.13.3",
     "pg-connection-string": "^2.7.0",
@@ -32,6 +33,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "drizzle-kit": "^0.30.5"
   },
   "pnpm": {

@@ -3,13 +3,21 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { ServiceRegistry } from "./utils/service/handler-registry";
 import { InitializeGameServices } from "./services/games";
+import authRoutes from "./services/auth/auth.routes";
 
 const app = express();
 const server = createServer(app);
 
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use("/auth", authRoutes);
+
 export const ServiceRegistryInstance = new ServiceRegistry();
 
-InitializeGameServices(ServiceRegistryInstance)
+InitializeGameServices(ServiceRegistryInstance);
 
 const io = new Server(server);
 
