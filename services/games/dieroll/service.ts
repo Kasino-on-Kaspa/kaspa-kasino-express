@@ -5,74 +5,79 @@ import { DieRollBetType } from "./types";
 import { z } from "zod";
 import { DieRollModel } from "./model";
 import crypto from "node:crypto";
+import { DIEROLL_ERROR, DIEROLL_RESULT } from "./messages";
 
 class DieRollService extends Service {
-	protected serviceName: string = "DieRoll";
+  protected serviceName: string = "DieRoll";
 
-	protected Model: DieRollModel = new DieRollModel();
+  protected Model: DieRollModel = new DieRollModel();
 
-	public override Handler(io: Server, socket: Socket): void {
-		socket.on("dieroll:bet", (bet_data: z.infer<typeof DieRollBetType>) => {
-			this.HandleBetCreate(io, socket, bet_data);
-		});
-	}
+  public override Handler(io: Server, socket: Socket): void {
+    socket.on("dieroll:bet", (bet_data: z.infer<typeof DieRollBetType>) => {
+      this.HandleBetCreate(io, socket, bet_data);
+    });
+  }
 
-	private HandleBetCreate(
-		io: Server,
-		socket: Socket,
-		bet_data: z.infer<typeof DieRollBetType>
-	) {
-		let parsed_data = this.ParseParams(bet_data, DieRollBetType, socket);
-		
-		if (!parsed_data) return;
+  private HandleBetCreate(
+    io: Server,
+    socket: Socket,
+    bet_data: z.infer<typeof DieRollBetType>
+  ) {
+    let parse = this.ParseParams(bet_data, DieRollBetType, socket);
 
-		if (parsed_data.target <= 1) {
-			socket.emit("dieroll:error", {
-				message: "Target must be greater than 1",
-			});
-			return;
-		}
+    if (!parse.success)
+      return socket.emit(DIEROLL_ERROR, {
+        message: `Failed to parse arguments`,
+        error: parse.error.issues,
+      });
 
-		if (parsed_data.target >= 99) {
-			socket.emit("dieroll:error", {
-				message: "Target must be lesser than 99",
-			});
-			return;
-		}
+    if (parse.data.target <= 1) {
+      socket.emit(DIEROLL_ERROR, {
+        message: "Target must be greater than 1",
+      });
+      return;
+    }
 
-		let { sSeed, sSeedHash } = this.GenerateServerSeed();
+    if (parse.data.target >= 99) {
+      socket.emit(DIEROLL_ERROR, {
+        message: "Target must be lesser than 99",
+      });
+      return;
+    }
 
-		let { session_id } = this.Model.AddSession(
-			sSeed,
-			sSeedHash,
-			parsed_data.client_seed,
-			parsed_data.condition,
-			parsed_data.target
-		);
+    let { sSeed, sSeedHash } = this.GenerateServerSeed();
 
-		let session = this.Model.GetSession(session_id);
-		
-		let resultListner = session.SessionContext.Result.AddListener(
-			async (new_result) => {
-				socket.emit("dieroll:result", new_result);
-			}
-		);
-		session.Start();
-	}
+    let { session_id } = this.Model.AddSession(
+      sSeed,
+      sSeedHash,
+      parse.data.client_seed,
+      parse.data.condition,
+      parse.data.target
+    );
 
-	private GenerateServerSeed() {
-		const sSeed = crypto.randomBytes(32).toString("hex");
-		const seedHashRaw = crypto.createHash("sha256").update(sSeed);
-		const sSeedHash = seedHashRaw.digest("hex");
+    let session = this.Model.GetSession(session_id);
 
-		return {
-			sSeed,
-			sSeedHash,
-		};
-	}
+    let resultListner = session.SessionContext.Result.AddListener(
+      async (new_result) => {
+        socket.emit(DIEROLL_RESULT, new_result);
+      }
+    );
+    session.Start();
+  }
+
+  private GenerateServerSeed() {
+    const sSeed = crypto.randomBytes(32).toString("hex");
+    const seedHashRaw = crypto.createHash("sha256").update(sSeed);
+    const sSeedHash = seedHashRaw.digest("hex");
+
+    return {
+      sSeed,
+      sSeedHash,
+    };
+  }
 }
 
 export function Initialize(Handler: ServiceRegistry) {
-	const DieRoll = new DieRollService();
-	Handler.RegisterService(DieRoll);
+  const DieRoll = new DieRollService();
+  Handler.RegisterService(DieRoll);
 }
