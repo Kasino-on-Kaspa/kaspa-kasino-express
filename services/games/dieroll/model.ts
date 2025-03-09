@@ -4,41 +4,53 @@ import { DierollSessionStateFactory } from "./entities/state-factory";
 import { BetSessionStateMachine } from "../../../utils/session/state-machine";
 import { z } from "zod";
 import { DieRollBetType } from "./types";
+import {  sessionsTable } from "../../../schema/session.schema";
+import { DB } from "../../../database";
 
 type TDieRollGameCondition = z.infer<typeof DieRollBetType.shape.condition>;
 type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.amount>;
 
 export class DieRollModel {
+	private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
+	private stateFactory = new DierollSessionStateFactory();
 
-  private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
-  private stateFactory = new DierollSessionStateFactory();
+	public async AddSession(
+		serverSeed: string,
+		serverSeedHash: string,
+		clientSeed: string,
+		amount: number,
+		condition: TDieRollGameCondition,
+		target: TDieRollGameTarget
+	) {
+		let data = await DB.insert(sessionsTable)
+			.values({
+				serverSeed,
+				serverSeedHash,
+				clientSeed,
+				amount,
+        gameType: "DICEROLL",
+			})
+			.returning();
 
-  public AddSession(
-    serverSeed: string,
-    serverSeedHash: string,
-    clientSeed: string,
-    condition: TDieRollGameCondition,
-    target: TDieRollGameTarget
-  ) {
-    let session_id = crypto.randomUUID();
+    let session_id = data[0].id
 
-    let context = new DieRollSessionContext(
-      session_id,
-      serverSeed,
-      serverSeedHash,
-      clientSeed,
-      condition,
-      target
-    );
+		let context = new DieRollSessionContext(
+			session_id,
+			serverSeed,
+			serverSeedHash,
+			clientSeed,
+			condition,
+			target
+		);
 
-    let session = new BetSessionStateMachine(this.stateFactory, context);
+		let session = new BetSessionStateMachine(this.stateFactory, context);
 
-    this.dieRollSessionStore.AddSession(session_id, session);
-    
-    return { session_id };
-  }
+		this.dieRollSessionStore.AddSession(session_id, session);
 
-  public GetSession(session_id: string) {
-    return this.dieRollSessionStore.GetSession(session_id);
-  }
+		return { session_id };
+	}
+
+	public GetSession(session_id: string) {
+		return this.dieRollSessionStore.GetSession(session_id);
+	}
 }

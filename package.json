@@ -4,20 +4,23 @@
   "description": "",
   "main": "./build/index.js",
   "scripts": {
-    "dev": "tsc-watch --onSuccess 'node .'"
+    "dev": "tsc-watch --onSuccess 'node .'",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.5.2",
   "dependencies": {
+    "@kaspa/grpc-node": "^1.0.8",
+    "@kaspa/wallet": "^1.4.26",
     "@kcoin/kaspa-web3.js": "^1.0.0",
     "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.9",
     "@types/pg": "^8.11.11",
     "dotenv": "^16.4.7",
-    "drizzle-kit": "^0.30.5",
     "drizzle-orm": "^0.40.0",
     "express": "^4.21.2",
     "kaspa-wasm": "^0.13.0",
@@ -27,5 +30,13 @@
     "tsc-watch": "^6.2.1",
     "typescript": "^5.8.2",
     "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "protobufjs"
+    ]
   }
 }

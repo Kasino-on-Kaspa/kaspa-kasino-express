@@ -18,7 +18,7 @@ class DieRollService extends Service {
     });
   }
 
-  private HandleBetCreate(
+  private async HandleBetCreate(
     io: Server,
     socket: Socket,
     bet_data: z.infer<typeof DieRollBetType>
@@ -47,10 +47,11 @@ class DieRollService extends Service {
 
     let { sSeed, sSeedHash } = this.GenerateServerSeed();
 
-    let { session_id } = this.Model.AddSession(
+    let { session_id } = await this.Model.AddSession(
       sSeed,
       sSeedHash,
       parse.data.client_seed,
+      parse.data.amount,
       parse.data.condition,
       parse.data.target
     );

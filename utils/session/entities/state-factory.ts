@@ -3,7 +3,6 @@ import { BetSessionBaseState } from "../state";
 import {
   BetSessionErrorState,
   BetSessionFullfilledState,
-  BetSessionPendingState,
   BetSessionSettleState,
   BetSessionStartState,
 } from "../states";
@@ -18,7 +17,6 @@ export abstract class BetBaseSessionStateFactory {
   public abstract GameSettleState: TSesisonStateProducerFunction;
   public BetSettleState = () => new BetSessionSettleState();
   public BetStartState = () => new BetSessionStartState();
-  public BetPendingState = () => new BetSessionPendingState();
   public BetFullfilledState = () => new BetSessionFullfilledState();
   public ErrorState = () => new BetSessionErrorState();
 }

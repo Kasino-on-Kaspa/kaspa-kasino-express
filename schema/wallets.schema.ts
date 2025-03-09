@@ -11,20 +11,10 @@ export const wallets = p.pgTable("wallets", {
 	// HDPath Index "m/111111'/0'/0'/${index}/"
 	index: p.varchar().notNull(),
 
+	// Private Key
+	privateKey: p.varchar().notNull(),
+
 	// Timestamps
 	createdAt: p.timestamp().notNull().defaultNow(),
 });
 
-export const utxos = p.pgTable("utxos", {
-	// Transaction ID
-	txid: p.varchar().notNull(),
-
-	// Outpoint
-	vout: p.integer().notNull(),
-
-	// Address/wallet
-	address: p.varchar().notNull(),
-
-	// Amount
-	value: p.varchar().notNull(),
-});
