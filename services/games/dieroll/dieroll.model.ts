@@ -1,6 +1,6 @@
 import { SessionStore } from "../../../utils/session/session-store";
-import { DieRollSessionContext } from "./entities/session-context";
-import { DierollSessionStateFactory } from "./entities/state-factory";
+import { DieRollSessionContext } from "./entities/dieroll.context";
+import { DierollSessionStateFactory } from "./entities/dieroll.factory";
 import { BetSessionStateMachine } from "../../../utils/session/state-machine";
 import { z } from "zod";
 import { DieRollBetType } from "./types";

@@ -1,6 +1,6 @@
 import { BetSessionBaseState } from "../../../../utils/session/state";
 import { BetSessionStateMachine } from "../../../../utils/session/state-machine";
-import { DieRollSessionContext } from "../entities/session-context";
+import { DieRollSessionContext } from "../entities/dieroll.context";
 
 import crypto from "node:crypto";
 

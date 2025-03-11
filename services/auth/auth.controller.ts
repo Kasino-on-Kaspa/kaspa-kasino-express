@@ -1,10 +1,6 @@
 import { Request, Response } from "express";
 import { authService, AuthRequest } from "./auth.service";
 import { WalletHandler } from "../../utils/wallet/wallet";
-import { DB } from "../../database";
-import { users } from "../../schema/users.schema";
-import { eq } from "drizzle-orm";
-import { wallets } from "../../schema/wallets.schema";
 
 export class AuthController {
 	signIn = async (req: Request, res: Response): Promise<void> => {

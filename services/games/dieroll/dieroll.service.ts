@@ -2,9 +2,9 @@ import { Server, Socket } from "socket.io";
 import { Service } from "../../../utils/service/service";
 import { DieRollBetType } from "./types";
 import { z } from "zod";
-import { DieRollModel } from "./model";
+import { DieRollModel } from "./dieroll.model";
 import crypto from "node:crypto";
-import { DIEROLL_ERROR, DIEROLL_RESULT } from "./messages";
+import { DIEROLL_ERROR, DIEROLL_RESULT } from "./dieroll.messages";
 
 class DieRollService extends Service {
   protected serviceName: string = "DieRoll";
