@@ -7,16 +7,16 @@ export const users = p.pgTable("users", {
 	id: p.uuid().primaryKey().defaultRandom(),
 
 	// User auth address
-	address: p.varchar().notNull(),
+	address: p.varchar().notNull().unique(),
 
-	// User public key
-	publicKey: p.varchar().notNull(),
+	// User xOnlyPublic key
+	xOnlyPublicKey: p.varchar().notNull().unique(),
 
 	// Username
 	username: p.varchar(),
 
 	// Deposit address
-	depositAddress: p    
+	wallet: p    
 		.uuid()
 		.references(() => wallets.id)
 		.notNull(),

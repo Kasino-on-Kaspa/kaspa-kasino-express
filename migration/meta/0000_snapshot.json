@@ -8,15 +8,16 @@
       "name": "utxos",
       "schema": "",
       "columns": {
-        "txid": {
-          "name": "txid",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "vout": {
-          "name": "vout",
-          "type": "integer",
+        "txId": {
+          "name": "txId",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -26,11 +27,31 @@
           "primaryKey": false,
           "notNull": true
         },
-        "value": {
-          "name": "value",
+        "amount": {
+          "name": "amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scriptPubKey": {
+          "name": "scriptPubKey",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "spent": {
+          "name": "spent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -58,8 +79,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "index": {
-          "name": "index",
+        "privateKey": {
+          "name": "privateKey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "xOnlyPublicKey": {
+          "name": "xOnlyPublicKey",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -138,8 +165,8 @@
       "policies": {},
       "isRLSEnabled": true
     },
-    "public.diceroll_games": {
-      "name": "diceroll_games",
+    "public.dieroll_result": {
+      "name": "dieroll_result",
       "schema": "",
       "columns": {
         "id": {
@@ -174,18 +201,17 @@
           "primaryKey": false,
           "notNull": false
         },
+        "client_won": {
+          "name": "client_won",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
         "multiplier": {
           "name": "multiplier",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         },
         "settledAt": {
           "name": "settledAt",
@@ -196,13 +222,153 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "diceroll_games_sessionId_sessions_id_fk": {
-          "name": "diceroll_games_sessionId_sessions_id_fk",
-          "tableFrom": "diceroll_games",
+        "dieroll_result_sessionId_sessions_id_fk": {
+          "name": "dieroll_result_sessionId_sessions_id_fk",
+          "tableFrom": "dieroll_result",
           "tableTo": "sessions",
           "schemaTo": "public",
           "columnsFrom": [
             "sessionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "xOnlyPublicKey": {
+          "name": "xOnlyPublicKey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "depositAddress": {
+          "name": "depositAddress",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balance": {
+          "name": "balance",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_address_unique": {
+          "columns": [
+            "address"
+          ],
+          "nullsNotDistinct": false,
+          "name": "users_address_unique"
+        },
+        "users_xOnlyPublicKey_unique": {
+          "columns": [
+            "xOnlyPublicKey"
+          ],
+          "nullsNotDistinct": false,
+          "name": "users_xOnlyPublicKey_unique"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.transactions": {
+      "name": "transactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "txId": {
+          "name": "txId",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "TransactionType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user": {
+          "name": "user",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "transactions_user_users_id_fk": {
+          "name": "transactions_user_users_id_fk",
+          "tableFrom": "transactions",
+          "tableTo": "users",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "user"
           ],
           "columnsTo": [
             "id"
@@ -232,6 +398,14 @@
       "values": [
         "DICEROLL",
         "COINFLIP"
+      ],
+      "schema": "public"
+    },
+    "public.TransactionType": {
+      "name": "TransactionType",
+      "values": [
+        "DEPOSIT",
+        "WITHDRAWAL"
       ],
       "schema": "public"
     }

@@ -1,4 +1,6 @@
 import { Keypair, NetworkType } from "@kcoin/kaspa-web3.js";
+import { config } from "dotenv";
+config();
 
 export class WalletHandler {
 	public static generateKeypair() {

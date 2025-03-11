@@ -1,0 +1,2 @@
+ALTER TABLE "users" ALTER COLUMN "depositAddress" SET DATA TYPE uuid;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_depositAddress_wallets_id_fk" FOREIGN KEY ("depositAddress") REFERENCES "public"."wallets"("id") ON DELETE no action ON UPDATE no action;

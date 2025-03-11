@@ -1,7 +1,11 @@
-import { TxScriptEngine } from "@kcoin/kaspa-web3.js";
+import { NetworkType, TxScriptEngine } from "@kcoin/kaspa-web3.js";
 import { sign, verify } from "jsonwebtoken";
 // import { verifyMessage } from "kaspa-wasm";
 import { WalletHandler } from "../../utils/wallet/wallet";
+import { DB } from "../../database";
+import { users } from "../../schema/users.schema";
+import { eq } from "drizzle-orm";
+import { wallets } from "../../schema/wallets.schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"; // Should be in env
 const REFRESH_SECRET = process.env.REFRESH_SECRET || "your-refresh-secret-key"; // Should be in env
@@ -89,6 +93,49 @@ export class AuthService {
 		// Generate new access token with the same payload
 		const { iat, exp, ...rest } = payload;
 		return sign(rest, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+	}
+
+	async getUserByAddress(
+		address: string
+	): Promise<typeof users.$inferSelect | null> {
+		const user = await DB.select()
+			.from(users)
+			.where(eq(users.address, address));
+
+		if (user[0]) {
+			return user[0];
+		}
+
+		return null;
+	}
+
+	async createUser(
+		address: string,
+		xOnlyPublicKey: string
+	): Promise<boolean> {
+		const kp = WalletHandler.generateKeypair();
+
+		const newWallet = await DB.insert(wallets)
+			.values({
+				address: kp
+					.toAddress(
+						process.env.NETWORK === "kaspa"
+							? NetworkType.Mainnet
+							: NetworkType.Testnet
+					)
+					.toString(),
+				xOnlyPublicKey: kp.xOnlyPublicKey!,
+				privateKey: kp.privateKey!,
+			})
+			.returning();
+
+		const user = await DB.insert(users).values({
+			address: address,
+			xOnlyPublicKey: xOnlyPublicKey,
+			wallet: newWallet[0].id,
+		});
+
+		return true;
 	}
 }
 

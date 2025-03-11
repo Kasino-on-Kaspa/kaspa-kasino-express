@@ -1,6 +1,6 @@
 {
-  "id": "40bb7dc5-c6d9-41a2-8ab9-7cad2b8df915",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "6576a858-bbc0-4de6-a13b-889d87a79f0f",
+  "prevId": "40bb7dc5-c6d9-41a2-8ab9-7cad2b8df915",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -234,8 +234,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "depositAddress": {
-          "name": "depositAddress",
+        "wallet": {
+          "name": "wallet",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -257,12 +257,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "users_depositAddress_wallets_id_fk": {
-          "name": "users_depositAddress_wallets_id_fk",
+        "users_wallet_wallets_id_fk": {
+          "name": "users_wallet_wallets_id_fk",
           "tableFrom": "users",
           "tableTo": "wallets",
           "columnsFrom": [
-            "depositAddress"
+            "wallet"
           ],
           "columnsTo": [
             "id"
