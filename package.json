@@ -15,7 +15,7 @@
   "dependencies": {
     "@kaspa/grpc-node": "^1.0.8",
     "@kaspa/wallet": "^1.4.26",
-    "@kcoin/kaspa-web3.js": "^1.0.0",
+    "@kcoin/kaspa-web3.js": "^1.1.0",
     "@types/dotenv": "^8.2.3",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.9",

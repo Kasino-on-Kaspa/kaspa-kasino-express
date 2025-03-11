@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { authService, AuthRequest } from "./auth.service";
+import { WalletHandler } from "../../utils/wallet/wallet";
 
 export class AuthController {
   signIn = async (req: Request, res: Response): Promise<void> => {
@@ -20,6 +21,10 @@ export class AuthController {
         return;
       }
 
+      if (!WalletHandler.isAddressOfPubkey(authData.address, authData.publicKey)) {
+        res.status(400).json({ message: "Address does not match public key" });
+        return;
+      }
       // Generate token pair
       const tokens = authService.generateTokenPair({
         address: authData.address,

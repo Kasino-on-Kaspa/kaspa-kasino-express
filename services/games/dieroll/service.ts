@@ -1,6 +1,5 @@
 import { Server, Socket } from "socket.io";
 import { Service } from "../../../utils/service/service";
-import { ServiceRegistry } from "../../../utils/service/handler-registry";
 import { DieRollBetType } from "./types";
 import { z } from "zod";
 import { DieRollModel } from "./model";
@@ -80,7 +79,4 @@ class DieRollService extends Service {
   
 }
 
-export function Initialize(Handler: ServiceRegistry) {
-  const DieRoll = new DieRollService();
-  Handler.RegisterService(DieRoll);
-}
+  export const DieRollServiceInstance = new DieRollService(); 
