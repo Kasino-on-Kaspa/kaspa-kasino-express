@@ -36,17 +36,21 @@ export class UserController {
         return;
       }
 
-      const updates: UpdateUserDto = req.body;
+      const { username } = req.body;
+
+      // If username is undefined or null, return bad request
+      if (username === undefined) {
+        res.status(400).json({ message: "Username is required" });
+        return;
+      }
 
       // Validate username
-      if (updates.username && !this.isValidUsername(updates.username)) {
+      if (username && !this.isValidUsername(username)) {
         res.status(400).json({ message: "Invalid username format" });
         return;
       }
 
-      const updatedUser = await userService.updateUser(address, {
-        username: updates.username || null,
-      });
+      const updatedUser = await userService.updateUser(address, { username });
       if (!updatedUser) {
         res.status(404).json({ message: "User not found" });
         return;

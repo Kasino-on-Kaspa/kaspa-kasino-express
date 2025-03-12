@@ -9,7 +9,7 @@ router.use(authenticateJWT);
 
 // User CRUD routes
 router.get("/me", userController.getUser);
-router.patch("/me", userController.updateUser);
+router.post("/me", userController.updateUser);
 router.delete("/me", userController.deleteUser);
 
 export default router;

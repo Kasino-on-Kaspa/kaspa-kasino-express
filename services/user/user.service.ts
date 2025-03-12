@@ -1,20 +1,27 @@
 import { randomUUID } from "crypto";
 import { User } from "./user.types";
+import { DB } from "../../database";
+import { eq } from "drizzle-orm";
+import { users } from "../../schema/users.schema";
 
 // In-memory store for now - replace with your database
-const users = new Map<string, User>();
 
 export class UserService {
   async getUser(address: string): Promise<User | null> {
-    const user = users.get(address);
-    return user || null;
+    const user = await DB.select()
+      .from(users)
+      .where(eq(users.address, address));
+    return user[0] || null;
   }
 
   async updateUser(
     address: string,
     updates: { username: string | null }
-  ): Promise<User | null> {
-    const user = users.get(address);
+  ): Promise<{ username: string | null } | null> {
+    console.log("address", address, updates);
+    const user = await DB.select()
+      .from(users)
+      .where(eq(users.address, address));
     if (!user) return null;
 
     const updatedUser = {
@@ -22,13 +29,15 @@ export class UserService {
       username: updates.username,
     };
 
-    users.set(address, updatedUser);
+    await DB.update(users).set(updatedUser).where(eq(users.address, address));
     return updatedUser;
   }
 
-  async deleteUser(address: string): Promise<boolean> {
-    if (!users.has(address)) return false;
-    return users.delete(address);
+  async deleteUser(address: string): Promise<User | null> {
+    const result = await DB.delete(users)
+      .where(eq(users.address, address))
+      .returning();
+    return result[0] || null;
   }
 
   // Internal method used by auth service
@@ -47,7 +56,7 @@ export class UserService {
       username: null,
     };
 
-    users.set(address, user);
+    await DB.insert(users).values(user);
     return user;
   }
 }
