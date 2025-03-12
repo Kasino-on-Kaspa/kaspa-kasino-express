@@ -6,7 +6,7 @@ export const E_DICEROLL_CONDITION = p.pgEnum("DicerollCondition", [
 	"UNDER",
 ]);
 
-export const dierollTable = p.pgTable("dieroll_result", {
+export const dieroll = p.pgTable("dieroll_result", {
 	id: p.uuid().primaryKey().defaultRandom(),
 	// Reference to the session
 	sessionId: p
