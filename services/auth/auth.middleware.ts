@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "./auth.service";
-import { Socket } from "socket.io";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -12,10 +11,11 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const authenticateJWT = (
-  socket: Socket,
+  req: AuthenticatedRequest,
+  res: Response,
   next: NextFunction
 ): void => {
-  const authHeader = socket.headers.authorization;
+  const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
     res.status(401).json({ message: "No token provided" });
@@ -45,5 +45,3 @@ export const authenticateJWT = (
 
   next();
 };
-
-export const authMiddleware = authenticateJWT;
