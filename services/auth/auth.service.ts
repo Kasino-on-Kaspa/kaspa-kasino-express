@@ -1,4 +1,4 @@
-import { NetworkType, TxScriptEngine } from "@kcoin/kaspa-web3.js";
+import { NetworkType } from "@kcoin/kaspa-web3.js";
 import { sign, verify } from "jsonwebtoken";
 // import { verifyMessage } from "kaspa-wasm";
 import { WalletHandler } from "../../utils/wallet/wallet";

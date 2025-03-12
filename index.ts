@@ -23,10 +23,11 @@ InitializeGameServices(ServiceRegistryInstance);
 
 const io = new Server(server);
 
+// io.use((socket,net))
 io.on("connection", (socket) => {
-  ServiceRegistryInstance.OnNewConnection(io, socket);
+	ServiceRegistryInstance.OnNewConnection(io, socket);
 });
 
 server.listen(3000, () => {
-  console.log("server running at http://localhost:3000");
+	console.log("server running at http://localhost:3000");
 });

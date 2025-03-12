@@ -5,6 +5,9 @@ export const utxos = p.pgTable("utxos", {
 
 	// Transaction ID
 	txId: p.varchar().notNull(),
+
+	// Vout
+	vout: p.integer().notNull(),
     
 	// Utxo owner
 	address: p.varchar().notNull(),

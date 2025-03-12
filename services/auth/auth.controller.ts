@@ -63,7 +63,7 @@ export class AuthController {
 			res.status(500).json({ message: "Internal server error" });
 		}
 	};
-
+	
 	refresh = async (req: Request, res: Response): Promise<void> => {
 		try {
 			const { refreshToken } = req.body;

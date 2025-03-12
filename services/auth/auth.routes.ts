@@ -1,4 +1,4 @@
-import { Router, Response, RequestHandler } from "express";
+import { Router, Response } from "express";
 import { authController } from "./auth.controller";
 import { authenticateJWT, AuthenticatedRequest } from "./auth.middleware";
 
