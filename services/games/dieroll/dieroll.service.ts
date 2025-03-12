@@ -23,6 +23,7 @@ class DieRollService extends Service {
     socket: Socket,
     bet_data: z.infer<typeof DieRollBetType>
   ) {
+    let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     let parse = this.ParseParams(bet_data, DieRollBetType, socket);
 
     if (!parse.success)
@@ -30,6 +31,13 @@ class DieRollService extends Service {
         message: `Failed to parse arguments`,
         error: parse.error.issues,
       });
+
+    if (account.Balance < parse.data.amount) {
+      socket.emit(DIEROLL_ERROR, {
+        message: "Insufficient Balance",
+      });
+      return;
+    }
 
     if (parse.data.target <= 1) {
       socket.emit(DIEROLL_ERROR, {
@@ -46,16 +54,16 @@ class DieRollService extends Service {
     }
 
     let { sSeed, sSeedHash } = this.GenerateServerSeed();
-    
 
     let { session_id } = await this.Model.AddSession(
       sSeed,
       sSeedHash,
-      AccountStoreInstance.GetUserHandshake(socket.id),
       parse.data.client_seed,
       parse.data.amount,
       parse.data.condition,
-      parse.data.target
+      parse.data.target,
+      this.CalculateMultiplier(parse.data.condition, parse.data.target),
+      account
     );
 
     let session = this.Model.GetSession(session_id);
@@ -78,7 +86,35 @@ class DieRollService extends Service {
       sSeedHash,
     };
   }
-  
+
+  private CalculateMultiplier(
+    condition: "OVER" | "UNDER",
+    target: number,
+    houseEdge: number = 2
+  ): number {
+    // Validate inputs
+    if (target < 1 || target > 99) {
+      throw new Error("Target must be between 1 and 99");
+    }
+    if (houseEdge < 0 || houseEdge > 100) {
+      throw new Error("House edge must be between 0 and 100");
+    }
+
+    // Calculate win probability
+    const winProbability =
+      condition === "OVER"
+        ? (100 - target) / 100 // Probability of rolling > target
+        : target / 100; // Probability of rolling ≤ target
+
+    // Calculate fair multiplier (without house edge)
+    const fairMultiplier = 1 / winProbability;
+
+    // Apply house edge
+    const multiplierWithEdge = fairMultiplier * (1 - houseEdge / 100);
+
+    // Convert to basis points (1/10000)
+    return Math.round(multiplierWithEdge * 10000);
+  }
 }
 
-  export const DieRollServiceInstance = new DieRollService(); 
+export const DieRollServiceInstance = new DieRollService();

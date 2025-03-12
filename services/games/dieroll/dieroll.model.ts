@@ -7,79 +7,84 @@ import { DieRollBetType } from "./types";
 import { sessionsTable } from "../../../schema/session.schema";
 import { DB } from "../../../database";
 import {
-	dieroll,
-	E_DICEROLL_CONDITION,
+  dieroll,
+  E_DICEROLL_CONDITION,
 } from "../../../schema/games/dieroll.schema";
+import { Account } from "../../../utils/account";
 
 type TDieRollGameCondition = z.infer<typeof DieRollBetType.shape.condition>;
 type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.amount>;
 
 export class DieRollModel {
-	private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
-	private stateFactory = new DierollSessionStateFactory();
+  private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
+  private stateFactory = new DierollSessionStateFactory();
 
-	public async AddSession(
-		serverSeed: string,
-		account_id:string,
-		serverSeedHash: string,
-		clientSeed: string,
-		amount: number,
-		condition: TDieRollGameCondition,
-		target: TDieRollGameTarget
-	) {
-		let data = await DB.insert(sessionsTable)
-			.values({
-				serverSeed,
-				serverSeedHash,
-				clientSeed,
-				user:account_id,
-				amount,
-				gameType: "DICEROLL",
-			})
-			.returning();
+  public async AddSession(
+    serverSeed: string,
+    serverSeedHash: string,
+    clientSeed: string,
+    amount: number,
+    condition: TDieRollGameCondition,
+    target: TDieRollGameTarget,
+    multiplier: number,
+    account: Account
+  ) {
+    let data = await DB.insert(sessionsTable)
+      .values({
+        serverSeed,
+        serverSeedHash,
+        clientSeed,
+        user: account.Id,
+        amount,
+        gameType: "DICEROLL",
+      })
+      .returning();
 
-		let session_id = data[0].id;
+    let session_id = data[0].id;
 
-		let context = new DieRollSessionContext(
-			session_id,
-			serverSeed,
-			serverSeedHash,
-			clientSeed,
-			condition,
-			target
-		);
+    let context = new DieRollSessionContext(
+      session_id,
+      serverSeed,
+      serverSeedHash,
+      clientSeed,
+      account,
+      condition,
+      target,
+      multiplier,
+      amount
+    );
 
-		let session = new BetSessionStateMachine(this.stateFactory, context);
+    let session = new BetSessionStateMachine(this.stateFactory, context);
 
-		session.AddOnCompleteListener((server_id: string) =>
-			this.OnSessionCompleteCleaner(server_id)
-		);
+    session.AddOnCompleteListener((server_id: string) =>
+      this.OnSessionCompleteCleaner(server_id)
+    );
 
-		session.SessionContext.Result.AddListener(async (data) => {
-			if (!data) return;
-			await DB.insert(dieroll)
-				.values({
-					condition: session.SessionContext.GameCondition,
-					multiplier: session.SessionContext.GameMultiplier,
-					target: session.SessionContext.GameTarget,
-					sessionId: session.SessionContext.SessionId,
-					result: data.resultRoll,
-					client_won: data.isWon,
-				})
-				.returning();
-		});
+    session.SessionContext.Result.AddListener(async (data) => {
+      if (!data) return;
+      await DB.insert(dieroll)
+        .values({
+          condition: session.SessionContext.GameCondition,
+          multiplier: session.SessionContext.Multiplier,
+          target: session.SessionContext.GameTarget,
+          sessionId: session.SessionContext.SessionId,
+          result: data.resultRoll,
+          client_won: data.isWon,
+        })
+        .returning();
+    });
 
-		this.dieRollSessionStore.AddSession(session_id, session);
+    this.dieRollSessionStore.AddSession(session_id, session);
 
-		return { session_id };
-	}
+    return { session_id };
+  }
 
-	public GetSession(session_id: string) {
-		return this.dieRollSessionStore.GetSession(session_id);
-	}
+  public GetSession(session_id: string) {
+    return this.dieRollSessionStore.GetSession(session_id);
+  }
 
-	private OnSessionCompleteCleaner(server_id: string) {
-		this.dieRollSessionStore.RemoveSession(server_id);
-		console.log(this.dieRollSessionStore.GetAllSession());
-	}
+  private OnSessionCompleteCleaner(server_id: string) {
+    this.dieRollSessionStore.RemoveSession(server_id);
+    console.log(this.dieRollSessionStore.GetAllSession());
+  }
 }
