@@ -1,10 +1,10 @@
-import { Socket } from "socket.io";
+import { DefaultEventsMap, Socket } from "socket.io";
 import { ExtendedError } from "socket.io/dist/namespace";
 import { authService } from "./auth.service";
 import { userService } from "../user/user.service";
 
-export interface AuthenticatedSocket extends Socket {
-  user?: {
+interface IAuthenticatedSocketData {
+  user: {
     id: string;
     address: string;
     xOnlyPublicKey: string;
@@ -14,8 +14,10 @@ export interface AuthenticatedSocket extends Socket {
   };
 }
 
+export type TAuthenticatedSocket = Socket<IAuthenticatedSocketData>;
+
 export const socketAuthMiddleware = async (
-  socket: AuthenticatedSocket,
+  socket: TAuthenticatedSocket,
   next: (err?: ExtendedError | undefined) => void
 ) => {
   try {
@@ -46,7 +48,7 @@ export const socketAuthMiddleware = async (
     }
 
     // Attach user data to socket
-    socket.user = user;
+    socket.data.user = user;
     next();
   } catch (error) {
     console.error("Socket authentication error:", error);

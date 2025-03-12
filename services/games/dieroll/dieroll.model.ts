@@ -7,7 +7,7 @@ import { DieRollBetType } from "./types";
 import { sessionsTable } from "../../../schema/session.schema";
 import { DB } from "../../../database";
 import {
-	dierollTable,
+	dieroll,
 	E_DICEROLL_CONDITION,
 } from "../../../schema/games/dieroll.schema";
 
@@ -20,6 +20,7 @@ export class DieRollModel {
 
 	public async AddSession(
 		serverSeed: string,
+		account_id:string,
 		serverSeedHash: string,
 		clientSeed: string,
 		amount: number,
@@ -31,6 +32,7 @@ export class DieRollModel {
 				serverSeed,
 				serverSeedHash,
 				clientSeed,
+				user:account_id,
 				amount,
 				gameType: "DICEROLL",
 			})
@@ -55,7 +57,7 @@ export class DieRollModel {
 
 		session.SessionContext.Result.AddListener(async (data) => {
 			if (!data) return;
-			await DB.insert(dierollTable)
+			await DB.insert(dieroll)
 				.values({
 					condition: session.SessionContext.GameCondition,
 					multiplier: session.SessionContext.GameMultiplier,

@@ -1,14 +1,15 @@
 import express from "express";
 import { createServer } from "node:http";
-import { Server } from "socket.io";
+import { DefaultEventsMap, Server, Socket } from "socket.io";
 import { ServiceRegistry } from "./utils/service/handler-registry";
 import { InitializeGameServices } from "./services/games";
 import authRoutes from "./services/auth/auth.routes";
 import userRoutes from "./services/user/user.routes";
 import {
   socketAuthMiddleware,
-  AuthenticatedSocket,
+  TAuthenticatedSocket,
 } from "./services/auth/socket.middleware";
+import { AccountStore } from "./services/auth/entities/accounts";
 
 const app = express();
 const server = createServer(app);
@@ -33,15 +34,21 @@ const io = new Server(server, {
   },
 });
 
+export const AccountStoreInstance = new AccountStore();
+
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);
 
-io.on("connection", (socket: AuthenticatedSocket) => {
-  console.log(`User connected: ${socket.user?.address}`);
+io.on("connection", async (socket: TAuthenticatedSocket) => {
+  console.log(`User connected: ${socket.data.user.address}`);
+
+  AccountStoreInstance.AddUserHandshake(socket.id, socket.data.user.id);
+  
+
   ServiceRegistryInstance.OnNewConnection(io, socket);
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.user?.address}`);
+    console.log(`User disconnected: ${socket.data.user.address}`);
   });
 });
 

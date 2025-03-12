@@ -23,5 +23,6 @@ export const users = p.pgTable("users", {
         
 	// User's balance
 	balance: p.bigint({ mode: "number" }).notNull().default(0),
+	
 	createdAt: p.timestamp().notNull().defaultNow(),
 });

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { DieRollModel } from "./dieroll.model";
 import crypto from "node:crypto";
 import { DIEROLL_ERROR, DIEROLL_RESULT } from "./dieroll.messages";
+import { AccountStoreInstance } from "../../..";
 
 class DieRollService extends Service {
   protected serviceName: string = "DieRoll";
@@ -50,6 +51,7 @@ class DieRollService extends Service {
     let { session_id } = await this.Model.AddSession(
       sSeed,
       sSeedHash,
+      AccountStoreInstance.GetUserHandshake(socket.id),
       parse.data.client_seed,
       parse.data.amount,
       parse.data.condition,
