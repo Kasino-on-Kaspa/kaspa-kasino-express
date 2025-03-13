@@ -1,20 +1,8 @@
-import { DefaultEventsMap, Socket } from "socket.io";
 import { ExtendedError } from "socket.io/dist/namespace";
 import { authService } from "./auth.service";
 import { userService } from "../user/user.service";
+import { TAuthenticatedSocket } from "../../typings";
 
-interface IAuthenticatedSocketData {
-  user: {
-    id: string;
-    address: string;
-    xOnlyPublicKey: string;
-    wallet: string;
-    balance: number;
-    username: string | null;
-  };
-}
-
-export type TAuthenticatedSocket = Socket<IAuthenticatedSocketData>;
 
 export const socketAuthMiddleware = async (
   socket: TAuthenticatedSocket,
