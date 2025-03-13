@@ -20,7 +20,7 @@ export class BetSessionSettleState extends BetSessionBaseState {
     const winAmount = bet_amount * (multiplier / 10000); // Mult in basis points
     
     // Update in-memory balance only
-    await account.AddBalance(winAmount);
+    await account.AddBalance(winAmount, "WIN");
     
     // Sync to database periodically or after significant changes
     // if (winAmount > 1000) {

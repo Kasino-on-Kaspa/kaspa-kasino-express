@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { DB } from "../../../database";
 import { users } from "../../../schema/users.schema";
 import { Account } from "../../../utils/account";
+import { E_BALANCE_LOG_TYPE } from "../../../schema/balance.schema";
 
 export class AccountStore {
   private _userHandshake: { [socket_id: string]: string } = {};
@@ -49,7 +50,7 @@ export class AccountStore {
   public async UpdateBalanceFromBlockchain(socketId: string, newBalance: number) {
     const account = this._userAccounts[socketId];
     if (account) {
-      await account.AddBalance(newBalance);
+      await account.AddBalance(newBalance, "DEPOSIT");
     }
   }
 

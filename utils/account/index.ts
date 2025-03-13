@@ -1,3 +1,5 @@
+import { DB } from "../../database";
+import { balance_log, E_BALANCE_LOG_TYPE } from "../../schema/balance.schema";
 import { users } from "../../schema/users.schema";
 import { ObservableData } from "../observables/data";
 export class Account {
@@ -17,12 +19,22 @@ export class Account {
     this.balance = new ObservableData<number>(user.balance);
   }
 
-  public async AddBalance(offset: number) {
+  public async AddBalance(offset: number, type: typeof E_BALANCE_LOG_TYPE.enumValues[number]) {
     this.balance.SetData(this.balance.GetData() + offset);
+    await DB.insert(balance_log).values({
+      account: this._id,
+      amount: offset,
+      type: type,
+    });
   }
 
-  public async RemoveBalance(offset: number) {
+  public async RemoveBalance(offset: number, type: typeof E_BALANCE_LOG_TYPE.enumValues[number]) {
     this.balance.SetData(this.balance.GetData() - offset);
+    await DB.insert(balance_log).values({
+      account: this._id,
+      amount: offset,
+      type: type,
+    });
   }
 
   public get Balance() {
