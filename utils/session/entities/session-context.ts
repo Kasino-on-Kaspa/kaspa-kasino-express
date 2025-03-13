@@ -7,7 +7,7 @@ export abstract class BetSessionContext {
   public readonly ClientSeed: string;
   public readonly ClientAccount: Account;
 
-  public BetAmount: number;
+  public BetAmount: bigint;
   public Multiplier: number;
 
   constructor(
@@ -15,7 +15,7 @@ export abstract class BetSessionContext {
     sSeed: string,
     sSeedHash: string,
     cSeed: string,
-    bet: number,
+    bet: bigint,
     multiplier: number,
     account: Account
   ) {

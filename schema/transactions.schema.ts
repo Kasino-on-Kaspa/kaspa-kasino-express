@@ -10,7 +10,7 @@ export const transactions = p.pgTable("transactions", {
 
 	txId: p.varchar().notNull(),
 
-	value: p.bigint({ mode: "number" }).notNull(), // Value in Sompi
+	value: p.bigint({ mode: "bigint" }).notNull(), // Value in Sompi
 
 	type: E_TRANSACTION_TYPE("type").notNull(),
 

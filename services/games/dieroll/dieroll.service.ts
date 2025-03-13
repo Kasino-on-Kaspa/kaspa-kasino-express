@@ -33,7 +33,10 @@ class DieRollService extends Service {
         error: parse.error.issues,
       });
 
-    if (account.Balance.GetData() < parse.data.amount) {
+    // Convert string amount to BigInt
+    const betAmount = BigInt(parse.data.amount);
+    
+    if (account.Balance.GetData() < betAmount) {
       socket.emit(DIEROLL_ERROR, {
         message: "Insufficient Balance",
       });
@@ -60,7 +63,7 @@ class DieRollService extends Service {
       sSeed,
       sSeedHash,
       parse.data.client_seed,
-      parse.data.amount,
+      betAmount, // Pass BigInt
       parse.data.condition,
       parse.data.target,
       this.CalculateMultiplier(parse.data.condition, parse.data.target),

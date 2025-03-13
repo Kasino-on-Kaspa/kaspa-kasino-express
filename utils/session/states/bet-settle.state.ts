@@ -17,7 +17,7 @@ export class BetSessionSettleState extends BetSessionBaseState {
     let multiplier = manager.SessionContext.Multiplier;
     
     // Calculate win amount
-    const winAmount = bet_amount * (multiplier / 10000); // Mult in basis points
+    const winAmount = bet_amount * BigInt(multiplier) / BigInt(10000); // Convert to BigInt calculation
     
     // Update in-memory balance only
     await account.AddBalance(winAmount, "WIN");
@@ -28,7 +28,7 @@ export class BetSessionSettleState extends BetSessionBaseState {
     // }
     
     // Log the win
-    console.log(`User ${account.Id} won ${winAmount} with multiplier ${multiplier}`);
+    console.log(`User ${account.Id} won ${winAmount.toString()} with multiplier ${multiplier}`);
 
     manager.ChangeCurrentState(manager.SessionStates.BetFullfilledState());
   }

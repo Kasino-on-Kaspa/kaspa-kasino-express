@@ -17,7 +17,7 @@ export class BetSessionStartState extends BetSessionBaseState {
     await account.RemoveBalance(bet_amount, "BET");
     
     // Log the bet
-    console.log(`User ${account.Id} placed bet of ${bet_amount}`);
+    console.log(`User ${account.Id} placed bet of ${bet_amount.toString()}`);
 
     manager.ChangeCurrentState(manager.SessionStates.GameSettleState());
   }

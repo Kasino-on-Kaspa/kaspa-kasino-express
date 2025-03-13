@@ -5,7 +5,7 @@ import { ObservableData } from "../../../../utils/observables/data";
 import { Account } from "../../../../utils/account";
 
 type TDieRollGameCondition = z.infer<typeof DieRollBetType.shape.condition>;
-type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.amount>;
+type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.target>;
 
 export class DieRollSessionContext extends BetSessionContext {
 	public readonly GameCondition: TDieRollGameCondition;
@@ -20,17 +20,16 @@ export class DieRollSessionContext extends BetSessionContext {
 		sSeed: string,
 		sSeedHash: string,
 		cSeed: string,
-    account:Account,
+		account: Account,
 		condition: TDieRollGameCondition,
 		target: TDieRollGameTarget,
-    multiplier:number,
-    bet:number
+		multiplier: number,
+		bet: bigint
 	) {
-		super(id, sSeed, sSeedHash, cSeed,bet,multiplier,account);
-    
-    this.GameCondition = condition;
+		super(id, sSeed, sSeedHash, cSeed, bet, multiplier, account);
+		
+		this.GameCondition = condition;
 		this.GameTarget = target;
-    
 	}
 
 	public SetResult(isWon: boolean, result: number) {

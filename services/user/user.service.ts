@@ -52,7 +52,7 @@ export class UserService {
       xOnlyPublicKey,
       wallet: walletId,
       createdAt: new Date(),
-      balance: 0,
+      balance: 0n,
       username: null,
     };
 

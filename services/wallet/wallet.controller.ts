@@ -24,10 +24,11 @@ export class WalletController {
 			}
 			this.lastUpdateTime[address] = now;
 
+			// Use the service which now utilizes Account methods
 			const result = await WalletService.updateWalletBalance(address);
 			
 			// Log the balance update
-			console.log(`Balance updated for ${address}: ${result.balance}`);
+			console.log(`Balance updated for ${address}: ${result!.balance}`);
 			
 			res.status(200).json(result);
 		} catch (e) {

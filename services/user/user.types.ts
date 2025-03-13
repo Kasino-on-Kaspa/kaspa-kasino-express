@@ -4,7 +4,7 @@ export interface User {
   xOnlyPublicKey: string;
   username: string | null;
   wallet: string;
-  balance: number;
+  balance: bigint;
   createdAt: Date;
 }
 

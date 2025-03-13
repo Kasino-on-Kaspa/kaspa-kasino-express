@@ -13,7 +13,7 @@ export const utxos = p.pgTable("utxos", {
 	address: p.varchar().notNull(),
 
 	// Amount in Sompi
-	amount: p.bigint({ mode: "number" }).notNull(),
+	amount: p.bigint({ mode: "bigint" }).notNull(),
 
 	// ScriptPubKey
 	scriptPubKey: p.varchar().notNull(),

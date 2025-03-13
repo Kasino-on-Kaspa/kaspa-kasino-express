@@ -13,7 +13,7 @@ import {
 import { Account } from "../../../utils/account";
 
 type TDieRollGameCondition = z.infer<typeof DieRollBetType.shape.condition>;
-type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.amount>;
+type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.target>;
 
 export class DieRollModel {
   private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
@@ -23,7 +23,7 @@ export class DieRollModel {
     serverSeed: string,
     serverSeedHash: string,
     clientSeed: string,
-    amount: number,
+    amount: bigint,
     condition: TDieRollGameCondition,
     target: TDieRollGameTarget,
     multiplier: number,
@@ -35,7 +35,7 @@ export class DieRollModel {
         serverSeedHash,
         clientSeed,
         user: account.Id,
-        amount,
+        amount: amount,
         gameType: "DICEROLL",
       })
       .returning();

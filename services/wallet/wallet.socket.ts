@@ -10,9 +10,9 @@ export class WalletSocketService extends Service {
 	private lastUpdateTime: Record<string, number> = {};
 	private readonly UPDATE_COOLDOWN_MS = 5000; // 5 seconds between updates
 
-	public onWalletBalanceUpdate(socket: Socket, balance: number) {
+	public onWalletBalanceUpdate(socket: Socket, balance: bigint) {
 		socket.emit("wallet:balance", {
-			balance: balance,
+			balance: balance.toString(),
 			address: socket.data.user.address,
 		});
 	}
@@ -20,9 +20,9 @@ export class WalletSocketService extends Service {
 	public override Handler(io: Server, socket: Socket): void {
 		const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
 
-    account.Balance.AddListener(async (balance) => {
-      this.onWalletBalanceUpdate(socket, balance);
-    });
+		account.Balance.AddListener(async (balance) => {
+			this.onWalletBalanceUpdate(socket, balance);
+		});
 		// Handle request to get wallet balance
 		socket.on("wallet:getBalance", async () => {
 			try {
@@ -39,7 +39,7 @@ export class WalletSocketService extends Service {
 					socket.data.user.address
 				);
 				socket.emit("wallet:balance", {
-					balance: wallet.balance,
+					balance: BigInt(wallet.balance).toString(),
 					address: wallet.walletAddress,
 				});
 			} catch (e) {
@@ -59,6 +59,7 @@ export class WalletSocketService extends Service {
 				const account = AccountStoreInstance.GetUserFromHandshake(
 					socket.id
 				);
+				
 				if (!account) {
 					socket.emit("wallet:error", { message: "Unauthorized" });
 					return;
@@ -76,16 +77,17 @@ export class WalletSocketService extends Service {
 				}
 				this.lastUpdateTime[socket.id] = now;
 
-				// Get blockchain-verified balance
+				// Get blockchain-verified balance using the service
 				const result = await WalletService.updateWalletBalance(
 					socket.data.user.address
 				);
-
-
+				
+				// The account's balance has already been updated in the service
+				// and listeners will be notified through the observable
 
 				// Log the balance update
 				console.log(
-					`Balance updated for ${socket.data.user.address}: ${result.balance}`
+					`Balance updated for ${socket.data.user.address}: ${result!.balance}`
 				);
 			} catch (e) {
 				console.error(e);

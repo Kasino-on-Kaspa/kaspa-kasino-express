@@ -13,7 +13,7 @@ export const sessionsTable = p.pgTable("sessions", {
   clientSeed: p.varchar().notNull(),
 
   // Bet amount
-  amount: p.integer().notNull(),
+  amount: p.bigint({mode: "bigint"}).notNull(),
 
   // Bet User
   user: p.uuid().references(() => users.id).notNull(),

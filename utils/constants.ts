@@ -1,16 +1,16 @@
 // Currency constants
-export const SOMPI_PER_KAS = 100000000; // 10^8 SOMPI = 1 KAS
+// 10^8 SOMPI = 1 KAS
 
 // Utility functions for currency conversion
-export function kasToSompi(kas: number): number {
-  return Math.floor(kas * SOMPI_PER_KAS);
+export function kasToSompi(kas: string): bigint {
+  return BigInt(Math.floor(parseFloat(kas) * 100000000));
 }
 
-export function sompiToKas(sompi: number): number {
-  return sompi / SOMPI_PER_KAS;
+export function sompiToKas(sompi: bigint): string {
+  return (Number(sompi) / 100000000).toFixed(8);
 }
 
 // Format a SOMPI amount for display (as KAS with 8 decimal places)
-export function formatBalance(sompiAmount: number): string {
-  return (sompiAmount / SOMPI_PER_KAS).toFixed(8);
+export function formatBalance(sompiAmount: bigint): string {
+  return (Number(sompiAmount) / 100000000).toFixed(8);
 } 

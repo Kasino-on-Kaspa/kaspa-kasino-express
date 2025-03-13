@@ -8,7 +8,7 @@ export class Account {
   private _xOnlyPublicKey: string;
   private _username: string | null;
   private _wallet: string;
-  private balance: ObservableData<number>;
+  private balance: ObservableData<bigint>;
 
   private isUpdated: boolean = false;
 
@@ -20,7 +20,7 @@ export class Account {
     this._xOnlyPublicKey = user.xOnlyPublicKey;
     this._username = user.username;
     this._wallet = user.wallet;
-    this.balance = new ObservableData<number>(user.balance);
+    this.balance = new ObservableData<bigint>(BigInt(user.balance));
   }
 
   public AddSockets(socket_id: string) {
@@ -35,7 +35,7 @@ export class Account {
   }
 
   public async AddBalance(
-    offset: number,
+    offset: bigint,
     type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
   ) {
     this.balance.SetData(this.balance.GetData() + offset);
@@ -56,7 +56,7 @@ export class Account {
   }
 
   public async RemoveBalance(
-    offset: number,
+    offset: bigint,
     type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
   ) {
     this.balance.SetData(this.balance.GetData() - offset);
