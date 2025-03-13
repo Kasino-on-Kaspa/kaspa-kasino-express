@@ -81,17 +81,7 @@ export class WalletSocketService extends Service {
 					socket.data.user.address
 				);
 
-				// Update the account balance in memory using secure method
-				await AccountStoreInstance.UpdateBalanceFromBlockchain(
-					socket.id,
-					result.balance
-				);
 
-				// Broadcast the updated balance to all sockets for this user
-				io.to(socket.data.user.address).emit("wallet:balance", {
-					balance: result.balance,
-					address: socket.data.user.address,
-				});
 
 				// Log the balance update
 				console.log(

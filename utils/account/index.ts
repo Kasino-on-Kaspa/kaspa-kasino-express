@@ -10,6 +10,8 @@ export class Account {
   private _wallet: string;
   private balance: ObservableData<number>;
 
+  private isUpdated: boolean = false;
+
   private connection_sockets: string[] = [];
 
   constructor(user: typeof users.$inferSelect) {
@@ -42,12 +44,15 @@ export class Account {
       amount: offset,
       type: type,
     });
+    this.isUpdated = true;
   }
 
   public async UpdateAccountDB() {
+    if (!this.isUpdated) return;
     await DB.update(users).set({
       balance: this.Balance.GetData(),
     });
+    this.isUpdated = false;
   }
 
   public async RemoveBalance(
@@ -60,12 +65,13 @@ export class Account {
       amount: offset,
       type: type,
     });
+    this.isUpdated = true;
   }
 
   public get AssociatedSockets() {
     return this.connection_sockets;
   }
-  
+
   public get Balance() {
     return this.balance;
   }

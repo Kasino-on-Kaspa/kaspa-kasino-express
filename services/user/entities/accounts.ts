@@ -71,16 +71,6 @@ export class AccountStore {
     }
   }
 
-  // Secure method to update balance that requires blockchain verification
-  public async UpdateBalanceFromBlockchain(
-    socketId: string,
-    newBalance: number
-  ) {
-    const account = this._userAccounts[socketId];
-    if (account) {
-      await account.AddBalance(newBalance, "DEPOSIT");
-    }
-  }
 
   // Add this method to get all accounts
   public GetAllAccounts(): Record<string, Account> {
