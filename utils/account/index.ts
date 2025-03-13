@@ -10,6 +10,8 @@ export class Account {
   private _wallet: string;
   private balance: ObservableData<number>;
 
+  private connection_sockets: string[] = [];
+
   constructor(user: typeof users.$inferSelect) {
     this._id = user.id;
     this._address = user.address;
@@ -19,7 +21,21 @@ export class Account {
     this.balance = new ObservableData<number>(user.balance);
   }
 
-  public async AddBalance(offset: number, type: typeof E_BALANCE_LOG_TYPE.enumValues[number]) {
+  public AddSockets(socket_id: string) {
+    this.connection_sockets.push(socket_id);
+  }
+
+  public RemoveSocket(socket_id: string) {
+    this.connection_sockets.splice(
+      this.connection_sockets.indexOf(socket_id),
+      1
+    );
+  }
+
+  public async AddBalance(
+    offset: number,
+    type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
+  ) {
     this.balance.SetData(this.balance.GetData() + offset);
     await DB.insert(balance_log).values({
       account: this._id,
@@ -28,7 +44,16 @@ export class Account {
     });
   }
 
-  public async RemoveBalance(offset: number, type: typeof E_BALANCE_LOG_TYPE.enumValues[number]) {
+  public async UpdateAccountDB() {
+    await DB.update(users).set({
+      balance: this.Balance.GetData(),
+    });
+  }
+
+  public async RemoveBalance(
+    offset: number,
+    type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
+  ) {
     this.balance.SetData(this.balance.GetData() - offset);
     await DB.insert(balance_log).values({
       account: this._id,
@@ -37,6 +62,10 @@ export class Account {
     });
   }
 
+  public get AssociatedSockets() {
+    return this.connection_sockets;
+  }
+  
   public get Balance() {
     return this.balance;
   }
