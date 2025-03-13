@@ -49,6 +49,7 @@ export const socketAuthMiddleware = async (
 
     // Attach user data to socket
     socket.data.user = user;
+    socket.join(payload.address);
     next();
   } catch (error) {
     console.error("Socket authentication error:", error);

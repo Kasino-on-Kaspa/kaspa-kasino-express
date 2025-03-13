@@ -13,7 +13,11 @@ export class BetSessionStartState extends BetSessionBaseState {
     let account = manager.SessionContext.ClientAccount;
     let bet_amount = manager.SessionContext.BetAmount;
 
+    // Update in-memory balance only
     await account.RemoveBalance(bet_amount);
+    
+    // Log the bet
+    console.log(`User ${account.Id} placed bet of ${bet_amount}`);
 
     manager.ChangeCurrentState(manager.SessionStates.GameSettleState());
   }

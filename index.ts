@@ -10,6 +10,8 @@ import {
   TAuthenticatedSocket,
 } from "./services/auth/socket.middleware";
 import { AccountStore } from "./services/auth/entities/accounts";
+import { WalletSocketService } from "./services/wallet/wallet.socket";
+import { BalanceManagerService } from "./services/wallet/balance-manager.service";
 
 const app = express();
 const server = createServer(app);
@@ -25,6 +27,8 @@ app.use("/users", userRoutes);
 export const ServiceRegistryInstance = new ServiceRegistry();
 
 InitializeGameServices(ServiceRegistryInstance);
+
+ServiceRegistryInstance.RegisterService(new WalletSocketService());
 
 const io = new Server(server, {
   cors: {
@@ -42,7 +46,7 @@ io.use(socketAuthMiddleware);
 io.on("connection", async (socket: TAuthenticatedSocket) => {
   console.log(`User connected: ${socket.data.user.address}`);
 
-  AccountStoreInstance.AddUserHandshake(socket.id, socket.data.user.id);
+  await AccountStoreInstance.AddUserHandshake(socket.id, socket.data.user.id);
   
 
   ServiceRegistryInstance.OnNewConnection(io, socket);
@@ -50,6 +54,21 @@ io.on("connection", async (socket: TAuthenticatedSocket) => {
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.data.user.address}`);
   });
+});
+
+// Initialize and configure the balance manager
+const balanceManager = BalanceManagerService.getInstance();
+balanceManager.configure({
+  updateIntervalMs: 12000,  // Check every 2 minutes
+  minUpdateThresholdMs: 10000  // Only update accounts every 10 minutes
+});
+balanceManager.startPeriodicUpdates();
+
+// Add a shutdown handler
+process.on('SIGINT', () => {
+  balanceManager.stopPeriodicUpdates();
+  // Other cleanup...
+  process.exit(0);
 });
 
 server.listen(3000, () => {

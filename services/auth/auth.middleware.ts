@@ -32,6 +32,7 @@ export const authenticateJWT = (
 
   // Check if token is expired based on the expiry claim
   if (payload.exp && payload.exp < Date.now() / 1000) {
+    
     res.status(401).json({ message: "Token has expired" });
     return;
   }

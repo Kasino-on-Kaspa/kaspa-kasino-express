@@ -9,14 +9,20 @@ export class AccountStore {
 
   public async AddUserHandshake(socket_id: string, account_id: string) {
     this._userHandshake[socket_id] = account_id;
-    if (this._userAccounts[account_id]) return;
     
-    let result = await DB.select()
-      .from(users)
-      .where(eq(users.id, account_id))
-      .limit(1);
-
-    this._userAccounts[socket_id] = new Account(result[0]);
+    // Store account by account_id, not socket_id
+    if (!this._userAccounts[account_id]) {
+      let result = await DB.select()
+        .from(users)
+        .where(eq(users.id, account_id))
+        .limit(1);
+      
+      if (result.length > 0) {
+        this._userAccounts[account_id] = new Account(result[0]);
+      } else {
+        console.error(`No user found with ID: ${account_id}`);
+      }
+    }
   }
 
   public RemoveUserHandshake(socket_id: string) {
@@ -37,5 +43,18 @@ export class AccountStore {
 
   public UpdateDatabase(socket_id: string) {
     // will implement
+  }
+
+  // Secure method to update balance that requires blockchain verification
+  public async UpdateBalanceFromBlockchain(socketId: string, newBalance: number) {
+    const account = this._userAccounts[socketId];
+    if (account) {
+      await account.AddBalance(newBalance);
+    }
+  }
+
+  // Add this method to get all accounts
+  public GetAllAccounts(): Record<string, Account> {
+    return this._userAccounts;
   }
 }

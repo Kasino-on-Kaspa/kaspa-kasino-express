@@ -9,7 +9,7 @@ import { wallets } from "../../schema/wallets.schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"; // Should be in env
 const REFRESH_SECRET = process.env.REFRESH_SECRET || "your-refresh-secret-key"; // Should be in env
-const JWT_EXPIRY = "15m"; // Short-lived access token
+const JWT_EXPIRY = "1DAY"; // Access token valid for 24 hours
 const REFRESH_EXPIRY = "7d"; // Long-lived refresh token
 
 export interface AuthRequest {

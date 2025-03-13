@@ -24,6 +24,7 @@ class DieRollService extends Service {
     bet_data: z.infer<typeof DieRollBetType>
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+    console.log("account", account);
     let parse = this.ParseParams(bet_data, DieRollBetType, socket);
 
     if (!parse.success)
@@ -32,7 +33,7 @@ class DieRollService extends Service {
         error: parse.error.issues,
       });
 
-    if (account.Balance < parse.data.amount) {
+    if (account.Balance.GetData() < parse.data.amount) {
       socket.emit(DIEROLL_ERROR, {
         message: "Insufficient Balance",
       });

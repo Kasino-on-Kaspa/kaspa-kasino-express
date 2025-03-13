@@ -34,8 +34,12 @@ export class DieRollSettleState extends BetSessionBaseState {
     switch (condition) {
       case "OVER":
         isWon = target < result;
+        break;
       case "UNDER":
-        isWon = result > target;
+        isWon = result < target;
+        break;
+      default:
+        isWon = false;
     }
 
     manager.SessionContext.SetResult(isWon, result);

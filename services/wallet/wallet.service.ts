@@ -23,12 +23,17 @@ export class WalletService {
     };
   }
 
+  /**
+   * Updates the wallet balance by checking for new UTXOs
+   * @param userAddress The user's address
+   * @returns Object containing the new balance in SOMPI and count of new transactions
+   */
   static async updateWalletBalance(userAddress: string) {
     const userWallet = await this.getUserWallet(userAddress);
     
     // Get all UTXOs from the blockchain
     const allUtxos = await WalletBalanceProvider.getUtxos([userWallet.walletAddress]);
-    
+    console.log("DEPOSIT ADDRESS", userWallet.walletAddress)
     // Get all UTXOs we've already seen
     const seenUtxos = await DB.select()
       .from(utxos)
@@ -43,12 +48,11 @@ export class WalletService {
       );
     });
 
+    // Calculate the balance change from new UTXOs (in SOMPI)
     let balanceDelta = 0;
-    
-    // Calculate the balance change from new UTXOs
     for (const utxo of unseenUtxos) {
       if (utxo.utxoEntry?.amount) {
-        balanceDelta += utxo.utxoEntry.amount;
+        balanceDelta += utxo.utxoEntry.amount; // UTXOs are already in SOMPI
       }
     }
 
@@ -76,7 +80,7 @@ export class WalletService {
       .where(eq(users.address, userAddress));
 
     return {
-      balance: newBalance,
+      balance: newBalance, // Balance in SOMPI
       newTransactions: utxoMap.length
     };
   }
