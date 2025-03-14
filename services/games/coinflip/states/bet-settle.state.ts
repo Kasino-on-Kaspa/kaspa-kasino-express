@@ -32,7 +32,7 @@ export class BetSettleState extends BetSessionBaseState {
 
     await DB.insert(coinflip).values({
       multiplier: manager.SessionContext.Multiplier,
-      playerChoice: manager.SessionContext.GameClientChoice,
+      playerChoice: manager.SessionContext.LastGameChoice!,
       sessionId: manager.SessionContext.SessionId,
       status: option,
       level: manager.SessionContext.CurrentGameLevel,
@@ -62,7 +62,7 @@ export class BetSettleState extends BetSessionBaseState {
     manager: BetSessionStateMachine<CoinFlipSessionContext>
   ) {
     manager.SessionContext.IncrementLevel();
-    manager.ChangeCurrentState(manager.SessionStates.BetStartState());
+    manager.ChangeCurrentState(manager.SessionStates.GameSettleState());
   }
 
   public ExitState(

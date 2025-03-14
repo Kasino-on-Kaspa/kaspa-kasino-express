@@ -1,0 +1,6 @@
+export const COINFLIP_ERROR = 'coinflip:error'
+export const COINFLIP_RESULT = 'coinflip:result'
+export const COINFLIP_FULLFILLED = 'coinflip:fullfilled'
+export const COINFLIP_CHOICE = 'coinflip:choice'
+export const COINFLIP_CONTINUE = 'coinflip:continue'
+export const COINFLIP_CASHOUT = 'coinflip:cashout'

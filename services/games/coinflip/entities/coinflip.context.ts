@@ -14,15 +14,18 @@ type TCoinStatus = (typeof E_COINFLIP_STATUS.enumValues)[number];
 const MAX_GAME_LEVELS = 20;
 
 export class CoinFlipSessionContext extends BetSessionContext {
-  public readonly GameClientChoice: TCoinFlipOption;
-
   private currentGameLevel: number;
+  public LastGameChoice?: "HEADS" | "TAILS";
 
   public get CurrentGameLevel() {
     return this.currentGameLevel;
   }
 
   public OnGameSettled: ObservableEvent<void> = new ObservableEvent();
+  
+  public OnClientOptionSelect: ObservableEvent<"HEADS" | "TAILS"> =
+    new ObservableEvent();
+    
   public OnClientFullfillOptionSelected: ObservableEvent<TCoinStatus> =
     new ObservableEvent();
 
@@ -40,12 +43,10 @@ export class CoinFlipSessionContext extends BetSessionContext {
     bet: bigint,
     multiplier: number,
     account: Account,
-    choice: TCoinFlipOption,
     level: number = 0
   ) {
     super(id, sSeed, sSeedHash, cSeed, bet, multiplier, account);
 
-    this.GameClientChoice = choice;
     this.currentGameLevel = level;
   }
 

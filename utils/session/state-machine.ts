@@ -2,6 +2,7 @@ import { BetSessionContext } from "./entities/session-context";
 import { BetSessionBaseState } from "./state";
 import { BetBaseSessionStateFactory } from "./entities/state-factory";
 import { ObservableData } from "../observables/data";
+import { ObservableEvent } from "../observables/event";
 
 type TOnCompleteListener = (server_id: string) => void;
 
@@ -14,6 +15,7 @@ export class BetSessionStateMachine<
   private _currentState: BetSessionBaseState;
 
   private lastStateUpdated: Date = new Date();
+  public ChangeStateEvent: ObservableEvent<TSessionState> = new ObservableEvent();
 
   constructor(stateFactory: BetBaseSessionStateFactory, context: TBetContext) {
     this._context = context;

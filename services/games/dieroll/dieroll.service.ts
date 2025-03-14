@@ -14,7 +14,7 @@ class DieRollService extends Service {
 
   public override Handler(io: Server, socket: Socket): void {
     socket.on(
-      "dieroll:predict",
+      "dieroll:new",
       (cb: ( serverSeedHash: string) => Promise<void>) => {
         let result = this.HandleGenerateServerSeed(socket.id);
         cb(result.sSeedHash);
@@ -42,7 +42,6 @@ class DieRollService extends Service {
         error: parse.error.issues,
       });
 
-    // Convert string amount to BigInt
     const betAmount = BigInt(parse.data.amount);
 
     if (account.Balance.GetData() < betAmount) {

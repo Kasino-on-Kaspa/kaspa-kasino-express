@@ -1,4 +1,5 @@
-import { E_COINFLIP_OPTION } from "../../../../schema/games/coinflip.schema";
+import { DB } from "../../../../database";
+import { coinflip, E_COINFLIP_OPTION } from "../../../../schema/games/coinflip.schema";
 import { BetSessionBaseState } from "../../../../utils/session/state";
 import { BetSessionStateMachine } from "../../../../utils/session/state-machine";
 import { CoinFlipSessionContext } from "../entities/coinflip.context";
@@ -10,6 +11,18 @@ export class CoinFlipSettleState extends BetSessionBaseState {
   public EnterState(
     manager: BetSessionStateMachine<CoinFlipSessionContext>
   ): void {
+    manager.SessionContext.OnClientOptionSelect.RegisterEventListener(
+      async (choice) => {
+        this.HandleOnGameBet(choice, manager);
+      },
+      true
+    );
+  }
+
+  private async HandleOnGameBet(
+    choice: "HEADS" | "TAILS",
+    manager: BetSessionStateMachine<CoinFlipSessionContext>
+  ) {
     const gameHashSeed = `${manager.SessionContext.ServerSeed}${manager.SessionContext.ClientSeed}`;
     const gameHash = crypto
       .createHash("sha512")
@@ -24,12 +37,10 @@ export class CoinFlipSettleState extends BetSessionBaseState {
 
     const result = E_COINFLIP_OPTION.enumValues[resultNumber % 2];
 
-    manager.SessionContext.SetResult(
-      result == manager.SessionContext.GameClientChoice,
-      result
-    );
+    manager.SessionContext.SetResult(result == choice, result);
 
-    if (result != manager.SessionContext.GameClientChoice) {
+
+    if (result != choice) {
       manager.ChangeCurrentState(manager.SessionStates.BetFullfilledState());
     } else {
       manager.ChangeCurrentState(manager.SessionStates.BetSettleState());
