@@ -1,36 +1,50 @@
 import { Socket } from "socket.io";
 
-interface IAuthenticatedSocketData {
+export interface IAuthenticatedSocketData {
 	user: {
 		id: string;
 		address: string;
 		xOnlyPublicKey: string;
 		wallet: string;
-		balance: number;
+		balance: bigint;
 		username: string | null;
 	};
 }
 
+// Base bet type structure
+export interface BaseBetData {
+  client_seed: string;
+  amount: string;
+}
+
+// Die roll specific bet data
+export interface DieRollBetData extends BaseBetData {
+  target: number;
+  condition: "OVER" | "UNDER";
+}
+
+// Zod validation error structure
+export interface ZodIssue {
+  code: string;
+  expected: string;
+  received: string;
+  path: (string | number)[];
+  message: string;
+}
+
 // Client to server events (what the server listens for)
-interface ClientToServerEvents {
+export interface ClientToServerEvents {
 	"wallet:getBalance": () => void;
 	"wallet:updateBalance": () => void;
-	"dieroll:bet": (bet_data: any) => void;
+	"dieroll:bet": (bet_data: DieRollBetData) => void;
 	disconnect: () => void;
 }
 
 // Server to client events (what the server emits)
-interface ServerToClientEvents {
+export interface ServerToClientEvents {
 	"wallet:balance": (data: { balance: string; address: string }) => void;
 	"wallet:error": (data: { message: string }) => void;
-	"dieroll:error": (data: { message: string; error?: any }) => void;
-	"dieroll:result": (data: any) => void;
+	"dieroll:error": (data: { message: string; error?: ZodIssue[] }) => void;
+	"dieroll:result": (data: { resultRoll: number; isWon: boolean }) => void;
 }
 
-
-
-export type TAuthenticatedSocket = Socket<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  IAuthenticatedSocketData
->;

@@ -18,7 +18,12 @@ export class UserController {
         return;
       }
 
-      res.json(user);
+      // Convert any BigInt values to strings before sending the response
+      const serializedUser = JSON.parse(JSON.stringify(user, (_, value) => 
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+
+      res.json(serializedUser);
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -56,7 +61,12 @@ export class UserController {
         return;
       }
 
-      res.json(updatedUser);
+      // Convert any BigInt values to strings before sending the response
+      const serializedUser = JSON.parse(JSON.stringify(updatedUser, (_, value) => 
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+
+      res.json(serializedUser);
     } catch (error) {
       console.error("Update user error:", error);
       res.status(500).json({ message: "Internal server error" });
