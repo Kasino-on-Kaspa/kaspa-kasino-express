@@ -8,7 +8,6 @@ import { sessionsTable } from "../../../schema/session.schema";
 import { DB } from "../../../database";
 import {
   dieroll,
-  E_DICEROLL_CONDITION,
 } from "../../../schema/games/dieroll.schema";
 import { Account } from "../../../utils/account";
 
@@ -18,10 +17,23 @@ type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.target>;
 export class DieRollModel {
   private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
   private stateFactory = new DierollSessionStateFactory();
+  private dieRollSessionSeedStore: {
+    [socket_id: string]: { serverSeed: string; serverSeedHash: string };
+  } = {};
+
+  public AddNewSocketServerSeed(
+    socket_id: string,
+    serverSeed: string,
+    serverSeedHash: string
+  ) {
+    return (this.dieRollSessionSeedStore[socket_id] = {
+      serverSeed,
+      serverSeedHash,
+    });
+  }
 
   public async AddSession(
-    serverSeed: string,
-    serverSeedHash: string,
+    socket_id: string,
     clientSeed: string,
     amount: bigint,
     condition: TDieRollGameCondition,
@@ -29,6 +41,8 @@ export class DieRollModel {
     multiplier: number,
     account: Account
   ) {
+    let { serverSeed, serverSeedHash } =
+      this.dieRollSessionSeedStore[socket_id];
     let data = await DB.insert(sessionsTable)
       .values({
         serverSeed,
@@ -56,7 +70,7 @@ export class DieRollModel {
 
     let session = new BetSessionStateMachine(this.stateFactory, context);
 
-    session.AddOnCompleteListener((server_id: string) =>
+    session.AddOnStateMachineIdle((server_id: string) =>
       this.OnSessionCompleteCleaner(server_id)
     );
 
@@ -85,6 +99,7 @@ export class DieRollModel {
 
   private OnSessionCompleteCleaner(server_id: string) {
     this.dieRollSessionStore.RemoveSession(server_id);
-    console.log(this.dieRollSessionStore.GetAllSession());
   }
+
+  
 }

@@ -4,7 +4,7 @@ import { DieRollBetType } from "./types";
 import { z } from "zod";
 import { DieRollModel } from "./dieroll.model";
 import crypto from "node:crypto";
-import { DIEROLL_ERROR, DIEROLL_RESULT } from "./dieroll.messages";
+import { DIEROLL_ERROR, DIEROLL_FULLFILLED, DIEROLL_RESULT } from "./dieroll.messages";
 import { AccountStoreInstance } from "../../..";
 
 class DieRollService extends Service {
@@ -13,6 +13,14 @@ class DieRollService extends Service {
   protected Model: DieRollModel = new DieRollModel();
 
   public override Handler(io: Server, socket: Socket): void {
+    socket.on(
+      "dieroll:predict",
+      (cb: ( serverSeedHash: string) => Promise<void>) => {
+        let result = this.HandleGenerateServerSeed();
+        cb(result.sSeedHash);
+      }
+    );
+    
     socket.on("dieroll:bet", (bet_data: z.infer<typeof DieRollBetType>) => {
       this.HandleBetCreate(io, socket, bet_data);
     });
@@ -35,7 +43,7 @@ class DieRollService extends Service {
 
     // Convert string amount to BigInt
     const betAmount = BigInt(parse.data.amount);
-    
+
     if (account.Balance.GetData() < betAmount) {
       socket.emit(DIEROLL_ERROR, {
         message: "Insufficient Balance",
@@ -57,11 +65,8 @@ class DieRollService extends Service {
       return;
     }
 
-    let { sSeed, sSeedHash } = this.GenerateServerSeed();
-
     let { session_id } = await this.Model.AddSession(
-      sSeed,
-      sSeedHash,
+      socket.id,
       parse.data.client_seed,
       betAmount, // Pass BigInt
       parse.data.condition,
@@ -77,6 +82,17 @@ class DieRollService extends Service {
         socket.emit(DIEROLL_RESULT, new_result);
       }
     );
+    let fullfilledListener = session.AddOnCompleteListener(
+      async (new_result) => {
+        socket.emit(DIEROLL_FULLFILLED, {server_seed:session.SessionContext.ServerSeed,server_hash:session.SessionContext.ServerSeed});
+      }
+    );
+
+    socket.once("disconnect",()=> {
+      session.SessionContext.Result.RemoveListener(resultListner)
+      session.RemoveOnCompleteListener(fullfilledListener)
+    })
+
     session.Start();
   }
 
@@ -118,6 +134,11 @@ class DieRollService extends Service {
 
     // Convert to basis points (1/10000)
     return Math.round(multiplierWithEdge * 10000);
+  }
+
+  public HandleGenerateServerSeed() {
+    let data = this.GenerateServerSeed();
+    return data;
   }
 }
 
