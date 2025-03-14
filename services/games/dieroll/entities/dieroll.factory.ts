@@ -1,5 +1,5 @@
 import { BetBaseSessionStateFactory } from "../../../../utils/session/entities/state-factory";
-import { DieRollSettleState } from "../state/game-settle.state";
+import { DieRollSettleState } from "../states/game-settle.state";
 
 export class DierollSessionStateFactory extends BetBaseSessionStateFactory {
   

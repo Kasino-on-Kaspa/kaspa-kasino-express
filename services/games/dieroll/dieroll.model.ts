@@ -15,6 +15,7 @@ type TDieRollGameCondition = z.infer<typeof DieRollBetType.shape.condition>;
 type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.target>;
 
 export class DieRollModel {
+  
   private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
   private stateFactory = new DierollSessionStateFactory();
   private dieRollSessionSeedStore: {
@@ -43,6 +44,7 @@ export class DieRollModel {
   ) {
     let { serverSeed, serverSeedHash } =
       this.dieRollSessionSeedStore[socket_id];
+
     let data = await DB.insert(sessionsTable)
       .values({
         serverSeed,

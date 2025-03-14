@@ -16,7 +16,7 @@ class DieRollService extends Service {
     socket.on(
       "dieroll:predict",
       (cb: ( serverSeedHash: string) => Promise<void>) => {
-        let result = this.HandleGenerateServerSeed();
+        let result = this.HandleGenerateServerSeed(socket.id);
         cb(result.sSeedHash);
       }
     );
@@ -32,7 +32,8 @@ class DieRollService extends Service {
     bet_data: z.infer<typeof DieRollBetType>
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
-    console.log("account", account);
+
+    
     let parse = this.ParseParams(bet_data, DieRollBetType, socket);
 
     if (!parse.success)
@@ -83,8 +84,8 @@ class DieRollService extends Service {
       }
     );
     let fullfilledListener = session.AddOnCompleteListener(
-      async (new_result) => {
-        socket.emit(DIEROLL_FULLFILLED, {server_seed:session.SessionContext.ServerSeed,server_hash:session.SessionContext.ServerSeed});
+      async (server_id) => {
+        socket.emit(DIEROLL_FULLFILLED, {server_seed:session.SessionContext.ServerSeed,server_hash:session.SessionContext.ServerSeedHash});
       }
     );
 
@@ -136,8 +137,9 @@ class DieRollService extends Service {
     return Math.round(multiplierWithEdge * 10000);
   }
 
-  public HandleGenerateServerSeed() {
+  public HandleGenerateServerSeed(socket_id:string) {
     let data = this.GenerateServerSeed();
+    this.Model.AddNewSocketServerSeed(socket_id,data.sSeed,data.sSeedHash)
     return data;
   }
 }
