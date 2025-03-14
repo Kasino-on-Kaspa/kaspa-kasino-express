@@ -37,6 +37,7 @@ export interface ClientToServerEvents {
 	"wallet:getBalance": () => void;
 	"wallet:updateBalance": () => void;
 	"dieroll:bet": (bet_data: DieRollBetData) => void;
+	"dieroll:predict": (callback: (serverSeedHash: string) => Promise<void>) => void;
 	disconnect: () => void;
 }
 
@@ -46,5 +47,16 @@ export interface ServerToClientEvents {
 	"wallet:error": (data: { message: string }) => void;
 	"dieroll:error": (data: { message: string; error?: ZodIssue[] }) => void;
 	"dieroll:result": (data: { resultRoll: number; isWon: boolean }) => void;
+	"dieroll:fullfilled": (data: { 
+		sessionId: string;
+		serverSeed: string;
+		serverSeedHash: string;
+		clientSeed: string;
+		betAmount: string;
+		payout: string;
+		multiplier: number;
+		resultRoll: number;
+		isWon: boolean;
+	}) => void;
 }
 
