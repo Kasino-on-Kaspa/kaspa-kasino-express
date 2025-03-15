@@ -31,6 +31,4 @@ export const coinflip = p.pgTable("coinflip_results", {
 
   // Created at
   createdAt: p.timestamp().notNull().defaultNow(),
-  // Settled at
-  settledAt: p.timestamp(),
 });

@@ -47,12 +47,12 @@ io.use(socketAuthMiddleware);
 io.on("connection", async (socket: TAuthenticatedSocket) => {
   console.log(`User connected: ${socket.data.user.address}`);
 
-  await AccountStoreInstance.AddUserHandshake(socket.id, socket.data.user.id);
+  await AccountStoreInstance.AddUserHandshake(socket, socket.data.user.id);
 
   ServiceRegistryInstance.OnNewConnection(io, socket);
 
   socket.on("disconnect", async () => {
-    await AccountStoreInstance.RemoveUserHandshake(socket.id);
+    await AccountStoreInstance.RemoveUserHandshake(socket);
     console.log(`User disconnected: ${socket.data.user.address}`);
   });
 });

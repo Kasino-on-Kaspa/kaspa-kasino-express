@@ -5,10 +5,14 @@ export abstract class BetSessionContext {
   public readonly ServerSeed: string;
   public readonly ServerSeedHash: string;
   public readonly ClientSeed: string;
-  public readonly ClientAccount: Account;
+  public readonly BetAmount: bigint;
 
-  public BetAmount: bigint;
-  public Multiplier: number;
+  public readonly ClientAccount: Account;
+  private _base_multiplier: number;
+
+  public get Multiplier(): number {
+    return this._base_multiplier;
+  }
 
   constructor(
     id: string,
@@ -25,6 +29,6 @@ export abstract class BetSessionContext {
     this.ClientSeed = cSeed;
     this.ClientAccount = account;
     this.BetAmount = bet;
-    this.Multiplier = multiplier;
+    this._base_multiplier = multiplier;
   }
 }

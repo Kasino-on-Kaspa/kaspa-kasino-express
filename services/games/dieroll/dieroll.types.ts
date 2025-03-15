@@ -9,3 +9,12 @@ export const DieRollBetType = BaseBetType.extend({
   target: z.number().min(1).max(99),
   amount: z.string(), // Changed from number to string for BigInt compatibility
 });
+
+export type TDierollBetResult = {
+  sessionId: string;
+  serverSeed: string;
+  payout: bigint;
+  resultRoll: number;
+  isWon: boolean;
+};
+

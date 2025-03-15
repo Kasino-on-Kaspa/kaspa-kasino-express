@@ -3,19 +3,20 @@ import { balance_log, E_BALANCE_LOG_TYPE } from "../../schema/balance.schema";
 import { users } from "../../schema/users.schema";
 import { ObservableData } from "../observables/data";
 import { ObservableEvent } from "../observables/event";
+import { AccountSockets } from "./sockets";
 export class Account {
   private _id: string;
   private _address: string;
   private _xOnlyPublicKey: string;
   private _username: string | null;
   private _wallet: string;
+
   private balance: ObservableData<bigint>;
 
   private isUpdated: boolean = false;
 
-  private connection_sockets: string[] = [];
+  public readonly AssociatedSockets: AccountSockets = new AccountSockets();
 
-  public OnAllSocketsDisconnect = new ObservableEvent<void>();
 
   constructor(user: typeof users.$inferSelect) {
     this._id = user.id;
@@ -26,38 +27,29 @@ export class Account {
     this.balance = new ObservableData<bigint>(BigInt(user.balance));
   }
 
-  public AddSockets(socket_id: string) {
-    this.connection_sockets.push(socket_id);
-  }
-
-  public RemoveSocket(socket_id: string) {
-    this.connection_sockets.splice(
-      this.connection_sockets.indexOf(socket_id),
-      1
-    );
-    if (this.connection_sockets.length > 0) return;
-    
-    this.OnAllSocketsDisconnect.Raise();
-  }
 
   public async AddBalance(
     offset: bigint,
     type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
   ) {
     this.balance.SetData(this.balance.GetData() + offset);
+    
     await DB.insert(balance_log).values({
       account: this._id,
       amount: offset,
       type: type,
     });
+
     this.isUpdated = true;
   }
 
   public async UpdateAccountDB() {
     if (!this.isUpdated) return;
+    
     await DB.update(users).set({
       balance: this.Balance.GetData(),
     });
+
     this.isUpdated = false;
   }
 
@@ -66,16 +58,14 @@ export class Account {
     type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
   ) {
     this.balance.SetData(this.balance.GetData() - offset);
+    
     await DB.insert(balance_log).values({
       account: this._id,
       amount: offset,
       type: type,
     });
+    
     this.isUpdated = true;
-  }
-
-  public get AssociatedSockets() {
-    return this.connection_sockets;
   }
 
   public get Balance() {

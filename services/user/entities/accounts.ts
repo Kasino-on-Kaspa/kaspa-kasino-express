@@ -4,6 +4,7 @@ import { users } from "../../../schema/users.schema";
 import { Account } from "../../../utils/account";
 import { E_BALANCE_LOG_TYPE } from "../../../schema/balance.schema";
 import { ObservableEvent } from "../../../utils/observables/event";
+import { Socket } from "socket.io";
 
 const MinUpdateDelay = 10000;
 
@@ -13,23 +14,26 @@ export class AccountStore {
 
   private updater?: NodeJS.Timeout;
 
-
-  public async AddUserHandshake(socket_id: string, account_id: string) {
-    this._userHandshake[socket_id] = account_id;
+  public async AddUserHandshake(socket: Socket, account_id: string) {
+    this._userHandshake[socket.id] = account_id;
 
     // Store account by account_id, not socket_id
     let account = this._userAccounts[account_id];
 
     if (!account) {
-      let result = await DB.select()
-        .from(users)
-        .where(eq(users.id, account_id))
-        .limit(1);
-
-      account = new Account(result[0]);
-      this._userAccounts[account_id] = account;
+      account = await this.GetAccount(account_id);
     }
-    account.AddSockets(socket_id);
+    account.AssociatedSockets.AddSockets(socket);
+  }
+
+  private async GetAccount(account_id: string) {
+    let result = await DB.select()
+      .from(users)
+      .where(eq(users.id, account_id))
+      .limit(1);
+    let account = new Account(result[0]);
+    this._userAccounts[account_id] = account;
+    return account;
   }
 
   public InstantiateDatabaseTimer(interval: number) {
@@ -45,14 +49,11 @@ export class AccountStore {
     this.updater = undefined;
   }
 
-  public async RemoveUserHandshake(socket_id: string) {
-    let account = this._userAccounts[this._userHandshake[socket_id]];
-    account.RemoveSocket(socket_id);
+  public async RemoveUserHandshake(socket: Socket) {
+    let account = this._userAccounts[this._userHandshake[socket.id]];
+    account.AssociatedSockets.RemoveSocket(socket);
 
-    if (account.AssociatedSockets.length <= 0)
-      this.UpdateDatabaseForAccount(account);
-
-    delete this._userHandshake[socket_id];
+    delete this._userHandshake[socket.id];
   }
 
   public GetUserHandshake(socket_id: string) {
