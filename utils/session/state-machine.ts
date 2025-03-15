@@ -14,8 +14,9 @@ export class BetSessionStateMachine<
   private _listeners: TOnCompleteListener[] = [];
   private _currentState: BetSessionBaseState;
 
-  private lastStateUpdated: Date = new Date();
-  public ChangeStateEvent: ObservableEvent<TSessionState> = new ObservableEvent();
+
+  public ChangeStateEvent: ObservableEvent<TSessionState> =
+    new ObservableEvent();
 
   constructor(stateFactory: BetBaseSessionStateFactory, context: TBetContext) {
     this._context = context;
@@ -30,7 +31,7 @@ export class BetSessionStateMachine<
   public AddOnCompleteListener(listener: TOnCompleteListener) {
     return this._listeners.push(listener) - 1;
   }
-  
+
   public RemoveOnCompleteListener(index: number) {
     this._listeners.splice(index, 1);
   }
@@ -40,7 +41,6 @@ export class BetSessionStateMachine<
   }
 
   public ChangeCurrentState(nextState: BetSessionBaseState) {
-    this.UpdateLastUpdatedTime(Date.now());
 
     this._currentState.ExitState(this);
 
@@ -53,15 +53,6 @@ export class BetSessionStateMachine<
     this._listeners.push(listener);
   }
 
-  public InvokeStateMachineIdleListeners() {
-    this._listeners.forEach((callback) => callback(this._context.SessionId));
-  }
-
-  UpdateLastUpdatedTime(newTime: number) {
-    this.lastStateUpdated = new Date(newTime);
-  }
-
-  
   public get SessionContext() {
     return this._context;
   }

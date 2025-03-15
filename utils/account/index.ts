@@ -2,6 +2,7 @@ import { DB } from "../../database";
 import { balance_log, E_BALANCE_LOG_TYPE } from "../../schema/balance.schema";
 import { users } from "../../schema/users.schema";
 import { ObservableData } from "../observables/data";
+import { ObservableEvent } from "../observables/event";
 export class Account {
   private _id: string;
   private _address: string;
@@ -13,6 +14,8 @@ export class Account {
   private isUpdated: boolean = false;
 
   private connection_sockets: string[] = [];
+
+  public OnAllSocketsDisconnect = new ObservableEvent<void>();
 
   constructor(user: typeof users.$inferSelect) {
     this._id = user.id;
@@ -32,6 +35,9 @@ export class Account {
       this.connection_sockets.indexOf(socket_id),
       1
     );
+    if (this.connection_sockets.length > 0) return;
+    
+    this.OnAllSocketsDisconnect.Raise();
   }
 
   public async AddBalance(

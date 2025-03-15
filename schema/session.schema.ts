@@ -13,15 +13,17 @@ export const sessionsTable = p.pgTable("sessions", {
   clientSeed: p.varchar().notNull(),
 
   // Bet amount
-  amount: p.bigint({mode: "bigint"}).notNull(),
+  amount: p.bigint({ mode: "bigint" }).notNull(),
 
   // Bet User
-  user: p.uuid().references(() => users.id).notNull(),
+  user: p
+    .uuid()
+    .references(() => users.id)
+    .notNull(),
 
   // Game type
   gameType: E_GAME_TYPE().notNull(),
 
-  
   // Timestamps
   createdAt: p.timestamp().notNull().defaultNow(),
 });

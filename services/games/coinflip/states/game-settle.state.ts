@@ -1,5 +1,8 @@
 import { DB } from "../../../../database";
-import { coinflip, E_COINFLIP_OPTION } from "../../../../schema/games/coinflip.schema";
+import {
+  coinflip,
+  E_COINFLIP_OPTION,
+} from "../../../../schema/games/coinflip.schema";
 import { BetSessionBaseState } from "../../../../utils/session/state";
 import { BetSessionStateMachine } from "../../../../utils/session/state-machine";
 import { CoinFlipSessionContext } from "../entities/coinflip.context";
@@ -39,12 +42,7 @@ export class CoinFlipSettleState extends BetSessionBaseState {
 
     manager.SessionContext.SetResult(result == choice, result);
 
-
-    if (result != choice) {
-      manager.ChangeCurrentState(manager.SessionStates.BetFullfilledState());
-    } else {
-      manager.ChangeCurrentState(manager.SessionStates.BetSettleState());
-    }
+    manager.ChangeCurrentState(manager.SessionStates.BetSettleState());
   }
 
   public ExitState(

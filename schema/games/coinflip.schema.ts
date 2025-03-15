@@ -4,8 +4,11 @@ import { sessionsTable } from "../session.schema";
 export const E_COINFLIP_OPTION = p.pgEnum("CoinflipChoice", ["HEADS", "TAILS"]);
 
 export const E_COINFLIP_STATUS = p.pgEnum("CoinflipStatus", [
+  "PROGRESS",
   "CONTINUE",
   "CASHOUT",
+  "PENDING",
+  "DEFEATED",
 ]);
 
 export const coinflip = p.pgTable("coinflip_results", {
@@ -23,6 +26,9 @@ export const coinflip = p.pgTable("coinflip_results", {
   // Multiplier for the bet
   multiplier: p.integer().notNull(),
   status: E_COINFLIP_STATUS().notNull(),
+  
+  client_won: p.boolean().notNull(),
+
   // Created at
   createdAt: p.timestamp().notNull().defaultNow(),
   // Settled at

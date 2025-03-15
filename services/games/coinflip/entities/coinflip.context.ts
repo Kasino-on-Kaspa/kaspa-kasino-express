@@ -22,12 +22,11 @@ export class CoinFlipSessionContext extends BetSessionContext {
   }
 
   public OnGameSettled: ObservableEvent<void> = new ObservableEvent();
-  
+
   public OnClientOptionSelect: ObservableEvent<"HEADS" | "TAILS"> =
     new ObservableEvent();
-    
-  public OnClientFullfillOptionSelected: ObservableEvent<TCoinStatus> =
-    new ObservableEvent();
+
+  public CurrentSessionStatus = new ObservableData<TCoinStatus>("PENDING");
 
   public readonly MaxGameLevels = MAX_GAME_LEVELS;
 
@@ -43,10 +42,13 @@ export class CoinFlipSessionContext extends BetSessionContext {
     bet: bigint,
     multiplier: number,
     account: Account,
+    result?: { resultFlip: TCoinFlipOption; isWon: boolean },
     level: number = 0
   ) {
     super(id, sSeed, sSeedHash, cSeed, bet, multiplier, account);
-
+    
+    if (result) this.SetResult(result.isWon, result.resultFlip);
+    
     this.currentGameLevel = level;
   }
 

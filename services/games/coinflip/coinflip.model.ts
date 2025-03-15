@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+import { AccountStoreInstance } from "../../..";
 import { DB } from "../../../database";
 import { coinflip } from "../../../schema/games/coinflip.schema";
 import { sessionsTable } from "../../../schema/session.schema";
@@ -13,46 +15,87 @@ export class CoinFlipModel {
   private stateFactory = new CoinFlipSessionStateFactory();
 
   private coinFlipSessionSeedStore: {
-    [socket_id: string]: { serverSeed: string; serverSeedHash: string };
+    [account_id: string]: { serverSeed: string; serverSeedHash: string };
   } = {};
 
-  public AddNewSocketServerSeed(
-    socket_id: string,
+  public async AddNewSocketServerSeed(
+    account_id: string,
     serverSeed: string,
     serverSeedHash: string
   ) {
-    return (this.coinFlipSessionSeedStore[socket_id] = {
+    return (this.coinFlipSessionSeedStore[account_id] = {
       serverSeed,
       serverSeedHash,
     });
   }
-  
+
+  public async GetPendingPreviousSession(account_id: string) {
+    let data = await DB.select({
+      id: coinflip.id,
+      session: sessionsTable,
+      result: coinflip.result,
+      level: coinflip.level,
+      client_won: coinflip.client_won,
+      multiplier: coinflip.multiplier,
+      account: sessionsTable.user,
+      status: coinflip.status,
+    })
+      .from(coinflip)
+      .orderBy(coinflip.createdAt)
+      .innerJoin(sessionsTable, eq(sessionsTable.id, coinflip.sessionId))
+      .where(eq(sessionsTable.id, account_id));
+
+    let latestData = data[0].status == "PENDING" ? data[0] : undefined;
+
+    if (latestData)
+      this.AddSession(
+        latestData.account,
+        latestData.session.clientSeed,
+        latestData.session.amount,
+        latestData.multiplier,
+        { resultFlip: latestData.result, isWon: latestData.client_won }
+      );
+
+    return { result: data, latest: latestData };
+  }
+
   public GetSession(session_id: string) {
     return this.coinFlipSessionStore.GetSession(session_id);
   }
 
   public async AddSession(
-    socket_id: string,
+    account_id: string,
     clientSeed: string,
     amount: bigint,
-    account: Account,
-    multiplier: number
+    multiplier: number,
+    result?: { resultFlip: "HEADS" | "TAILS"; isWon: boolean },
+    session_id?: string
   ) {
     let { serverSeed, serverSeedHash } =
-      this.coinFlipSessionSeedStore[socket_id];
+      this.coinFlipSessionSeedStore[account_id];
 
-    let data = await DB.insert(sessionsTable)
-      .values({
-        serverSeed,
-        serverSeedHash,
-        clientSeed,
-        user: account.Id,
-        amount: amount,
-        gameType: "COINFLIP",
-      })
-      .returning();
+    if (!session_id) {
+      let data = await DB.insert(sessionsTable)
+        .values({
+          serverSeed,
+          serverSeedHash,
+          clientSeed,
+          user: account_id,
+          amount: amount,
+          gameType: "COINFLIP",
+        })
+        .returning();
 
-    let session_id = data[0].id;
+      session_id = data[0].id;
+    }
+
+    let previousSessions = this.coinFlipSessionStore.GetSession(session_id);
+
+    if (previousSessions) {
+      return { session_id };
+    }
+
+    let account = AccountStoreInstance.GetUserFromAccountID(account_id);
 
     let context = new CoinFlipSessionContext(
       session_id,
@@ -61,20 +104,26 @@ export class CoinFlipModel {
       clientSeed,
       amount,
       multiplier,
-      account
+      account,
+      result
     );
 
     let session = new BetSessionStateMachine(this.stateFactory, context);
 
-    session.AddOnStateMachineIdle((server_id: string) =>
-      this.OnSessionCompleteCleaner(server_id)
+    session.AddOnCompleteListener((session_id: string) =>
+      this.OnSessionCompleteCleaner(session_id)
     );
 
     this.coinFlipSessionStore.AddSession(session_id, session);
 
     return { session_id };
   }
-  OnSessionCompleteCleaner(server_id: string) {
-    throw new Error("Method not implemented.");
+
+  public OnSessionAccountDisconnected(session_id: string) {
+    this.coinFlipSessionStore.RemoveSession(session_id);
+  }
+
+  public OnSessionCompleteCleaner(session_id: string) {
+    this.coinFlipSessionStore.RemoveSession(session_id);
   }
 }
