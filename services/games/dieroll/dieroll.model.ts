@@ -6,102 +6,104 @@ import { z } from "zod";
 import { DieRollBetType } from "./types";
 import { sessionsTable } from "../../../schema/session.schema";
 import { DB } from "../../../database";
-import {
-  dieroll,
-} from "../../../schema/games/dieroll.schema";
+import { dieroll } from "../../../schema/games/dieroll.schema";
 import { Account } from "../../../utils/account";
 
 type TDieRollGameCondition = z.infer<typeof DieRollBetType.shape.condition>;
 type TDieRollGameTarget = z.infer<typeof DieRollBetType.shape.target>;
 
 export class DieRollModel {
-  
-  private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
-  private stateFactory = new DierollSessionStateFactory();
-  private dieRollSessionSeedStore: {
-    [socket_id: string]: { serverSeed: string; serverSeedHash: string };
-  } = {};
+	private dieRollSessionStore = new SessionStore<DieRollSessionContext>();
+	private stateFactory = new DierollSessionStateFactory();
+	private dieRollSessionSeedStore: {
+		[socket_id: string]: { serverSeed: string; serverSeedHash: string };
+	} = {};
 
-  public AddNewSocketServerSeed(
-    socket_id: string,
-    serverSeed: string,
-    serverSeedHash: string
-  ) {
-    return (this.dieRollSessionSeedStore[socket_id] = {
-      serverSeed,
-      serverSeedHash,
-    });
-  }
+  private GetSocketServerSeed(socket_id: string) {
+		let data = this.dieRollSessionSeedStore[socket_id];
+		console.log(data);
+		return data;
+	}
 
-  public async AddSession(
-    socket_id: string,
-    clientSeed: string,
-    amount: bigint,
-    condition: TDieRollGameCondition,
-    target: TDieRollGameTarget,
-    multiplier: number,
-    account: Account
-  ) {
-    let { serverSeed, serverSeedHash } =
-      this.dieRollSessionSeedStore[socket_id];
+	public AddNewSocketServerSeed(
+		socket_id: string,
+		serverSeed: string,
+		serverSeedHash: string
+	) {
+		console.log(socket_id, serverSeed, serverSeedHash);
+		return (this.dieRollSessionSeedStore[socket_id] = {
+			serverSeed,
+			serverSeedHash,
+		});
+	}
 
-    let data = await DB.insert(sessionsTable)
-      .values({
-        serverSeed,
-        serverSeedHash,
-        clientSeed,
-        user: account.Id,
-        amount: amount,
-        gameType: "DICEROLL",
-      })
-      .returning();
+	public async AddSession(
+		socket_id: string,
+		clientSeed: string,
+		amount: bigint,
+		condition: TDieRollGameCondition,
+		target: TDieRollGameTarget,
+		multiplier: number,
+		account: Account
+	) {
+		let { serverSeed, serverSeedHash } =
+			this.GetSocketServerSeed(socket_id);
 
-    let session_id = data[0].id;
+		let data = await DB.insert(sessionsTable)
+			.values({
+				serverSeed,
+				serverSeedHash,
+				clientSeed,
+				user: account.Id,
+				amount: amount,
+				gameType: "DICEROLL",
+			})
+			.returning();
 
-    let context = new DieRollSessionContext(
-      session_id,
-      serverSeed,
-      serverSeedHash,
-      clientSeed,
-      account,
-      condition,
-      target,
-      multiplier,
-      amount
-    );
+		let session_id = data[0].id;
 
-    let session = new BetSessionStateMachine(this.stateFactory, context);
+		let context = new DieRollSessionContext(
+			session_id,
+			serverSeed,
+			serverSeedHash,
+			clientSeed,
+			account,
+			condition,
+			target,
+			multiplier,
+			amount
+		);
 
-    session.AddOnStateMachineIdle((server_id: string) =>
-      this.OnSessionCompleteCleaner(server_id)
-    );
+		let session = new BetSessionStateMachine(this.stateFactory, context);
 
-    session.SessionContext.Result.AddListener(async (data) => {
-      if (!data) return;
-      await DB.insert(dieroll)
-        .values({
-          condition: session.SessionContext.GameCondition,
-          multiplier: session.SessionContext.Multiplier,
-          target: session.SessionContext.GameTarget,
-          sessionId: session.SessionContext.SessionId,
-          result: data.resultRoll,
-          client_won: data.isWon,
-        })
-        .returning();
-    });
+		session.AddOnStateMachineIdle((server_id: string) =>
+			this.OnSessionCompleteCleaner(server_id)
+		);
 
-    this.dieRollSessionStore.AddSession(session_id, session);
+		session.SessionContext.Result.AddListener(async (data) => {
+			if (!data) return;
+			await DB.insert(dieroll)
+				.values({
+					condition: session.SessionContext.GameCondition,
+					multiplier: session.SessionContext.Multiplier,
+					target: session.SessionContext.GameTarget,
+					sessionId: session.SessionContext.SessionId,
+					result: data.resultRoll,
+					client_won: data.isWon,
+				})
+				.returning();
+		});
 
-    return { session_id };
-  }
+		this.dieRollSessionStore.AddSession(session_id, session);
 
-  public GetSession(session_id: string) {
-    return this.dieRollSessionStore.GetSession(session_id);
-  }
+		return { session_id };
+	}
 
-  private OnSessionCompleteCleaner(server_id: string) {
-    this.dieRollSessionStore.RemoveSession(server_id);
-  }
+	public GetSession(session_id: string) {
+		return this.dieRollSessionStore.GetSession(session_id);
+	}
 
-  
+	private OnSessionCompleteCleaner(server_id: string) {
+		this.dieRollSessionStore.RemoveSession(server_id);
+	}
 }

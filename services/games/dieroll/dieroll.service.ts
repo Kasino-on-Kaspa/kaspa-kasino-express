@@ -84,6 +84,7 @@ class DieRollService extends Service {
     );
     let fullfilledListener = session.AddOnCompleteListener(
       async (server_id) => {
+        console.log(server_id)
         socket.emit(DIEROLL_FULLFILLED, {server_seed:session.SessionContext.ServerSeed,server_hash:session.SessionContext.ServerSeedHash});
       }
     );
