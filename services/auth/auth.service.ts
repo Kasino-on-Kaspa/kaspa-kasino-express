@@ -13,130 +13,127 @@ const JWT_EXPIRY = "1d"; // Access token valid for 24 hours
 const REFRESH_EXPIRY = "7d"; // Long-lived refresh token
 
 export interface AuthRequest {
-	message: string;
-	signature: string;
-	publicKey: string;
-	address: string;
-	nonce: string;
-	expiry: number;
+  message: string;
+  signature: string;
+  publicKey: string;
+  address: string;
+  nonce: string;
+  expiry: number;
 }
 
 export interface JWTPayload {
-	address: string;
-	nonce: string;
-	expiry: number;
-	publicKey: string;
-	iat?: number;
-	exp?: number;
+  address: string;
+  nonce: string;
+  expiry: number;
+  publicKey: string;
+  iat?: number;
+  exp?: number;
 }
 
 export interface TokenPair {
-	accessToken: string;
-	refreshToken: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export class AuthService {
-	async verifyKaspaSignature(data: AuthRequest): Promise<boolean> {
-		try {
-			// TODO: !!! Test impl !!!
-			const isVerified = WalletHandler.verifyMessage(
-				data.message,
-				data.signature,
-				data.publicKey
-			);
+  async verifyKaspaSignature(data: AuthRequest): Promise<boolean> {
+    try {
+      // TODO: !!! Test impl !!!
+      const isVerified = WalletHandler.verifyMessage(
+        data.message,
+        data.signature,
+        data.publicKey
+      );
 
-			if (!isVerified) {
-				console.error("Signature verification failed");
-				return false;
-			}
-			return true;
-		} catch (error) {
-			console.error("Error verifying Kaspa signature:", error);
-			return false;
-		}
-	}
+      if (!isVerified) {
+        console.error("Signature verification failed");
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error verifying Kaspa signature:", error);
+      return false;
+    }
+  }
 
-	generateTokenPair(payload: Omit<JWTPayload, "iat" | "exp">): TokenPair {
-		const accessToken = sign(payload, JWT_SECRET, {
-			expiresIn: JWT_EXPIRY,
-		});
-		const refreshToken = sign(payload, REFRESH_SECRET, {
-			expiresIn: REFRESH_EXPIRY,
-		});
+  generateTokenPair(payload: Omit<JWTPayload, "iat" | "exp">): TokenPair {
+    const accessToken = sign(payload, JWT_SECRET, {
+      expiresIn: 60 * 60 * 24,
+    });
+    const refreshToken = sign(payload, REFRESH_SECRET, {
+      expiresIn: 60 * 60 * 24 * 7,
+    });
 
-		return { accessToken, refreshToken };
-	}
+    return { accessToken, refreshToken };
+  }
 
-	verifyToken(token: string): JWTPayload | null {
-		try {
-			return verify(token, JWT_SECRET) as JWTPayload;
-		} catch (error) {
-			console.error("Error verifying JWT:", error);
-			return null;
-		}
-	}
+  verifyToken(token: string): JWTPayload | null {
+    try {
+      return verify(token, JWT_SECRET) as JWTPayload;
+    } catch (error) {
+      console.error("Error verifying JWT:", error);
+      return null;
+    }
+  }
 
-	verifyRefreshToken(token: string): JWTPayload | null {
-		try {
-			return verify(token, REFRESH_SECRET) as JWTPayload;
-		} catch (error) {
-			console.error("Error verifying refresh token:", error);
-			return null;
-		}
-	}
+  verifyRefreshToken(token: string): JWTPayload | null {
+    try {
+      return verify(token, REFRESH_SECRET) as JWTPayload;
+    } catch (error) {
+      console.error("Error verifying refresh token:", error);
+      return null;
+    }
+  }
 
-	refreshAccessToken(refreshToken: string): string | null {
-		const payload = this.verifyRefreshToken(refreshToken);
-		console.log(payload);
-		if (!payload) return null;
+  refreshAccessToken(refreshToken: string): string | null {
+    const payload = this.verifyRefreshToken(refreshToken);
+    console.log(payload);
+    if (!payload) return null;
 
-		// Generate new access token with the same payload
-		const { iat, exp, ...rest } = payload;
-		return sign(rest, JWT_SECRET, { expiresIn: JWT_EXPIRY });
-	}
+    // Generate new access token with the same payload
+    const { iat, exp, ...rest } = payload;
+    return sign(rest, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+  }
 
-	async getUserByAddress(
-		address: string
-	): Promise<typeof users.$inferSelect | null> {
-		const user = await DB.select()
-			.from(users)
-			.where(eq(users.address, address));
+  async getUserByAddress(
+    address: string
+  ): Promise<typeof users.$inferSelect | null> {
+    const user = await DB.select()
+      .from(users)
+      .where(eq(users.address, address));
 
-		if (user[0]) {
-			return user[0];
-		}
+    if (user[0]) {
+      return user[0];
+    }
 
-		return null;
-	}
+    return null;
+  }
 
-	async createUser(
-		address: string,
-		xOnlyPublicKey: string
-	): Promise<boolean> {
-		const kp = WalletHandler.generateKeypair();
+  async createUser(address: string, xOnlyPublicKey: string): Promise<boolean> {
+    const kp = WalletHandler.generateKeypair();
 
-		const newWallet = await DB.insert(wallets)
-			.values({
-				address: kp
-					.toAddress(
-						process.env.NETWORK === "kaspa"
-							? NetworkType.Mainnet
-							: NetworkType.Testnet
-					)
-					.toString(),
-				xOnlyPublicKey: kp.xOnlyPublicKey!,
-				privateKey: kp.privateKey!,
-			})
-			.returning();
+    const newWallet = await DB.insert(wallets)
+      .values({
+        address: kp
+          .toAddress(
+            process.env.NETWORK === "kaspa"
+              ? NetworkType.Mainnet
+              : NetworkType.Testnet
+          )
+          .toString(),
+        xOnlyPublicKey: kp.xOnlyPublicKey!,
+        privateKey: kp.privateKey!,
+      })
+      .returning();
 
-		const user = await DB.insert(users).values({
-			address: address,
-			xOnlyPublicKey: xOnlyPublicKey,
-			wallet: newWallet[0].id,
-		});
+    const user = await DB.insert(users).values({
+      address: address,
+      xOnlyPublicKey: xOnlyPublicKey,
+      wallet: newWallet[0].id,
+    });
 
-		return true;
-	}
+    return true;
+  }
 }
 
 export const authService = new AuthService();

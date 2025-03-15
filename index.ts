@@ -5,12 +5,10 @@ import { ServiceRegistry } from "./utils/service/handler-registry";
 import { InitializeGameServices } from "./services/games";
 import authRoutes from "./services/auth/auth.routes";
 import userRoutes from "./services/user/user.routes";
-import {
-  socketAuthMiddleware,
-  TAuthenticatedSocket,
-} from "./services/auth/socket.middleware";
+import { socketAuthMiddleware } from "./services/auth/socket.middleware";
 import { AccountStore } from "./services/user/entities/accounts";
 import { WalletSocketService } from "./services/wallet/wallet.socket";
+import { TAuthenticatedSocket } from "./typings";
 
 const app = express();
 const server = createServer(app);

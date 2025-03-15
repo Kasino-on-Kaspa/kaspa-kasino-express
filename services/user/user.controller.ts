@@ -1,9 +1,16 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { userService } from "./user.service";
 import { UpdateUserDto } from "./user.types";
 import { AuthenticatedRequest } from "../auth/auth.middleware";
 
 export class UserController {
+  private serializeUser(user: any) {
+    return {
+      ...user,
+      balance: Number(user.balance),
+    };
+  }
+
   getUser = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const address = req.user?.address;
@@ -18,7 +25,7 @@ export class UserController {
         return;
       }
 
-      res.json(user);
+      res.json(this.serializeUser(user));
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -56,7 +63,7 @@ export class UserController {
         return;
       }
 
-      res.json(updatedUser);
+      res.json(this.serializeUser(updatedUser));
     } catch (error) {
       console.error("Update user error:", error);
       res.status(500).json({ message: "Internal server error" });
