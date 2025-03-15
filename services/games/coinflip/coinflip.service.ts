@@ -38,7 +38,7 @@ class CoinFlipService extends Service {
 
   public override Handler(io: Server, socket: Socket): void {
     socket.on(
-      "coinflip:get_prviousGames",
+      "coinflip:get_previousGames",
       async (
         cb: (prvsGame: PrvsGame[], currentGame?: PrvsGame) => Promise<void>
       ) => {
