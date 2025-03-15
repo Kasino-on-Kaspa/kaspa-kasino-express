@@ -1,8 +1,14 @@
 import { ExtendedError } from "socket.io/dist/namespace";
 import { authService } from "./auth.service";
 import { userService } from "../user/user.service";
-import { TAuthenticatedSocket } from "../../typings";
+import { Socket } from "socket.io";
+import { ClientToServerEvents, IAuthenticatedSocketData, ServerToClientEvents } from "../../typings";
 
+export type TAuthenticatedSocket = Socket<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  IAuthenticatedSocketData 
+>;
 
 export const socketAuthMiddleware = async (
   socket: TAuthenticatedSocket,

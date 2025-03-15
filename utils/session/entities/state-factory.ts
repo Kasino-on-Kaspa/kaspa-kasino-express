@@ -15,8 +15,12 @@ export abstract class BetBaseSessionStateFactory {
   }
 
   public abstract GameSettleState: TSesisonStateProducerFunction;
-  public BetSettleState = () => new BetSessionSettleState();
-  public BetStartState = () => new BetSessionStartState();
-  public BetFullfilledState = () => new BetSessionFullfilledState();
-  public ErrorState = () => new BetSessionErrorState();
+  public BetSettleState: TSesisonStateProducerFunction = () =>
+    new BetSessionSettleState();
+  public BetStartState: TSesisonStateProducerFunction = () =>
+    new BetSessionStartState();
+  public BetFullfilledState: TSesisonStateProducerFunction = () =>
+    new BetSessionFullfilledState();
+  public ErrorState: TSesisonStateProducerFunction = () =>
+    new BetSessionErrorState();
 }

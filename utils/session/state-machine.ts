@@ -1,54 +1,72 @@
 import { BetSessionContext } from "./entities/session-context";
 import { BetSessionBaseState } from "./state";
 import { BetBaseSessionStateFactory } from "./entities/state-factory";
+import { ObservableData } from "../observables/data";
+import { ObservableEvent } from "../observables/event";
 
 type TOnCompleteListener = (server_id: string) => void;
 
 export class BetSessionStateMachine<
-	TBetContext extends BetSessionContext = BetSessionContext
+  TBetContext extends BetSessionContext = BetSessionContext
 > {
-	private _stateFactory: BetBaseSessionStateFactory;
-	private _context: TBetContext;
-	private _listeners: TOnCompleteListener[] = [];
-	private _currentState: BetSessionBaseState;
+  private _stateFactory: BetBaseSessionStateFactory;
+  private _context: TBetContext;
+  private _listeners: TOnCompleteListener[] = [];
+  private _currentState: BetSessionBaseState;
 
-	constructor(
-		stateFactory: BetBaseSessionStateFactory,
-		context: TBetContext
-	) {
-		this._context = context;
-		this._stateFactory = stateFactory;
-		this._currentState = stateFactory.GetStartState();
-	}
+  private lastStateUpdated: Date = new Date();
+  public ChangeStateEvent: ObservableEvent<TSessionState> = new ObservableEvent();
 
-	public Start() {
-		this._currentState.EnterState(this);
-	}
+  constructor(stateFactory: BetBaseSessionStateFactory, context: TBetContext) {
+    this._context = context;
+    this._stateFactory = stateFactory;
+    this._currentState = stateFactory.GetStartState();
+  }
 
-	public AddOnCompleteListener(listener: TOnCompleteListener) {
-		this._listeners.push(listener);
-	}
+  public Start() {
+    this._currentState.EnterState(this);
+  }
 
-	public InvokeOnCompleteListener() {
-		this._listeners.forEach((callback) =>
-			callback(this._context.SessionId)
-		);
-	}
+  public AddOnCompleteListener(listener: TOnCompleteListener) {
+    return this._listeners.push(listener) - 1;
+  }
   
+  public RemoveOnCompleteListener(index: number) {
+    this._listeners.splice(index, 1);
+  }
 
-	public ChangeCurrentState(nextState: BetSessionBaseState) {
-		this._currentState.ExitState(this);
+  public InvokeOnCompleteListener() {
+    this._listeners.forEach((callback) => callback(this._context.SessionId));
+  }
 
-		this._currentState = nextState;
+  public ChangeCurrentState(nextState: BetSessionBaseState) {
+    this.UpdateLastUpdatedTime(Date.now());
 
-		this._currentState.EnterState(this);
-	}
+    this._currentState.ExitState(this);
 
-	public get SessionContext() {
-		return this._context;
-	}
+    this._currentState = nextState;
 
-	public get SessionStates() {
-		return this._stateFactory;
-	}
+    this._currentState.EnterState(this);
+  }
+
+  public AddOnStateMachineIdle(listener: TOnCompleteListener) {
+    this._listeners.push(listener);
+  }
+
+  public InvokeStateMachineIdleListeners() {
+    this._listeners.forEach((callback) => callback(this._context.SessionId));
+  }
+
+  UpdateLastUpdatedTime(newTime: number) {
+    this.lastStateUpdated = new Date(newTime);
+  }
+
+  
+  public get SessionContext() {
+    return this._context;
+  }
+
+  public get SessionStates() {
+    return this._stateFactory;
+  }
 }

@@ -1,33 +1,25 @@
-type ObservableListener<T> = (new_data: T) => Promise<void>;
+import { ObservableEvent } from "./event";
 
 export class ObservableData<T> {
-	private _data: T;
-	private listeners: ObservableListener<T>[] = [];
+  private _data: T;
+  
+  private onUpdateEvent: ObservableEvent<T> = new ObservableEvent();
 
-	constructor(data: T) {
-		this._data = data;
-	}
+  constructor(data: T) {
+    this._data = data;
+  }
 
-	public AddListener(listener: ObservableListener<T>) {
-		return this.listeners.push(listener) - 1;
-	}
+  public AddListener = this.onUpdateEvent.RegisterEventListener;
 
-	public RemoveListener(index: number) {
-		this.listeners.splice(index, 1);
-	}
+  public RemoveListener = this.onUpdateEvent.UnRegisterEventListener;
 
-	public SetData(data: T) {
-		this._data = data;
-		this.OnDataChange();
-	}
+  public SetData(data: T) {
+    this._data = data;
+    this.onUpdateEvent.Raise(data);
+  }
 
-	public OnDataChange() {
-		this.listeners.forEach((val) => {
-			val(this._data);
-		});
-	}
 
-	public GetData() {
-		return this._data;
-	}
+  public GetData() {
+    return this._data;
+  }
 }

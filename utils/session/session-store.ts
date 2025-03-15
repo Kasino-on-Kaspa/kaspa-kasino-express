@@ -3,7 +3,6 @@ import { BetSessionStateMachine } from "./state-machine";
 
 export class SessionStore<TBetContext extends BetSessionContext> {
   private _sessions: Record<string, BetSessionStateMachine<TBetContext>> = {};
-
   public AddSession(id: string, session: BetSessionStateMachine<TBetContext>) {
     this._sessions[id] = session;
   }
