@@ -20,6 +20,7 @@ export class CoinFlipController {
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     let data = await this.model.GetSessionFromAccountId(account.Id);
+    
     if (!data) {
       let seeds = this.GenerateServerSeed();
 
