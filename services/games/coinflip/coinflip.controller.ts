@@ -48,7 +48,7 @@ export class CoinflipController {
 
     if (this.model.coinflipSessionStore[session.session.id])
       return callback(seed.serverSeedHash, seed.sessionId);
-    
+
     this.model.coinflipSessionStore[session.session.id] = sessionManager;
     this.model.accountSessionStore[account.Id] =
       sessionManager.SessionContext.SessionId;
@@ -60,7 +60,17 @@ export class CoinflipController {
     socket: Socket,
     bet_data: z.infer<typeof BaseBetType>,
     ack: AckFunction,
-    onSessionStateChange: (socket: Socket, newState: TSessionState) => void
+    onSessionStateChange: (socket: Socket, newState: TSessionState) => void,
+    onSessionFullfilled: (
+      socket: Socket,
+      server_seed: string,
+      client_seed: string
+    ) => void,
+    onSessionGameResult: (
+      socket: Socket,
+      result: "HEADS" | "TAILS",
+      client_won: boolean
+    ) => void
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
 
@@ -99,19 +109,7 @@ export class CoinflipController {
     this.model.coinflipSessionStore[insertedSession[0].id] = sessionManager;
     this.model.accountSessionStore[account.Id] = insertedSession[0].id;
 
-    sessionManager.OnStateChangeEvent.RegisterEventListener(
-      async (newState) => {
-        onSessionStateChange(socket, newState);
-      }
-    );
-
-    sessionManager.OnSessionComplete.RegisterEventListener(
-      async (sessionId) => {
-        delete this.model.coinflipSessionStore[sessionId];
-        delete this.model.accountSessionStore[account.Id];
-        delete this.model.coinflipSessionSeedStore[socket.id];
-      }
-    );
+    this.HandleSessionManagerListeners(sessionManager, socket, account, onSessionStateChange, onSessionFullfilled, onSessionGameResult);
 
     return ack({ success: true });
   }
@@ -120,7 +118,17 @@ export class CoinflipController {
     socket: Socket,
     session_id: string,
     ack: AckFunction,
-    HandleSessionStateChange: (socket: Socket, newState: TSessionState) => void
+    onSessionStateChange: (socket: Socket, newState: TSessionState) => void,
+    onSessionFullfilled: (
+      socket: Socket,
+      server_seed: string,
+      client_seed: string
+    ) => void,
+    onSessionGameResult: (
+      socket: Socket,
+      result: "HEADS" | "TAILS",
+      client_won: boolean
+    ) => void
   ) {
     let session = this.model.coinflipSessionStore[session_id];
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
@@ -131,32 +139,91 @@ export class CoinflipController {
 
     let sessionManager = session;
 
-    sessionManager.OnStateChangeEvent.RegisterEventListener(
-      async (newState) => {
-        HandleSessionStateChange(socket, newState);
+    this.HandleSessionManagerListeners(
+      sessionManager,
+      socket,
+      account,
+      onSessionStateChange,
+      onSessionFullfilled,
+      onSessionGameResult
+    );
+
+    sessionManager.Start();
+
+    return ack({ success: true });
+  }
+
+  //#region Internal Event Handlers
+  private HandleSessionManagerListeners(
+    sessionManager: SessionManager<CoinflipSessionContext>,
+    socket: Socket,
+    account: Account,
+    onSessionStateChange: (socket: Socket, newState: TSessionState) => void,
+    onSessionFullfilled: (
+      socket: Socket,
+      server_seed: string,
+      client_seed: string
+    ) => void,
+    onSessionGameResult: (
+      socket: Socket,
+      result: "HEADS" | "TAILS",
+      client_won: boolean
+    ) => void
+  ) {
+
+    let stateChangeListenerIndex =
+      sessionManager.OnStateChangeEvent.RegisterEventListener(
+        async (newState) => {
+          onSessionStateChange(socket, newState);
+        }
+      );
+
+    let sessionGameResultListenerIndex =
+      sessionManager.SessionContext.GameResultEvent.RegisterEventListener(
+        async (result) => {
+          onSessionGameResult(socket, result.result, result.client_won);
+        }
+      );
+
+    let sessionFullfilledListenerIndex =
+      sessionManager.SessionContext.GameFlipChoiceEvent.RegisterEventListener(
+        async (choice) => {
+          onSessionFullfilled(
+            socket,
+            sessionManager.SessionContext.ServerSeed,
+            sessionManager.SessionContext.ClientSeed
+          );
+        }
+      );
+
+    account.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(
+      async () => {
+        this.HandleAccountDisconnect(sessionManager.SessionContext.SessionId, account.Id);
       }
     );
-    account.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => { 
-      this.HandleAccountDisconnect(session_id,account.Id);
-    });
 
     sessionManager.OnSessionComplete.RegisterEventListener(
       async (sessionId) => {
+        sessionManager.OnStateChangeEvent.UnRegisterEventListener(
+          stateChangeListenerIndex
+        );
+        sessionManager.SessionContext.GameResultEvent.UnRegisterEventListener(
+          sessionGameResultListenerIndex
+        );
+        sessionManager.SessionContext.GameFlipChoiceEvent.UnRegisterEventListener(
+          sessionFullfilledListenerIndex
+        );
         delete this.model.coinflipSessionStore[sessionId];
         delete this.model.accountSessionStore[account.Id];
         delete this.model.coinflipSessionSeedStore[socket.id];
       }
     );
-
-    sessionManager.Start();
-    
-    return ack({ success: true });
   }
 
-  HandleAccountDisconnect(session_id: string,account_id: string) {
+  private HandleAccountDisconnect(session_id: string, account_id: string) {
     let session = this.model.coinflipSessionStore[session_id];
     if (!session) return;
-    
+
     session.OnAssociatedAccountDisconnect.Raise();
     delete this.model.coinflipSessionStore[session_id];
     delete this.model.accountSessionStore[account_id];

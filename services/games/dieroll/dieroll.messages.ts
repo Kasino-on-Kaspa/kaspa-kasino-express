@@ -1,5 +1,6 @@
 // Client -> Server messages
 export const enum DieRollClientMessage {
+    GET_SESSION_SEEDS = 'dieroll:get_session_seeds',
     PLACE_BET = 'dieroll:place_bet',
     ROLL_DICE = 'dieroll:roll_dice',
     LEAVE_GAME = 'dieroll:leave_game'

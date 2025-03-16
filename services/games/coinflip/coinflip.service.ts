@@ -13,28 +13,36 @@ export class CoinflipService extends Service {
     private coinflipController:CoinflipController = new CoinflipController();
     
     override Handler(io: Server, socket: Socket): void {
-        socket.on("coinflip:session", (callback: (serverSeedHash:string,sessionId?:string) => void) => {
+        socket.on(CoinFlipClientMessage.GET_SESSION_SEED, (callback: (serverSeedHash:string,sessionId?:string) => void) => {
             this.coinflipController.NewSessionSeeds(socket, callback);
         });
 
-        socket.on(CoinFlipClientMessage.PLACE_BET, (bet_data:z.infer<typeof BaseBetType>, ack: AckFunction) => {
-            this.coinflipController.HandleNewBet(socket, bet_data, ack, this.HandleSessionStateChange);
+        socket.on(CoinFlipClientMessage.CREATE_BET, (bet_data:z.infer<typeof BaseBetType>, ack: AckFunction) => {
+            this.coinflipController.HandleNewBet(socket, bet_data, ack, this.HandleSessionStateChange, this.HandleSessionFullfilled, this.HandleSessionGameResult);
         });
 
-        socket.on("coinflip:continue", (session_id:string, ack: AckFunction) => {
-            this.coinflipController.HandleBetContinuation(socket, session_id, ack, this.HandleSessionStateChange);
+        socket.on(CoinFlipClientMessage.CONTINUE_BET, (session_id:string, ack: AckFunction) => {
+            this.coinflipController.HandleBetContinuation(socket, session_id, ack, this.HandleSessionStateChange, this.HandleSessionFullfilled, this.HandleSessionGameResult);
         });
 
         socket.on(CoinFlipClientMessage.FLIP_COIN, (session_id:string, choice:typeof E_COINFLIP_OPTION.enumValues[number], ack: AckFunction) => {
             this.coinflipController.HandleChoice(socket, session_id, choice, ack);
         });
 
-        socket.on("coinflip:next", (session_id:string, option:"CASHOUT" | "CONTINUE", ack: AckFunction) => {
+        socket.on(CoinFlipClientMessage.SESSION_NEXT, (session_id:string, option:"CASHOUT" | "CONTINUE", ack: AckFunction) => {
             this.coinflipController.HandleNext(socket, session_id, option, ack);
         });
     }
 
     private HandleSessionStateChange(socket: Socket, newState: TSessionState) {
-        socket.emit(CoinFlipServerMessage.GAME_STATE, newState);
+        socket.emit(CoinFlipServerMessage.GAME_CHANGE_STATE, newState);
+    }
+
+    private HandleSessionFullfilled(socket: Socket, server_seed: string, client_seed: string) {
+        socket.emit(CoinFlipServerMessage.GAME_ENDED,{ server_seed, client_seed});
+    }
+
+    private HandleSessionGameResult(socket: Socket, result: "HEADS" | "TAILS", client_won: boolean) {
+        socket.emit(CoinFlipServerMessage.FLIP_RESULT,{ result, client_won});
     }
 }

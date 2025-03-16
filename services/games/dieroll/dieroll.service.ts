@@ -4,7 +4,7 @@ import { DieRollController } from "./dieroll.controller";
 import { DieRollBetType, TDierollBetResult } from "./dieroll.types";
 import { z } from "zod";
 import { AckFunction } from "../types";
-import { DieRollClientMessage, DieRollServerMessage, PlaceBetPayload, RollResultPayload } from "./dieroll.messages";
+import { DieRollClientMessage, DieRollServerMessage } from "./dieroll.messages";
 
 class DieRollService extends Service {
   protected serviceName: string = "DierollService";
@@ -24,7 +24,7 @@ class DieRollService extends Service {
     );
 
     socket.on(
-      "dieroll:generate",
+      DieRollClientMessage.GET_SESSION_SEEDS,
       (callback: (serverSeedHash: string) => void) => {
         let seeds = this.controller.HandleGenerate(socket.id);
         callback(seeds.serverSeedHash);

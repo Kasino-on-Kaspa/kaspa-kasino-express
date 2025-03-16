@@ -1,4 +1,3 @@
-import { BaseBetData } from "../../../../typings";
 import { BetSessionBaseState } from "../../../../utils/session/base.state";
 import { SessionManager } from "../../../../utils/session/session.manager";
 import { CoinflipSessionContext } from "../entities/coinflip.context";
