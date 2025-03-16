@@ -5,7 +5,7 @@ export class BetSessionFullfilledState extends BetSessionBaseState {
   protected _stateName: TSessionState = "BET_FULLFILLED";
 
   public EnterState(manager: SessionManager): void {
-    manager.OnSessionComplete.Raise();
+    manager.OnSessionComplete.Raise(manager.SessionContext.SessionId);
   }
 
   public ExitState(manager: SessionManager): void {
