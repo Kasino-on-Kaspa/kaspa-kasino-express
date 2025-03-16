@@ -4,6 +4,7 @@ import { DieRollController } from "./dieroll.controller";
 import { DieRollBetType, TDierollBetResult } from "./dieroll.types";
 import { z } from "zod";
 import { AckFunction } from "../types";
+import { DieRollClientMessage, DieRollServerMessage, PlaceBetPayload, RollResultPayload } from "./dieroll.messages";
 
 class DieRollService extends Service {
   protected serviceName: string = "DierollService";
@@ -11,17 +12,8 @@ class DieRollService extends Service {
 
   public override Handler(io: Server, socket: Socket): void {
     socket.on(
-      "dieroll:generate",
-      (callback: (serverSeedHash: string) => void) => {
-        let seeds = this.controller.HandleGenerate(socket.id);
-        callback(seeds.serverSeedHash);
-      }
-    );
-
-    socket.on(
-      "dieroll:bet",
+      DieRollClientMessage.PLACE_BET,
       (bet_data: z.infer<typeof DieRollBetType>, ack: AckFunction) => {
-        
         return this.controller.HandleBet(
           socket,
           bet_data,
@@ -30,10 +22,17 @@ class DieRollService extends Service {
         );
       }
     );
+
+    socket.on(
+      "dieroll:generate",
+      (callback: (serverSeedHash: string) => void) => {
+        let seeds = this.controller.HandleGenerate(socket.id);
+        callback(seeds.serverSeedHash);
+      }
+    );
   }
 
   OnBetFullfilled(socket: Socket, result: TDierollBetResult): void {
-    socket.emit("dieroll:fullfilled", result);
+    socket.emit(DieRollServerMessage.ROLL_RESULT, result);
   }
-  
 }

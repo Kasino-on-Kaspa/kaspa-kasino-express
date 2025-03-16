@@ -15,7 +15,8 @@ import { dieroll } from "../../../schema/games/dieroll.schema";
 export class DieRollController {
   private readonly model: DieRollModel = new DieRollModel();
   private readonly StateFactory = new DierollStateFactory();
-
+  
+  //#region Event Handlers
   public HandleGenerate(socket_id: string) {
     let serverSeed = this.GenerateServerSeed();
     this.model.dieRollSessionSeedStore[socket_id] = serverSeed;
@@ -93,6 +94,9 @@ export class DieRollController {
     });
   }
 
+  //#endregion
+
+  //#region Private Methods
   private async HandleSessionComplete(
     session: SessionManager<DieRollSessionContext>,
     socketId: string
@@ -191,4 +195,5 @@ export class DieRollController {
       serverSeedHash: sSeedHash,
     };
   }
+  //#endregion
 }

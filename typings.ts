@@ -1,4 +1,13 @@
 import { Socket } from "socket.io";
+import { z } from "zod";
+import { DieRollBetType } from "./services/games/dieroll/dieroll.types";
+import { DieRollClientMessage } from "./services/games/dieroll/dieroll.messages";
+import { PlaceBetPayload } from "./services/games/dieroll/dieroll.messages";
+import { CoinFlipClientMessage } from "./services/games/coinflip/coinflip.messages";
+import { DieRollServerMessage } from "./services/games/dieroll/dieroll.messages";
+import { CoinFlipServerMessage } from "./services/games/coinflip/coinflip.messages";
+import { AckFunction } from "./services/games/types";
+import { TDierollBetResult } from "./services/games/dieroll/dieroll.types";
 
 export interface IAuthenticatedSocketData {
 	user: {
@@ -63,16 +72,18 @@ export interface ClientToServerEvents {
 	"wallet:updateBalance": () => void;
 	
 	// Dieroll events
-	"dieroll:bet": (bet_data: DieRollBetData) => void;
-	"dieroll:predict": (callback: (serverSeedHash: string) => Promise<void>) => void;
-	"dieroll:new": (callback: (serverSeedHash: string) => Promise<void>) => void;
+	[DieRollClientMessage.PLACE_BET]: (bet_data: z.infer<typeof DieRollBetType>) => void;
+	[DieRollClientMessage.ROLL_DICE]: () => void;
+	[DieRollClientMessage.LEAVE_GAME]: () => void;
+	"dieroll:generate": (callback: (serverSeedHash: string) => void) => void;
 	
 	// Coinflip events
-	"coinflip:bet": (bet_data: CoinflipBetData) => void;
-	"coinflip:new": (callback: (serverSeedHash: string) => Promise<void>) => void;
-	"coinflip:choice": (option: "HEADS" | "TAILS") => void;
-	"coinflip:next": (option: "CASHOUT" | "CONTINUE") => void;
-	"coinflip:get_previousGames": (callback: (prvsGame: PreviousGameData[], currentGame?: PreviousGameData) => Promise<void>) => void;
+	[CoinFlipClientMessage.PLACE_BET]: (bet_data: PlaceBetPayload) => void;
+	[CoinFlipClientMessage.FLIP_COIN]: () => void;
+	[CoinFlipClientMessage.LEAVE_GAME]: () => void;
+	"coinflip:session": (callback: (serverSeedHash: string, sessionId?: string) => void) => void;
+	"coinflip:continue": (session_id: string, ack: AckFunction) => void;
+	"coinflip:next": (session_id: string, option: "CASHOUT" | "CONTINUE", ack: AckFunction) => void;
 	
 	// Socket events
 	disconnect: () => void;
@@ -85,33 +96,17 @@ export interface ServerToClientEvents {
 	"wallet:error": (data: { message: string }) => void;
 	
 	// Dieroll events
-	"dieroll:error": (data: { message: string; error?: ZodIssue[] }) => void;
-	"dieroll:result": (data: { resultRoll: number; isWon: boolean }) => void;
-	"dieroll:fullfilled": (data: { 
-		sessionId: string;
-		serverSeed: string;
-		serverSeedHash: string;
-		clientSeed: string;
-		betAmount: string;
-		payout: string;
-		multiplier: number;
-		resultRoll: number;
-		isWon: boolean;
-	}) => void;
+	[DieRollServerMessage.GAME_STATE]: (state: any) => void;
+	[DieRollServerMessage.BET_PLACED]: (data: any) => void;
+	[DieRollServerMessage.ROLL_RESULT]: (result: TDierollBetResult) => void;
+	[DieRollServerMessage.ERROR]: (data: { message: string; error?: ZodIssue[] }) => void;
+	[DieRollServerMessage.GAME_ENDED]: () => void;
 	
 	// Coinflip events
-	"coinflip:error": (data: { message: string; error?: ZodIssue[] }) => void;
-	"coinflip:result": (data: { resultFlip: "HEADS" | "TAILS"; isWon: boolean }) => void;
-	"coinflip:fullfilled": (data: {
-		server_seed: string;
-		server_hash: string;
-		sessionId?: string;
-		clientSeed?: string;
-		betAmount?: string;
-		payout?: string;
-		multiplier?: number;
-		resultFlip?: "HEADS" | "TAILS";
-		isWon?: boolean;
-	}) => void;
+	[CoinFlipServerMessage.GAME_STATE]: (state: TSessionState) => void;
+	[CoinFlipServerMessage.BET_PLACED]: (data: any) => void;
+	[CoinFlipServerMessage.FLIP_RESULT]: (data: { resultFlip: "HEADS" | "TAILS"; isWon: boolean }) => void;
+	[CoinFlipServerMessage.ERROR]: (data: { message: string; error?: ZodIssue[] }) => void;
+	[CoinFlipServerMessage.GAME_ENDED]: () => void;
 }
 

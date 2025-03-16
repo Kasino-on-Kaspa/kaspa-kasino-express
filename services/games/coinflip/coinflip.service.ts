@@ -6,7 +6,8 @@ import { BaseBetType } from "../types";
 import { CoinflipSessionContext } from "./entities/coinflip.context";
 import { z } from "zod";
 import { E_COINFLIP_OPTION } from "../../../schema/games/coinflip.schema";
- 
+import { CoinFlipClientMessage, CoinFlipServerMessage } from "./coinflip.messages";
+
 export class CoinflipService extends Service {
     protected serviceName: string = "CoinflipService";
     private coinflipController:CoinflipController = new CoinflipController();
@@ -16,24 +17,24 @@ export class CoinflipService extends Service {
             this.coinflipController.NewSessionSeeds(socket, callback);
         });
 
-        socket.on("coinflip:new", (bet_data:z.infer<typeof BaseBetType>,ack: AckFunction) => {
+        socket.on(CoinFlipClientMessage.PLACE_BET, (bet_data:z.infer<typeof BaseBetType>, ack: AckFunction) => {
             this.coinflipController.HandleNewBet(socket, bet_data, ack, this.HandleSessionStateChange);
         });
 
-        socket.on("coinflip:continue", (session_id:string,ack: AckFunction) => {
+        socket.on("coinflip:continue", (session_id:string, ack: AckFunction) => {
             this.coinflipController.HandleBetContinuation(socket, session_id, ack, this.HandleSessionStateChange);
         });
 
-        socket.on("coinflip:choice", (session_id:string,choice:typeof E_COINFLIP_OPTION.enumValues[number],ack: AckFunction) => {
+        socket.on(CoinFlipClientMessage.FLIP_COIN, (session_id:string, choice:typeof E_COINFLIP_OPTION.enumValues[number], ack: AckFunction) => {
             this.coinflipController.HandleChoice(socket, session_id, choice, ack);
         });
 
-        socket.on("coinflip:next", (session_id:string,option:"CASHOUT" | "CONTINUE",ack: AckFunction) => {
+        socket.on("coinflip:next", (session_id:string, option:"CASHOUT" | "CONTINUE", ack: AckFunction) => {
             this.coinflipController.HandleNext(socket, session_id, option, ack);
         });
     }
 
     private HandleSessionStateChange(socket: Socket, newState: TSessionState) {
-        socket.emit("coinflip:session:state", newState);
+        socket.emit(CoinFlipServerMessage.GAME_STATE, newState);
     }
 }
