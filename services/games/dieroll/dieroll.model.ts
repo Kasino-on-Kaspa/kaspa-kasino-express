@@ -1,11 +1,7 @@
-import { z } from "zod";
 import { DB } from "../../../database";
 import { sessionsTable } from "../../../schema/session.schema";
-import { Account } from "../../../utils/account";
-import { BetSessionContext } from "../../../utils/session/entities/session.context";
 import { SessionManager } from "../../../utils/session/session.manager";
 import { DieRollSessionContext } from "./entities/dieroll.context";
-import { DieRollBetType } from "./dieroll.types";
 
 interface ISocketServerSeedStore {
   [socket_id: string]: { serverSeed: string; serverSeedHash: string };

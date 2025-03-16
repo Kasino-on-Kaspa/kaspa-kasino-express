@@ -8,7 +8,7 @@ export abstract class BetSessionContext {
   public readonly BetAmount: bigint;
 
   public readonly ClientAccount: Account;
-  private _base_multiplier: number;
+  protected _base_multiplier: number;
 
   public get Multiplier(): number {
     return this._base_multiplier;
