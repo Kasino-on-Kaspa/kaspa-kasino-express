@@ -1,15 +1,17 @@
-import { BetSessionContext } from "./session-context";
-import { BetSessionBaseState } from "../state";
+import { BetSessionBaseState } from "../base.state";
+import { SessionManager } from "../session.manager";
 import {
-  BetSessionErrorState,
-  BetSessionFullfilledState,
   BetSessionSettleState,
   BetSessionStartState,
+  BetSessionFullfilledState,
+  BetSessionErrorState,
 } from "../states";
+import { BetSessionContext } from "./session.context";
 
 type TSesisonStateProducerFunction = () => BetSessionBaseState;
 
 export abstract class BetBaseSessionStateFactory {
+
   public GetStartState(): BetSessionBaseState {
     return this.BetStartState();
   }

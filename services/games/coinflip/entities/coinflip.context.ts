@@ -1,38 +1,32 @@
-import { z } from "zod";
-import { BetSessionContext } from "../../../../utils/session/entities/session-context";
-import {
-  E_COINFLIP_OPTION,
-  E_COINFLIP_STATUS,
-} from "../../../../schema/games/coinflip.schema";
 import { Account } from "../../../../utils/account";
-import { ObservableData } from "../../../../utils/observables/data";
 import { ObservableEvent } from "../../../../utils/observables/event";
+import { BetSessionContext } from "../../../../utils/session/entities/session.context";
 
-type TCoinFlipOption = (typeof E_COINFLIP_OPTION.enumValues)[number];
-type TCoinStatus = (typeof E_COINFLIP_STATUS.enumValues)[number];
-
-const MAX_GAME_LEVELS = 20;
-
-export class CoinFlipSessionContext extends BetSessionContext {
-  private currentGameLevel: number;
-  public LastGameChoice?: "HEADS" | "TAILS";
-
-  public get CurrentGameLevel() {
-    return this.currentGameLevel;
+export class CoinflipSessionContext extends BetSessionContext {
+  public readonly Level: number;
+  public Next?: "CONTINUE" | "PENDING" | "CASHOUT" | "DEFEATED";
+  public readonly GameFlipChoiceEvent = new ObservableEvent<"HEADS" | "TAILS">();
+  public readonly GameNextChoiceEvent = new ObservableEvent<"CONTINUE" | "CASHOUT">();
+  public readonly GameResultEvent = new ObservableEvent<{client_won:boolean,player_choice:"HEADS" | "TAILS",result:"HEADS" | "TAILS"}>();
+  
+  private _result?: {client_won:boolean,player_choice:"HEADS" | "TAILS",result:"HEADS" | "TAILS"};
+  
+  public get Result() : typeof this._result {
+    return this._result;
+  }
+  
+  public set Result(result: {client_won:boolean,player_choice:"HEADS" | "TAILS",result:"HEADS" | "TAILS"}) {
+    this._result = result;
+  }
+  
+  public override get Multiplier(): number {
+    return super.Multiplier ** this.Level;
   }
 
-  public OnGameSettled: ObservableEvent<void> = new ObservableEvent();
-
-  public OnClientOptionSelect: ObservableEvent<"HEADS" | "TAILS"> =
-    new ObservableEvent();
-
-  public CurrentSessionStatus = new ObservableData<TCoinStatus>("PENDING");
-
-  public readonly MaxGameLevels = MAX_GAME_LEVELS;
-
-  public readonly GameResult = new ObservableData<
-    { resultFlip: TCoinFlipOption; isWon: boolean } | undefined
-  >(undefined);
+  public ResetContext() {
+    this._result = undefined;
+    this.Next = undefined;
+  }
 
   constructor(
     id: string,
@@ -42,21 +36,10 @@ export class CoinFlipSessionContext extends BetSessionContext {
     bet: bigint,
     multiplier: number,
     account: Account,
-    result?: { resultFlip: TCoinFlipOption; isWon: boolean },
-    level: number = 0
+    level: number
   ) {
     super(id, sSeed, sSeedHash, cSeed, bet, multiplier, account);
-    
-    if (result) this.SetResult(result.isWon, result.resultFlip);
-    
-    this.currentGameLevel = level;
+    this.Level = level;
   }
 
-  public SetResult(isWon: boolean, result: TCoinFlipOption) {
-    this.GameResult.SetData({ resultFlip: result, isWon });
-  }
-
-  public IncrementLevel() {
-    this.currentGameLevel++;
-  }
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { BetSessionContext } from "../../../../utils/session/entities/session-context";
-import { DieRollBetType } from "../types";
+import { BetSessionContext } from "../../../../utils/session/entities/session.context";
+import { DieRollBetType } from "../dieroll.types";
 import { ObservableData } from "../../../../utils/observables/data";
 import { Account } from "../../../../utils/account";
 

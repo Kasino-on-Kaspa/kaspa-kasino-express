@@ -1,129 +1,140 @@
-import { eq } from "drizzle-orm";
-import { AccountStoreInstance } from "../../..";
+import { and, desc, eq, or } from "drizzle-orm";
 import { DB } from "../../../database";
 import { coinflip } from "../../../schema/games/coinflip.schema";
 import { sessionsTable } from "../../../schema/session.schema";
-import { Account } from "../../../utils/account";
-import { SessionStore } from "../../../utils/session/session-store";
-import { BetSessionStateMachine } from "../../../utils/session/state-machine";
-import { CoinFlipSessionContext } from "./entities/coinflip.context";
-import { CoinFlipSessionStateFactory } from "./entities/coinflip.factory";
+import { SessionManager } from "../../../utils/session/session.manager";
+import { CoinflipSessionContext } from "./entities/coinflip.context";
 
-export class CoinFlipModel {
-  private coinFlipSessionStore = new SessionStore<CoinFlipSessionContext>();
+interface ISocketSessionStore {
+  [socket_id: string]: SessionManager<CoinflipSessionContext>;
+}
+interface ISocketSessionSeedStore {
+  [socket_id: string]: { serverSeed: string; serverSeedHash: string };
+}
+interface ISocketAccountSessionStore {
+  [account_id: string]: string;
+}
 
-  private stateFactory = new CoinFlipSessionStateFactory();
+type GetPreviousSessionParams = {
+  seed: {
+    serverSeedHash: string;
+    sessionId: string;
+  };
+  session: {
+    id: string;
+    sSeed: string;
+    sSeedHash: string;
+    cSeed: string;
+    bet: bigint;
+    multiplier: number;
+    level: number;
+    next?: "CONTINUE" | "PENDING" | "CASHOUT" | "DEFEATED";
+  };
+};
 
-  private coinFlipSessionSeedStore: {
-    [account_id: string]: { serverSeed: string; serverSeedHash: string };
-  } = {};
+export class CoinflipModel {
+  public readonly coinflipSessionStore: ISocketSessionStore = {};
+  public readonly coinflipSessionSeedStore: ISocketSessionSeedStore = {};
+  public readonly accountSessionStore: ISocketAccountSessionStore = {};
 
-  public async AddNewSocketServerSeed(
-    account_id: string,
+  public async GetPreviousSession(
+    account_id: string
+  ): Promise<GetPreviousSessionParams | undefined> {
+    let memory_session = this.GetMemorySessionFromAccountId(account_id);
+
+    if (memory_session) {
+      return memory_session;
+    }
+
+    let stored_session = await this.GetPendingSessionFromDB(account_id);
+
+    if (stored_session.length > 0) {
+      return {
+        seed: {
+          serverSeedHash: stored_session[0].sessions.serverSeedHash,
+          sessionId: stored_session[0].sessions.id,
+        },
+        session: {
+          id: stored_session[0].sessions.id,
+          sSeed: stored_session[0].sessions.serverSeed,
+          sSeedHash: stored_session[0].sessions.serverSeedHash,
+          cSeed: stored_session[0].sessions.clientSeed,
+          bet: stored_session[0].sessions.amount,
+          multiplier: stored_session[0].coinflip_results.multiplier,
+          level: stored_session[0].coinflip_results.level,
+          next: stored_session[0].coinflip_results.next,
+        },
+      };
+    }
+
+    return;
+  }
+
+  public async InsertSession(
     serverSeed: string,
-    serverSeedHash: string
-  ) {
-    return (this.coinFlipSessionSeedStore[account_id] = {
-      serverSeed,
-      serverSeedHash,
-    });
-  }
-
-  public async GetPendingPreviousSession(account_id: string) {
-    let data = await DB.select({
-      id: coinflip.id,
-      session: sessionsTable,
-      result: coinflip.result,
-      level: coinflip.level,
-      client_won: coinflip.client_won,
-      multiplier: coinflip.multiplier,
-      account: sessionsTable.user,
-      status: coinflip.status,
-    })
-      .from(coinflip)
-      .orderBy(coinflip.createdAt)
-      .innerJoin(sessionsTable, eq(sessionsTable.id, coinflip.sessionId))
-      .where(eq(sessionsTable.id, account_id));
-
-    let latestData = data[0].status == "PENDING" ? data[0] : undefined;
-
-    if (latestData)
-      this.AddSession(
-        latestData.account,
-        latestData.session.clientSeed,
-        latestData.session.amount,
-        latestData.multiplier,
-        { resultFlip: latestData.result, isWon: latestData.client_won }
-      );
-
-    return { result: data, latest: latestData };
-  }
-
-  public GetSession(session_id: string) {
-    return this.coinFlipSessionStore.GetSession(session_id);
-  }
-
-  public async AddSession(
-    account_id: string,
-    clientSeed: string,
+    serverSeedHash: string,
+    client_seed: string,
     amount: bigint,
-    multiplier: number,
-    result?: { resultFlip: "HEADS" | "TAILS"; isWon: boolean },
-    session_id?: string
+    account_id: string,
+   
   ) {
-    let { serverSeed, serverSeedHash } =
-      this.coinFlipSessionSeedStore[account_id];
+    return await DB.insert(sessionsTable).values({
+      
+      serverSeed: serverSeed,
+      serverSeedHash: serverSeedHash,
+      clientSeed: client_seed,
+      amount: amount,
+      user: account_id,
+      gameType: "COINFLIP",
+    }).returning();
+  }
+
+  
+  private async GetPendingSessionFromDB(account_id: string) {
+    return await DB.select()
+      .from(coinflip)
+      .innerJoin(sessionsTable, eq(coinflip.sessionId, sessionsTable.id))
+      .where(
+        and(
+          eq(sessionsTable.user, account_id),
+          or(eq(coinflip.next, "PENDING"), eq(coinflip.next, "CONTINUE"))
+        )
+      )
+      .orderBy(desc(coinflip.createdAt))
+      .limit(1);
+  }
+
+  private GetMemorySessionFromAccountId(
+    account_id: string
+  ): GetPreviousSessionParams | undefined {
+    let session_id = this.accountSessionStore[account_id];
 
     if (!session_id) {
-      let data = await DB.insert(sessionsTable)
-        .values({
-          serverSeed,
-          serverSeedHash,
-          clientSeed,
-          user: account_id,
-          amount: amount,
-          gameType: "COINFLIP",
-        })
-        .returning();
-
-      session_id = data[0].id;
+      return;
     }
 
-    let previousSessions = this.coinFlipSessionStore.GetSession(session_id);
+    let session = this.coinflipSessionStore[session_id];
 
-    if (previousSessions) {
-      return { session_id };
+    if (!session) {
+      return;
     }
 
-    let account = AccountStoreInstance.GetUserFromAccountID(account_id);
-
-    let context = new CoinFlipSessionContext(
-      session_id,
-      serverSeed,
-      serverSeedHash,
-      clientSeed,
-      amount,
-      multiplier,
-      account,
-      result
-    );
-
-    let session = new BetSessionStateMachine(this.stateFactory, context);
-
-    session.AddOnCompleteListener((session_id: string) =>
-      this.OnSessionCompleteCleaner(session_id)
-    );
-
-    this.coinFlipSessionStore.AddSession(session_id, session);
-
-    return { session_id };
+    return {
+      seed: {
+        serverSeedHash: session.SessionContext.ServerSeedHash,
+        sessionId: session.SessionContext.SessionId,
+      },
+      session: {
+        id: session.SessionContext.SessionId,
+        sSeed: session.SessionContext.ServerSeed,
+        sSeedHash: session.SessionContext.ServerSeedHash,
+        cSeed: session.SessionContext.ClientSeed,
+        bet: session.SessionContext.BetAmount,
+        multiplier: session.SessionContext.Multiplier,
+        level: session.SessionContext.Level
+    },
+    };
   }
+  
 
-  public OnSessionAccountDisconnected(session_id: string) {
-    this.coinFlipSessionStore.RemoveSession(session_id);
-  }
-
-  public OnSessionCompleteCleaner(session_id: string) {
-    this.coinFlipSessionStore.RemoveSession(session_id);
-  }
 }
