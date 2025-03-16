@@ -3,7 +3,6 @@ import { Service } from "../../../utils/service/service";
 import { CoinflipController } from "./coinflip.controller";
 import { AckFunction } from "../types";
 import { BaseBetType } from "../types";
-import { CoinflipSessionContext } from "./entities/coinflip.context";
 import { z } from "zod";
 import { E_COINFLIP_OPTION } from "../../../schema/games/coinflip.schema";
 import { CoinFlipClientMessage, CoinFlipServerMessage } from "./coinflip.messages";

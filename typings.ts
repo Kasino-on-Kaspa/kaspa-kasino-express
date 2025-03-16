@@ -1,5 +1,5 @@
 import { CoinFlipClientMessage, CoinFlipServerMessage } from "./services/games/coinflip/coinflip.messages";
-import { DieRollClientMessage,DieRollServerMessage } from "./services/games/dieroll/dieroll.messages";
+import { DieRollClientMessage, DieRollServerMessage } from "./services/games/dieroll/dieroll.messages";
 import { User } from "./services/user/user.types";
 
 // Socket data interface for authenticated sockets
@@ -38,9 +38,6 @@ export interface ServerToClientEvents {
   [CoinFlipServerMessage.GAME_ENDED]: () => void;
   
   // Dieroll events
-  [DieRollServerMessage.GAME_STATE]: (state: any) => void;
-  [DieRollServerMessage.BET_PLACED]: (data: any) => void;
   [DieRollServerMessage.ROLL_RESULT]: (result: any) => void;
-  [DieRollServerMessage.ERROR]: (error: any) => void;
   [DieRollServerMessage.GAME_ENDED]: () => void;
 } 
