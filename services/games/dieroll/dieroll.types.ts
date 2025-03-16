@@ -16,5 +16,6 @@ export type TDierollBetResult = {
   payout: bigint;
   resultRoll: number;
   isWon: boolean;
+  betAmount: bigint;
 };
 

@@ -30,11 +30,11 @@ InitializeGameServices(ServiceRegistryInstance);
 ServiceRegistryInstance.RegisterService(new WalletSocketService());
 
 const io = new Server(server, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
+  // cors: {
+  //   origin: "http://localhost:3001", // process.env.CORS_ORIGIN ||
+  //   methods: ["GET", "POST"],
+  //   credentials: true,
+  // },
   pingInterval: 2000,
   pingTimeout: 5000,
 });

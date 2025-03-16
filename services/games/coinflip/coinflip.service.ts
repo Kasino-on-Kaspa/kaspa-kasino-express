@@ -7,7 +7,7 @@ import { z } from "zod";
 import { E_COINFLIP_OPTION } from "../../../schema/games/coinflip.schema";
 import { CoinFlipClientMessage, CoinFlipServerMessage } from "./coinflip.messages";
 
-export class CoinflipService extends Service {
+class CoinflipService extends Service {
     protected serviceName: string = "CoinflipService";
     private coinflipController:CoinflipController = new CoinflipController();
     
@@ -45,3 +45,5 @@ export class CoinflipService extends Service {
         socket.emit(CoinFlipServerMessage.FLIP_RESULT,{ result, client_won});
     }
 }
+
+export const CoinflipServiceInstance = new CoinflipService();

@@ -24,7 +24,7 @@ class DieRollService extends Service {
     );
 
     socket.on(
-      DieRollClientMessage.GET_SESSION_SEEDS,
+      DieRollClientMessage.GET_SESSION_SEEDS,      
       (callback: (serverSeedHash: string) => void) => {
         let seeds = this.controller.HandleGenerate(socket.id);
         callback(seeds.serverSeedHash);
@@ -33,6 +33,15 @@ class DieRollService extends Service {
   }
 
   OnBetFullfilled(socket: Socket, result: TDierollBetResult): void {
-    socket.emit(DieRollServerMessage.ROLL_RESULT, result);
+    let parseableResult = {
+      ...result,
+      payout: result.payout.toString(),
+      betAmount: result.betAmount.toString(),
+    }
+
+    console.log("OnBetFullfilled", parseableResult);
+    socket.emit(DieRollServerMessage.ROLL_RESULT, parseableResult);
   }
 }
+
+export const DieRollServiceInstance = new DieRollService();
