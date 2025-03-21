@@ -3,9 +3,9 @@ import { Service } from "../../utils/service/service";
 import { WalletService } from "./wallet.service";
 import { AccountStoreInstance } from "../..";
 
-export class WalletSocketService extends Service {
-	protected serviceName: string = "Wallet";
+const WalletServiceNamespace = "/wallet";
 
+export class WalletSocketService extends Service {
 	// Add rate limiting
 	private lastUpdateTime: Record<string, number> = {};
 	private readonly UPDATE_COOLDOWN_MS = 5000; // 5 seconds between updates
@@ -17,7 +17,7 @@ export class WalletSocketService extends Service {
 		});
 	}
 
-	public override Handler(io: Server, socket: Socket): void {
+	public override Handler(socket: Socket): void {
 		const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
 
 		account.Balance.AddListener(async (balance) => {
@@ -59,7 +59,7 @@ export class WalletSocketService extends Service {
 				const account = AccountStoreInstance.GetUserFromHandshake(
 					socket.id
 				);
-				
+
 				if (!account) {
 					socket.emit("wallet:error", { message: "Unauthorized" });
 					return;
@@ -81,13 +81,15 @@ export class WalletSocketService extends Service {
 				const result = await WalletService.updateWalletBalance(
 					socket.data.user.address
 				);
-				
+
 				// The account's balance has already been updated in the service
 				// and listeners will be notified through the observable
 
 				// Log the balance update
 				console.log(
-					`Balance updated for ${socket.data.user.address}: ${result!.balance}`
+					`Balance updated for ${socket.data.user.address}: ${
+						result!.balance
+					}`
 				);
 			} catch (e) {
 				console.error(e);
@@ -105,4 +107,8 @@ export class WalletSocketService extends Service {
 			delete this.lastUpdateTime[socket.id];
 		});
 	}
+}
+
+export function InitializeWalletService(io: Server) {
+	return new WalletSocketService(io, WalletServiceNamespace);
 }

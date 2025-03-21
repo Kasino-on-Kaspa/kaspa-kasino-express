@@ -4,15 +4,15 @@ import { users } from "../../../schema/users.schema";
 import { Account } from "../../../utils/account";
 import { E_BALANCE_LOG_TYPE } from "../../../schema/balance.schema";
 import { ObservableEvent } from "../../../utils/observables/event";
-import { Socket } from "socket.io";
+import { Socket, Server } from "socket.io";
 
-const MinUpdateDelay = 10000;
+const MIN_UPDATE_DELAY = 10000;
 
 export class AccountStore {
   private _userHandshake: { [socket_id: string]: string } = {};
   private _userAccounts: { [account_id: string]: Account } = {};
-
   private updater?: NodeJS.Timeout;
+  private readonly io: Server;
 
   public async AddUserHandshake(socket: Socket, account_id: string) {
     this._userHandshake[socket.id] = account_id;
@@ -21,17 +21,21 @@ export class AccountStore {
     let account = this._userAccounts[account_id];
 
     if (!account) {
-      account = await this.GetAccount(account_id);
+      account = await this.GetAccountFromDB(account_id);
     }
     account.AssociatedSockets.AddSockets(socket);
   }
 
-  private async GetAccount(account_id: string) {
+  constructor(io: Server) {
+    this.io = io;
+  }
+
+  private async GetAccountFromDB(account_id: string) {
     let result = await DB.select()
       .from(users)
       .where(eq(users.id, account_id))
       .limit(1);
-    let account = new Account(result[0]);
+    let account = new Account(result[0], this.io);
     this._userAccounts[account_id] = account;
     return account;
   }
@@ -77,4 +81,5 @@ export class AccountStore {
       account.UpdateAccountDB();
     }
   }
+  
 }

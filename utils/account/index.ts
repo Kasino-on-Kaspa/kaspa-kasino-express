@@ -1,9 +1,11 @@
+import { Server } from "socket.io";
 import { DB } from "../../database";
 import { balance_log, E_BALANCE_LOG_TYPE } from "../../schema/balance.schema";
 import { users } from "../../schema/users.schema";
 import { ObservableData } from "../observables/data";
 import { ObservableEvent } from "../observables/event";
 import { AccountSockets } from "./sockets";
+
 export class Account {
   private _id: string;
   private _address: string;
@@ -15,16 +17,17 @@ export class Account {
 
   private isUpdated: boolean = false;
 
-  public readonly AssociatedSockets: AccountSockets = new AccountSockets();
+  public readonly AssociatedSockets: AccountSockets;
 
 
-  constructor(user: typeof users.$inferSelect) {
+  constructor(user: typeof users.$inferSelect, io: Server) {
     this._id = user.id;
     this._address = user.address;
     this._xOnlyPublicKey = user.xOnlyPublicKey;
     this._username = user.username;
     this._wallet = user.wallet;
     this.balance = new ObservableData<bigint>(BigInt(user.balance));
+    this.AssociatedSockets = new AccountSockets(io, this._id);
   }
 
 
@@ -39,6 +42,7 @@ export class Account {
       amount: offset,
       type: type,
     });
+
 
     this.isUpdated = true;
   }

@@ -1,13 +1,25 @@
-import { Server, Socket } from "socket.io";
+import { Namespace, Server, Socket } from "socket.io";
+import { EventsMap, DefaultEventsMap } from "socket.io/dist/typed-events";
 import { z, ZodObject, ZodRawShape, ZodSchema } from "zod";
 
-export abstract class Service {
-  protected abstract serviceName: string;
+export abstract class Service<
+	TClientToServerEvents extends EventsMap = DefaultEventsMap,
+	TServerToClientEvents extends EventsMap = DefaultEventsMap
+> {
+	protected readonly namespace: Namespace<
+		TClientToServerEvents,
+		TServerToClientEvents
+	>;
+	protected readonly server: Server;
 
-  public get ServiceName() {
-    return this.serviceName;
-  }
+	constructor(io: Server, namespace: string) {
+		this.server = io;
+		this.namespace = io.of(`/${namespace}`);
+	}
 
-  public Handler(io: Server, socket: Socket): void {}
-  
+	private HandleInitialize() {
+		this.namespace.on("connection", () => {});
+	}
+
+	public Handler(socket: Socket): void {}
 }

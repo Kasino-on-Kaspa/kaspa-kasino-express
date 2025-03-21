@@ -5,6 +5,7 @@ import { wallets } from "../../schema/wallets.schema";
 import { WalletBalanceProvider } from "../../utils/wallet/balance";
 import { utxos } from "../../schema/utxos.schema";
 import { AccountStoreInstance } from "../..";
+import { rpcClient } from "../../utils/wallet";
 
 export class WalletService {
 	static async getUserWallet(userAddress: string) {
@@ -53,13 +54,20 @@ export class WalletService {
 			.from(utxos)
 			.where(eq(utxos.address, userWallet.walletAddress));
 
+		const dagInfo = await rpcClient.getBlockDagInfo();
+		
 		// Find UTXOs that we haven't seen before
 		const unseenUtxos = allUtxos.filter((utxo) => {
 			// Check if this UTXO is already in our database
+			console.log("BLOCKDAASCORE", utxo.utxoEntry!.blockDaaScore)
+			console.log("VIRTUALDAASCORE", dagInfo.virtualDaaScore)
+
 			return !seenUtxos.some(
 				(seenUtxo) =>
 					seenUtxo.txId === utxo.outpoint?.transactionId &&
-					seenUtxo.vout === utxo.outpoint?.index
+					seenUtxo.vout === utxo.outpoint?.index &&
+					// Check "confirmation"
+					utxo.utxoEntry!.blockDaaScore < dagInfo.virtualDaaScore
 			);
 		});
 
@@ -89,7 +97,7 @@ export class WalletService {
 
 			// Use account method to add balance instead of direct DB update
 			if (balanceDelta > 0) {
-				await account.AddBalance(balanceDelta, "DEPOSIT");
+				await account?.AddBalance(balanceDelta, "DEPOSIT");
 				// await account.UpdateAccountDB();
 			}
 		}

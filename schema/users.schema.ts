@@ -1,5 +1,6 @@
 import * as p from "drizzle-orm/pg-core";
 import { wallets } from "./wallets.schema";
+import { sql } from "drizzle-orm";
 
 export const users = p.pgTable("users", {
 
@@ -22,7 +23,7 @@ export const users = p.pgTable("users", {
 		.notNull(),
         
 	// User's balance
-	balance: p.bigint({ mode: "bigint" }).notNull().default(0n),
+	balance: p.bigint({ mode: "bigint" }).notNull().default(sql`0`),
 	
 	createdAt: p.timestamp().notNull().defaultNow(),
 });

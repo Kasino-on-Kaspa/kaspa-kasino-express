@@ -6,11 +6,12 @@ import { z } from "zod";
 import { AckFunction } from "../types";
 import { DieRollClientMessage, DieRollServerMessage } from "./dieroll.messages";
 
+const DierollNamespaceName = "/games/dieroll"
 class DieRollService extends Service {
-  protected serviceName: string = "DierollService";
+
   private controller: DieRollController = new DieRollController();
 
-  public override Handler(io: Server, socket: Socket): void {
+  public override Handler(socket: Socket): void {
     socket.on(
       DieRollClientMessage.PLACE_BET,
       (bet_data: z.infer<typeof DieRollBetType>, ack: AckFunction) => {
@@ -44,4 +45,6 @@ class DieRollService extends Service {
   }
 }
 
-export const DieRollServiceInstance = new DieRollService();
+export function InitializeDierollService(io:Server){
+  return new DieRollService(io,DierollNamespaceName)
+}

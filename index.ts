@@ -1,16 +1,19 @@
 import express from "express";
 import { createServer } from "node:http";
 import { DefaultEventsMap, Server, Socket } from "socket.io";
-import { ServiceRegistry } from "./utils/service/handler-registry";
+
 import { InitializeGameServices } from "./services/games";
 import authRoutes from "./services/auth/auth.routes";
 import userRoutes from "./services/user/user.routes";
 import {
-  socketAuthMiddleware,
-  TAuthenticatedSocket,
+	socketAuthMiddleware,
+	TAuthenticatedSocket,
 } from "./services/auth/socket.middleware";
 import { AccountStore } from "./services/user/entities/accounts";
 import { WalletSocketService } from "./services/wallet/wallet.socket";
+import { WalletService } from "./services/wallet/wallet.service";
+import { WalletBalanceProvider } from "./utils/wallet/balance";
+import { rpcClient } from "./utils/wallet";
 
 const app = express();
 const server = createServer(app);
@@ -23,48 +26,39 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 
-export const ServiceRegistryInstance = new ServiceRegistry();
-
-InitializeGameServices(ServiceRegistryInstance);
-
-ServiceRegistryInstance.RegisterService(new WalletSocketService());
-
 const io = new Server(server, {
-  // cors: {
-  //   origin: "http://localhost:3001", // process.env.CORS_ORIGIN ||
-  //   methods: ["GET", "POST"],
-  //   credentials: true,
-  // },
-  pingInterval: 2000,
-  pingTimeout: 5000,
+	pingInterval: 2000,
+	pingTimeout: 5000,
 });
 
-export const AccountStoreInstance = new AccountStore();
+export const AccountStoreInstance = new AccountStore(io);
 
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);
 
 io.on("connection", async (socket: TAuthenticatedSocket) => {
-  console.log(`User connected: ${socket.data.user.address}`);
+	console.log(`User connected: ${socket.data.user.address}`);
 
-  await AccountStoreInstance.AddUserHandshake(socket, socket.data.user.id);
+	await AccountStoreInstance.AddUserHandshake(socket, socket.data.user.id);
 
-  ServiceRegistryInstance.OnNewConnection(io, socket);
-
-  socket.on("disconnect", async () => {
-    await AccountStoreInstance.RemoveUserHandshake(socket);
-    console.log(`User disconnected: ${socket.data.user.address}`);
-  });
+	socket.on("disconnect", async () => {
+		await AccountStoreInstance.RemoveUserHandshake(socket);
+		console.log(`User disconnected: ${socket.data.user.address}`);
+	});
 });
 
-AccountStoreInstance.InstantiateDatabaseTimer(10000); // i think this is 10 seconds
+AccountStoreInstance.InstantiateDatabaseTimer(10000);
 
-// Add a shutdown handler
 process.on("SIGINT", () => {
-  AccountStoreInstance.DestroyDatabaseTimer();
-  process.exit(0);
+	AccountStoreInstance.DestroyDatabaseTimer();
+	process.exit(0);
 });
+
+// !!! TESTING !!!
+async function sleep(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 server.listen(3000, () => {
-  console.log("server running at http://localhost:3000");
+	console.log("server running at http://localhost:3000");
 });
