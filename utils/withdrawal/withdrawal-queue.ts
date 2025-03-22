@@ -1,11 +1,15 @@
 import { PaymentOutput, Address } from "@kcoin/kaspa-web3.js";
 import { createWithdrawalTransaction } from "./withdraw";
+import { DB } from "../../database";
+import { transactions, E_TRANSACTION_TYPE } from "../../schema/transactions.schema";
+import { balance_log, E_BALANCE_LOG_TYPE } from "../../schema/balance.schema";
 
 type WithdrawalQueueItem = {
     address: string,
     amount: bigint,
     createdAt: number,
     retryCount: number,
+    userId: string,  // User ID for transaction recording
 }
 
 export class WithdrawalQueue {
@@ -29,12 +33,13 @@ export class WithdrawalQueue {
         return WithdrawalQueue.instance;
     }
 
-    public add(address: string, amount: bigint) {
+    public add(address: string, amount: bigint, userId: string) {
         this.queue.push({
             address,
             amount,
             createdAt: Date.now(),
             retryCount: 0,
+            userId,
         });
 
         // Clear existing timer if any
@@ -84,6 +89,29 @@ export class WithdrawalQueue {
             const txHash = await createWithdrawalTransaction(outputs);
 
             if (txHash) {
+                // Record transactions in the database
+                const transactionRecords = itemsToProcess.map(item => ({
+                    txId: txHash,
+                    value: item.amount,
+                    type: "WITHDRAWAL" as const,
+                    user: item.userId,
+                    createdAt: new Date()
+                }));
+
+                // Record balance log entries
+                const balanceLogRecords = itemsToProcess.map(item => ({
+                    account: item.userId,
+                    amount: -item.amount, // Negative amount for withdrawals
+                    type: "WITHDRAWAL" as const,
+                    created_at: new Date()
+                }));
+
+                // Insert both transaction and balance log records
+                await DB.transaction(async (tx) => {
+                    await tx.insert(transactions).values(transactionRecords);
+                    await tx.insert(balance_log).values(balanceLogRecords);
+                });
+
                 // Remove the processed items from queue only if successful
                 this.queue.splice(0, itemsToProcess.length);
                 console.log(`Batch withdrawal processed successfully. Transaction hash: ${txHash}`);
