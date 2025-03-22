@@ -8,102 +8,111 @@ import { AccountStoreInstance } from "../..";
 import { rpcClient } from "../../utils/wallet";
 
 export class WalletService {
-	static async getUserWallet(userAddress: string) {
-		const user = await DB.select()
-			.from(users)
-			.where(eq(users.address, userAddress))
-			.leftJoin(wallets, eq(users.wallet, wallets.id));
+  static async getDepositWallet(wallet_id: string) {
+    try {
+      const wallet = await DB.select()
+        .from(wallets)
+        .where(eq(wallets.id, wallet_id));
+      return wallet[0];
+    } catch (e) {
+      console.error(e);
+      throw new Error("Wallet not found");
+    }
+  }
 
-		if (!user[0] || !user[0].wallets) {
-			throw new Error("Wallet not found");
-		}
+  static async getUserWallet(userAddress: string) {
+    const user = await DB.select()
+      .from(users)
+      .where(eq(users.address, userAddress))
+      .leftJoin(wallets, eq(users.wallet, wallets.id));
 
-		return {
-			walletAddress: user[0].wallets.address,
-			balance: user[0].users.balance,
-			userId: user[0].users.id,
-		};
-	}
+    if (!user[0] || !user[0].wallets) {
+      throw new Error("Wallet not found");
+    }
 
-	/**
-	 * Updates the wallet balance by checking for new UTXOs
-	 * @param userAddress The user's address
-	 * @returns Object containing the new balance in SOMPI and count of new transactions
-	 */
-	static async updateWalletBalance(userAddress: string) {
-		const userWallet = await this.getUserWallet(userAddress);
+    return {
+      walletAddress: user[0].wallets.address,
+      balance: user[0].users.balance,
+      userId: user[0].users.id,
+    };
+  }
 
-		// Get account from store to use its balance methods
-		const account = AccountStoreInstance.GetUserFromAccountID(
-			userWallet.userId
-		);
+  /**
+   * Updates the wallet balance by checking for new UTXOs
+   * @param userAddress The user's address
+   * @returns Object containing the new balance in SOMPI and count of new transactions
+   */
+  static async updateWalletBalance(userAddress: string) {
+    const userWallet = await this.getUserWallet(userAddress);
 
-		if (!account) {
-			throw new Error("Account not found in store");
-		}
+    // Get account from store to use its balance methods
+    const account = AccountStoreInstance.GetUserFromAccountID(
+      userWallet.userId
+    );
 
-		// Get all UTXOs from the blockchain
-		const allUtxos = await WalletBalanceProvider.getUtxos([
-			userWallet.walletAddress,
-		]);
+    if (!account) {
+      throw new Error("Account not found in store");
+    }
 
-		console.log("DEPOSIT ADDRESS", userWallet.walletAddress);
+    // Get all UTXOs from the blockchain
+    const allUtxos = await WalletBalanceProvider.getUtxos([
+      userWallet.walletAddress,
+    ]);
 
-		// Get all UTXOs we've already seen
-		const seenUtxos = await DB.select()
-			.from(utxos)
-			.where(eq(utxos.address, userWallet.walletAddress));
+    console.log("DEPOSIT ADDRESS", userWallet.walletAddress);
 
-		const dagInfo = await rpcClient.getBlockDagInfo();
-		
-		// Find UTXOs that we haven't seen before
-		const unseenUtxos = allUtxos.filter((utxo) => {
-			// Check if this UTXO is already in our database
-			console.log("BLOCKDAASCORE", utxo.utxoEntry!.blockDaaScore)
-			console.log("VIRTUALDAASCORE", dagInfo.virtualDaaScore)
+    // Get all UTXOs we've already seen
+    const seenUtxos = await DB.select()
+      .from(utxos)
+      .where(eq(utxos.address, userWallet.walletAddress));
 
-			return !seenUtxos.some(
-				(seenUtxo) =>
-					seenUtxo.txId === utxo.outpoint?.transactionId &&
-					seenUtxo.vout === utxo.outpoint?.index &&
-					// Check "confirmation"
-					utxo.utxoEntry!.blockDaaScore < dagInfo.virtualDaaScore
-			);
-		});
+    const dagInfo = await rpcClient.getBlockDagInfo();
 
-		// Calculate the balance change from new UTXOs (in SOMPI)
-		let balanceDelta = BigInt(0);
+    // Find UTXOs that we haven't seen before
+    const unseenUtxos = allUtxos.filter((utxo) => {
+      // Check if this UTXO is already in our database
+      return !seenUtxos.some(
+        (seenUtxo) =>
+          seenUtxo.txId === utxo.outpoint?.transactionId &&
+          seenUtxo.vout === utxo.outpoint?.index &&
+          // Check "confirmation"
+          utxo.utxoEntry!.blockDaaScore < dagInfo.virtualDaaScore
+      );
+    });
 
-		for (const utxo of unseenUtxos) {
-			if (utxo.utxoEntry?.amount) {
-				balanceDelta += BigInt(utxo.utxoEntry.amount);
-			}
-		}
+    // Calculate the balance change from new UTXOs (in SOMPI)
+    let balanceDelta = BigInt(0);
 
-		// Map the unseen UTXOs to our database format
-		const utxoMap = unseenUtxos.map((u) => {
-			return {
-				address: u.address,
-				amount: BigInt(u.utxoEntry!.amount),
-				txId: u.outpoint!.transactionId,
-				vout: u.outpoint!.index,
-				scriptPubKey: u.utxoEntry!.scriptPublicKey,
-			};
-		});
+    for (const utxo of unseenUtxos) {
+      if (utxo.utxoEntry?.amount) {
+        balanceDelta += BigInt(utxo.utxoEntry.amount);
+      }
+    }
 
-		// Insert the new UTXOs into the database
-		if (utxoMap.length > 0) {
-			await DB.insert(utxos).values(utxoMap);
+    // Map the unseen UTXOs to our database format
+    const utxoMap = unseenUtxos.map((u) => {
+      return {
+        address: u.address,
+        amount: BigInt(u.utxoEntry!.amount),
+        txId: u.outpoint!.transactionId,
+        vout: u.outpoint!.index,
+        scriptPubKey: u.utxoEntry!.scriptPublicKey,
+      };
+    });
 
-			// Use account method to add balance instead of direct DB update
-			if (balanceDelta > 0) {
-				await account?.AddBalance(balanceDelta, "DEPOSIT");
-				// await account.UpdateAccountDB();
-			}
-		}
-		return {
-			balance: account.Balance.GetData().toString(),
-			newTransactions: utxoMap.length,
-		};
-	}
+    // Insert the new UTXOs into the database
+    if (utxoMap.length > 0) {
+      await DB.insert(utxos).values(utxoMap);
+
+      // Use account method to add balance instead of direct DB update
+      if (balanceDelta > 0) {
+        await account?.AddBalance(balanceDelta, "DEPOSIT");
+        // await account.UpdateAccountDB();
+      }
+    }
+    return {
+      balance: account.Balance.GetData().toString(),
+      newTransactions: utxoMap.length,
+    };
+  }
 }

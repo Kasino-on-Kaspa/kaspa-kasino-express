@@ -1,29 +1,42 @@
 import * as p from "drizzle-orm/pg-core";
 import { wallets } from "./wallets.schema";
 import { sql } from "drizzle-orm";
-
+import crypto from "crypto";
+import { foreignKey, uuid } from "drizzle-orm/gel-core";
 export const users = p.pgTable("users", {
+  // User ID
+  id: p.uuid().primaryKey().defaultRandom(),
 
-	// User ID
-	id: p.uuid().primaryKey().defaultRandom(),
+  // User auth address
+  address: p.varchar().notNull().unique(),
 
-	// User auth address
-	address: p.varchar().notNull().unique(),
+  // User xOnlyPublic key
+  xOnlyPublicKey: p.varchar().notNull().unique(),
 
-	// User xOnlyPublic key
-	xOnlyPublicKey: p.varchar().notNull().unique(),
+  // Username
+  username: p.varchar(),
 
-	// Username
-	username: p.varchar(),
+  // Deposit address
+  wallet: p
+    .uuid()
+    .references(() => wallets.id)
+    .notNull(),
 
-	// Deposit address
-	wallet: p    
-		.uuid()
-		.references(() => wallets.id)
-		.notNull(),
-        
-	// User's balance
-	balance: p.bigint({ mode: "bigint" }).notNull().default(sql`0`),
-	
-	createdAt: p.timestamp().notNull().defaultNow(),
+  // User's balance
+  balance: p
+    .bigint({ mode: "bigint" })
+    .notNull()
+    .default(sql`0`),
+
+  createdAt: p.timestamp().notNull().defaultNow(),
+
+  referrelCode: p
+    .varchar({
+      length: 12,
+    })
+    .notNull()
+    .unique()
+    .$defaultFn(() => crypto.randomBytes(6).toString("hex")),
+
+  referredBy: p.uuid().references((): p.AnyPgColumn => users.referrelCode),
 });

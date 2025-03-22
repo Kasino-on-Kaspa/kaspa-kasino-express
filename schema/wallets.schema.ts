@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import * as p from "drizzle-orm/pg-core";
 
 // Wallet table to track deposit addresses
