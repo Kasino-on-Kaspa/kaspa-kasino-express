@@ -8,6 +8,7 @@ import { DieRollBetType } from "./dieroll.types";
 import { z } from "zod";
 import { Account } from "@utils/account";
 import { DieRollGameState } from "./states";
+import { DieRollServerMessage } from "./dieroll.messages";
 
 export type TDieRollAck = {
 	status: "SUCCESS" ;
@@ -55,7 +56,15 @@ export class DieRollController {
 			return;
 		}
 
-		let bet = DieRollBetType.parse(betParams);
+		let {data:bet, success:ParseSuccess, error:ParseError} = DieRollBetType.safeParse(betParams);
+
+		if (!ParseSuccess || !bet) {
+			ack({
+				status: "ERROR",
+				message: "Invalid bet parameters"
+			});
+			return;
+		}
 
 		if (bet.target < 1) {
 			ack({
@@ -103,7 +112,13 @@ export class DieRollController {
 	}
 
 	private AddSessionListeners(account: Account, session: DierollSession) {
+		session.SessionResultEvent.RegisterEventListener(async(result: TDieRollGameResult) => {
+			account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(DieRollServerMessage.ROLL_RESULT, result);
+		});
+		
 		session.SessionCompleteEvent.RegisterEventListener(async(result: TDieRollGameResult) => {
+			account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(DieRollServerMessage.GAME_ENDED, {serverSeed: session.ServerSeed});
+			
 			session.AssociatedAccount.AssociatedSockets.Session.socketsLeave(session.GetSessionRoomId());
 			this.model.RemoveSession(account.Id);
 		});
