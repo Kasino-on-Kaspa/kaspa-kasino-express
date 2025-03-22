@@ -3,23 +3,26 @@ import { EventsMap, DefaultEventsMap } from "socket.io/dist/typed-events";
 import { z, ZodObject, ZodRawShape, ZodSchema } from "zod";
 
 export abstract class Service<
-	TClientToServerEvents extends EventsMap = DefaultEventsMap,
-	TServerToClientEvents extends EventsMap = DefaultEventsMap
+  TClientToServerEvents extends EventsMap = DefaultEventsMap,
+  TServerToClientEvents extends EventsMap = DefaultEventsMap
 > {
-	protected readonly namespace: Namespace<
-		TClientToServerEvents,
-		TServerToClientEvents
-	>;
-	protected readonly server: Server;
+  protected readonly namespace: Namespace<
+    TClientToServerEvents,
+    TServerToClientEvents
+  >;
+  protected readonly server: Server;
 
-	constructor(io: Server, namespace: string) {
-		this.server = io;
-		this.namespace = io.of(`/${namespace}`);
-	}
+  constructor(io: Server, namespace?: string) {
+    this.server = io;
+    this.namespace = namespace ? io.of(`/${namespace}`) : io.of("/");
+    this.HandleInitialize();
+  }
 
-	private HandleInitialize() {
-		this.namespace.on("connection", () => {});
-	}
+  private HandleInitialize() {
+    this.namespace.on("connection", (socket) => {
+      this.Handler(socket);
+    });
+  }
 
-	public Handler(socket: Socket): void {}
+  public Handler(socket: Socket): void {}
 }

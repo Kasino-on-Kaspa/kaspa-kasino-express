@@ -3,7 +3,7 @@ import { Service } from "../../utils/service/service";
 import { WalletService } from "./wallet.service";
 import { AccountStoreInstance } from "../..";
 
-const WalletServiceNamespace = "/";
+// const WalletServiceNamespace = "/";
 
 export class WalletSocketService extends Service {
   // Add rate limiting
@@ -11,6 +11,10 @@ export class WalletSocketService extends Service {
   private readonly UPDATE_COOLDOWN_MS = 5000; // 5 seconds between updates
 
   public onWalletBalanceUpdate(socket: Socket, balance: bigint) {
+    console.log("wallet:balance", {
+      balance: balance.toString(),
+      address: socket.data.user.address,
+    });
     socket.emit("wallet:balance", {
       balance: balance.toString(),
       address: socket.data.user.address,
@@ -75,9 +79,7 @@ export class WalletSocketService extends Service {
       }
 
       // Get blockchain-verified balance using the service
-      const result = await WalletService.updateWalletBalance(
-        account.Id
-      );
+      const result = await WalletService.updateWalletBalance(account.Id);
 
       // Log the balance update
       console.log(
@@ -98,14 +100,14 @@ export class WalletSocketService extends Service {
 
   public override Handler(socket: Socket): void {
     this.setupBalanceListener(socket);
-    
+
     // Set up event handlers
-    socket.on("wallet:getBalance", () => this.handleGetBalance(socket));
+    socket.on("wallet:getBalance", () => console.log("wallet:getBalance"));
     socket.on("wallet:updateBalance", () => this.handleUpdateBalance(socket));
     socket.on("disconnect", () => this.handleDisconnect(socket));
   }
 }
 
 export function InitializeWalletService(io: Server) {
-  return new WalletSocketService(io, WalletServiceNamespace);
+  return new WalletSocketService(io);
 }
