@@ -35,12 +35,11 @@ export class Account {
           wallet: this._wallet,
           id: this._id,
           username: this._username,
-          xOnlyPublicKey: this._xOnlyPublicKey,
+          balance: this.balance.GetData().toString(),
         });
       }
     );
   }
-  
 
   public async AddBalance(
     offset: bigint,
@@ -59,7 +58,10 @@ export class Account {
   }
 
   private HandleBalanceUpdate() {
-    this.AssociatedSockets.Session.emit("account:balance", this.balance.GetData().toString());
+    this.AssociatedSockets.Session.emit(
+      "account:balance",
+      this.balance.GetData().toString()
+    );
   }
 
   public async UpdateAccountDB() {
@@ -100,5 +102,4 @@ export class Account {
   public get Id() {
     return this._id;
   }
-  
 }
