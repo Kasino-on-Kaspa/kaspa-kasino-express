@@ -3,6 +3,7 @@ import { DB } from "../../../database";
 import { users } from "../../../schema/users.schema";
 import { Account } from "../../../utils/account";
 import { Socket, Server } from "socket.io";
+import { wallets } from "@schema/wallets.schema";
 
 const MIN_UPDATE_DELAY = 10000;
 
@@ -31,10 +32,10 @@ export class AccountStore {
 
   private async GetAccountFromDB(account_id: string) {
     let result = await DB.select()
-      .from(users)
+      .from(users).innerJoin(wallets, eq(users.wallet, wallets.id))
       .where(eq(users.id, account_id))
       .limit(1);
-    let account = new Account(result[0], this.io);
+    let account = new Account(result[0].users, {id:result[0].wallets.id, address:result[0].wallets.address}, this.io);
     this._userAccounts[account_id] = account;
     return account;
   }

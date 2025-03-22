@@ -11,7 +11,7 @@ export class Account {
   private _address: string;
   private _xOnlyPublicKey: string;
   private _username: string | null;
-  private _wallet: string;
+  private _wallet: {id:string, address:string};
 
   private balance: ObservableData<bigint>;
 
@@ -19,12 +19,12 @@ export class Account {
 
   public readonly AssociatedSockets: AccountSockets;
 
-  constructor(user: typeof users.$inferSelect, io: Server) {
+  constructor(user: typeof users.$inferSelect, wallet: {id:string, address:string}, io: Server) {
     this._id = user.id;
     this._address = user.address;
     this._xOnlyPublicKey = user.xOnlyPublicKey;
     this._username = user.username;
-    this._wallet = user.wallet;
+    this._wallet = wallet;
     this.balance = new ObservableData<bigint>(BigInt(user.balance));
     this.AssociatedSockets = new AccountSockets(io, this._id);
 
@@ -32,7 +32,7 @@ export class Account {
       async (socket) => {
         socket.emit("account:handshake", {
           address: this._address,
-          wallet: this._wallet,
+          wallet: this._wallet.address,
           id: this._id,
           username: this._username,
           balance: this.balance.GetData().toString(),
