@@ -39,7 +39,7 @@ export class WalletService {
 
   /**
    * Updates the wallet balance by checking for new UTXOs
-   * @param userAddress The user's address
+   * @param userId The user's ID
    * @returns Object containing the new balance in SOMPI and count of new transactions
    */
   static async updateWalletBalance(userId: string) {

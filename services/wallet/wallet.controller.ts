@@ -51,10 +51,10 @@ export class WalletController {
         return;
       }
 
-      const wallet = await WalletService.getUserWallet(address);
+      // const wallet = await WalletService.getUserWallet();
       res.status(200).json({
-        balance: wallet.balance,
-        address: wallet.walletAddress,
+        balance: 0,
+        address: "wallet.walletAddress",
       });
     } catch (e) {
       console.error(e);

@@ -1,3 +1,4 @@
+import { AccountStoreInstance } from "@/index";
 import { Namespace, Server, Socket } from "socket.io";
 import { EventsMap, DefaultEventsMap } from "socket.io/dist/typed-events";
 import { z, ZodObject, ZodRawShape, ZodSchema } from "zod";
@@ -14,12 +15,13 @@ export abstract class Service<
 
   constructor(io: Server, namespace?: string) {
     this.server = io;
-    this.namespace = namespace ? io.of(`/${namespace}`) : io.of("/");
+    this.namespace = namespace ? io.of(`${namespace}`) : io.of("/");
     this.HandleInitialize();
   }
 
   private HandleInitialize() {
     this.namespace.on("connection", (socket) => {
+      console.log(socket.client)  
       this.Handler(socket);
     });
   }

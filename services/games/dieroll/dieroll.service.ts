@@ -1,4 +1,4 @@
-import { DefaultEventsMap, Server, Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { Service } from "../../../utils/service/service";
 import { DieRollController, TDieRollAck } from "./dieroll.controller";
 import { DieRollBetType } from "./dieroll.types";

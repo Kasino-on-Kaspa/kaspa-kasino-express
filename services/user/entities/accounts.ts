@@ -26,6 +26,9 @@ export class AccountStore {
     
   }
 
+  public GetAllUsers(){
+    return this._userHandshake 
+  }
   constructor(io: Server) {
     this.io = io;
   }

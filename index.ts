@@ -54,19 +54,21 @@ const io = new Server(server, {
 
 export const AccountStoreInstance = new AccountStore(io);
 
+
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);
 InstantiateServices(io);
 
 io.on("connection", async (socket: TAuthenticatedSocket) => {
   console.log(`User connected: ${socket.data.user.address}`);
-
+  
   await AccountStoreInstance.AddUserHandshake(socket, socket.data.user.id);
 
   socket.on("disconnect", async () => {
     await AccountStoreInstance.RemoveUserHandshake(socket);
     console.log(`User disconnected: ${socket.data.user.address}`);
   });
+  
 });
 AccountStoreInstance.InstantiateDatabaseTimer(10000);
 
