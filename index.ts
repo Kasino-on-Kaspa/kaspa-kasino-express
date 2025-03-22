@@ -15,6 +15,7 @@ import { WalletBalanceProvider } from "./utils/wallet/balance";
 import { rpcClient } from "./utils/wallet";
 import { walletRouter } from "./services/wallet/wallet.routes";
 import bodyParser from "body-parser";
+import { InstantiateServices } from "./services";
 const cors = require("cors");
 
 const app = express();
@@ -58,6 +59,7 @@ export const AccountStoreInstance = new AccountStore(io);
 
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);
+InstantiateServices(io);
 
 io.on("connection", async (socket: TAuthenticatedSocket) => {
   console.log(`User connected: ${socket.data.user.address}`);
@@ -69,7 +71,6 @@ io.on("connection", async (socket: TAuthenticatedSocket) => {
     console.log(`User disconnected: ${socket.data.user.address}`);
   });
 });
-
 AccountStoreInstance.InstantiateDatabaseTimer(10000);
 
 process.on("SIGINT", () => {
