@@ -109,7 +109,10 @@ export class AuthService {
     return null;
   }
 
-  async createUser(address: string, xOnlyPublicKey: string): Promise<boolean> {
+  async createUser(
+    address: string,
+    xOnlyPublicKey: string
+  ): Promise<typeof users.$inferSelect> {
     const kp = WalletHandler.generateKeypair();
 
     const newWallet = await DB.insert(wallets)
@@ -126,13 +129,15 @@ export class AuthService {
       })
       .returning();
 
-    const user = await DB.insert(users).values({
-      address: address,
-      xOnlyPublicKey: xOnlyPublicKey,
-      wallet: newWallet[0].id,
-    });
+    const user = await DB.insert(users)
+      .values({
+        address: address,
+        xOnlyPublicKey: xOnlyPublicKey,
+        wallet: newWallet[0].id,
+      })
+      .returning();
 
-    return true;
+    return user[0];
   }
 }
 

@@ -32,9 +32,12 @@ export class AuthController {
         return;
       }
 
-      const user = await authService.getUserByAddress(authData.address);
+      let user = await authService.getUserByAddress(authData.address);
       if (!user) {
-        await authService.createUser(authData.address, authData.publicKey);
+        user = await authService.createUser(
+          authData.address,
+          authData.publicKey
+        );
       }
 
       // Set token expiry to 24 hours from now
@@ -53,6 +56,13 @@ export class AuthController {
         user: {
           address: authData.address,
           publicKey: authData.publicKey,
+          referralCode: user?.referrelCode,
+          referredBy: user?.referredBy,
+          balance: user?.balance.toString(),
+          id: user?.id,
+          username: user?.username,
+          createdAt: user?.createdAt,
+          depositAddress: user?.wallet,
         },
       });
     } catch (error) {

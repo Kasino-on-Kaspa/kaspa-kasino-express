@@ -50,13 +50,7 @@ export class UserController {
         return;
       }
 
-      const { username } = req.body;
-
-      // If username is undefined or null, return bad request
-      if (username === undefined) {
-        res.status(400).json({ message: "Username is required" });
-        return;
-      }
+      const { username, referredBy } = req.body;
 
       // Validate username
       if (username && !this.isValidUsername(username)) {
@@ -64,7 +58,10 @@ export class UserController {
         return;
       }
 
-      const updatedUser = await userService.updateUser(address, { username });
+      const updatedUser = await userService.updateUser(address, {
+        username,
+        referredBy,
+      });
       if (!updatedUser) {
         res.status(404).json({ message: "User not found" });
         return;
