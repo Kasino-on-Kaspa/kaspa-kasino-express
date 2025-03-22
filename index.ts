@@ -9,10 +9,7 @@ import {
   TAuthenticatedSocket,
 } from "./services/auth/socket.middleware";
 import { AccountStore } from "./services/user/entities/accounts";
-import { WalletSocketService } from "./services/wallet/wallet.socket";
-import { WalletService } from "./services/wallet/wallet.service";
-import { WalletBalanceProvider } from "./utils/wallet/balance";
-import { rpcClient } from "./utils/wallet";
+
 import { walletRouter } from "./services/wallet/wallet.routes";
 import bodyParser from "body-parser";
 import { InstantiateServices } from "./services";

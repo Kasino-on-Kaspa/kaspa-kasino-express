@@ -11,7 +11,7 @@ export class Account {
   private _address: string;
   private _xOnlyPublicKey: string;
   private _username: string | null;
-  private _wallet: {id:string, address:string};
+  private _wallet: { id: string; address: string };
 
   private balance: ObservableData<bigint>;
 
@@ -19,7 +19,11 @@ export class Account {
 
   public readonly AssociatedSockets: AccountSockets;
 
-  constructor(user: typeof users.$inferSelect, wallet: {id:string, address:string}, io: Server) {
+  constructor(
+    user: typeof users.$inferSelect,
+    wallet: { id: string; address: string },
+    io: Server
+  ) {
     this._id = user.id;
     this._address = user.address;
     this._xOnlyPublicKey = user.xOnlyPublicKey;
