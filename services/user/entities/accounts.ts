@@ -22,6 +22,7 @@ export class AccountStore {
       account = await this.GetAccountFromDB(account_id);
     }
     account.AssociatedSockets.AddSockets(socket);
+    
   }
 
   constructor(io: Server) {
