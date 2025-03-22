@@ -19,7 +19,6 @@ export class Account {
 
   public readonly AssociatedSockets: AccountSockets;
 
-
   constructor(user: typeof users.$inferSelect, io: Server) {
     this._id = user.id;
     this._address = user.address;
@@ -28,28 +27,44 @@ export class Account {
     this._wallet = user.wallet;
     this.balance = new ObservableData<bigint>(BigInt(user.balance));
     this.AssociatedSockets = new AccountSockets(io, this._id);
-  }
 
+    this.AssociatedSockets.OnSocketAdded.RegisterEventListener(
+      async (socket) => {
+        socket.emit("account:handshake", {
+          address: this._address,
+          wallet: this._wallet,
+          id: this._id,
+          username: this._username,
+          xOnlyPublicKey: this._xOnlyPublicKey,
+        });
+      }
+    );
+  }
+  
 
   public async AddBalance(
     offset: bigint,
     type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
   ) {
     this.balance.SetData(this.balance.GetData() + offset);
-    
+
     await DB.insert(balance_log).values({
       account: this._id,
       amount: offset,
       type: type,
     });
 
-
+    this.HandleBalanceUpdate();
     this.isUpdated = true;
+  }
+
+  private HandleBalanceUpdate() {
+    this.AssociatedSockets.Session.emit("account:balance", this.balance.GetData().toString());
   }
 
   public async UpdateAccountDB() {
     if (!this.isUpdated) return;
-    
+
     await DB.update(users).set({
       balance: this.Balance.GetData(),
     });
@@ -62,13 +77,15 @@ export class Account {
     type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
   ) {
     this.balance.SetData(this.balance.GetData() - offset);
-    
+
     await DB.insert(balance_log).values({
       account: this._id,
       amount: offset,
       type: type,
     });
-    
+
+    this.HandleBalanceUpdate();
+
     this.isUpdated = true;
   }
 
@@ -83,4 +100,5 @@ export class Account {
   public get Id() {
     return this._id;
   }
+  
 }

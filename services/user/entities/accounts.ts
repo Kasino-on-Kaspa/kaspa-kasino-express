@@ -2,8 +2,6 @@ import { eq } from "drizzle-orm";
 import { DB } from "../../../database";
 import { users } from "../../../schema/users.schema";
 import { Account } from "../../../utils/account";
-import { E_BALANCE_LOG_TYPE } from "../../../schema/balance.schema";
-import { ObservableEvent } from "../../../utils/observables/event";
 import { Socket, Server } from "socket.io";
 
 const MIN_UPDATE_DELAY = 10000;

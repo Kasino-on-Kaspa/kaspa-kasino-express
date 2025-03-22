@@ -5,6 +5,8 @@ export class AccountSockets {
   private connection_sockets: { [socket_id: string]: Socket } = {};
   public readonly OnAllSocketsDisconnect = new ObservableEvent<void>();
   public readonly OnSocketDisconnect = new ObservableEvent<void>();
+  public readonly OnSocketAdded = new ObservableEvent<Socket>();
+
   public readonly io: Server;
   private session_id: string;
 
@@ -16,6 +18,7 @@ export class AccountSockets {
   public AddSockets(socket: Socket) {
     this.connection_sockets[socket.id] = socket;
     socket.join(this.session_id);
+    this.OnSocketAdded.Raise(socket);
   }
   
   public RemoveSocket(socket: Socket) {
