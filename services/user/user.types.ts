@@ -6,6 +6,8 @@ export interface User {
   wallet: string;
   balance: bigint;
   createdAt: Date;
+  referrelCode?: string;
+  referredBy?: string;
 }
 
 export interface UpdateUserDto {

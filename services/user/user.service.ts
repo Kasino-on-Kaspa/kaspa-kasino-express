@@ -11,7 +11,7 @@ export class UserService {
     const user = await DB.select()
       .from(users)
       .where(eq(users.address, address));
-    return user[0] || null;
+    return (user[0] as User) || null;
   }
 
   async updateUser(
@@ -38,7 +38,7 @@ export class UserService {
     const result = await DB.delete(users)
       .where(eq(users.address, address))
       .returning();
-    return result[0] || null;
+    return (result[0] as User) || null;
   }
 
   // Internal method used by auth service
@@ -59,6 +59,13 @@ export class UserService {
 
     await DB.insert(users).values(user);
     return user;
+  }
+
+  async getUserByReferrelCode(referrelCode: string): Promise<User | null> {
+    const user = await DB.select()
+      .from(users)
+      .where(eq(users.referrelCode, referrelCode));
+    return (user[0] as User) || null;
   }
 }
 

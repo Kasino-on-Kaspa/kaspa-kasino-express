@@ -52,9 +52,34 @@ export class UserController {
 
       const { username, referredBy } = req.body;
 
+      console.log(username, referredBy);
+
       // Validate username
       if (username && !this.isValidUsername(username)) {
         res.status(400).json({ message: "Invalid username format" });
+        return;
+      }
+
+      const user = await userService.getUser(address);
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      if (referredBy) {
+        const referredByUser = await userService.getUserByReferrelCode(
+          referredBy
+        );
+        if (!referredByUser) {
+          res.status(404).json({ message: "Referred by user not found" });
+          return;
+        }
+      }
+
+      if (referredBy == user.referrelCode) {
+        res
+          .status(400)
+          .json({ message: "Referred by user cannot be the same" });
         return;
       }
 
