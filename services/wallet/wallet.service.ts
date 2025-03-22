@@ -71,9 +71,6 @@ export class WalletService {
     // Find UTXOs that we haven't seen before
     const unseenUtxos = allUtxos.filter((utxo) => {
       // Check if this UTXO is already in our database
-      console.log("BLOCKDAASCORE", utxo.utxoEntry!.blockDaaScore);
-      console.log("VIRTUALDAASCORE", dagInfo.virtualDaaScore);
-
       return !seenUtxos.some(
         (seenUtxo) =>
           seenUtxo.txId === utxo.outpoint?.transactionId &&
