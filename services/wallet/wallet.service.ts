@@ -20,10 +20,10 @@ export class WalletService {
     }
   }
 
-  static async getUserWallet(userAddress: string) {
+  static async getUserWallet(userId: string) {
     const user = await DB.select()
       .from(users)
-      .where(eq(users.address, userAddress))
+      .where(eq(users.id, userId))
       .leftJoin(wallets, eq(users.wallet, wallets.id));
 
     if (!user[0] || !user[0].wallets) {
@@ -42,12 +42,12 @@ export class WalletService {
    * @param userAddress The user's address
    * @returns Object containing the new balance in SOMPI and count of new transactions
    */
-  static async updateWalletBalance(userAddress: string) {
-    const userWallet = await this.getUserWallet(userAddress);
+  static async updateWalletBalance(userId: string) {
+    const userWallet = await this.getUserWallet(userId);
 
     // Get account from store to use its balance methods
     const account = AccountStoreInstance.GetUserFromAccountID(
-      userWallet.userId
+      userId
     );
 
     if (!account) {
@@ -58,8 +58,6 @@ export class WalletService {
     const allUtxos = await WalletBalanceProvider.getUtxos([
       userWallet.walletAddress,
     ]);
-
-    console.log("DEPOSIT ADDRESS", userWallet.walletAddress);
 
     // Get all UTXOs we've already seen
     const seenUtxos = await DB.select()

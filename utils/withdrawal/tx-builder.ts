@@ -29,5 +29,5 @@ export function buildTransactionGenerator({
 }
 
 export function calculatePriorityFee(inputs: number, outputs: number) {
-	return kasToSompi(((inputs + outputs) * 0.01).toString());
+	return kasToSompi(((inputs + outputs) * 0.1).toString());
 }
