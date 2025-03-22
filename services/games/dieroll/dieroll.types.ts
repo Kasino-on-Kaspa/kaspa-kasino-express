@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { BaseBetType } from "../types";
 
-export type TDieRollGameCondition = "OVER" | "UNDER";
 export type TDieRollGameTarget = number;
 
 export const DieRollBetType = BaseBetType.extend({

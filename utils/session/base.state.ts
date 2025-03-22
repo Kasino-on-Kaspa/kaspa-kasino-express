@@ -1,18 +1,17 @@
-import { SessionManager } from "./session.manager";
+import { SessionStateManager } from "./state.manager";
 
-export abstract class BetSessionBaseState {
-  protected abstract _stateName: TSessionState;
-
+export abstract class SessionBaseState<TStateManager extends SessionStateManager<any,any>> {
+  protected abstract _stateName: string;
+  
   public get StateName() {
     return this._stateName;
   }
-  
+
   public abstract EnterState(
-    manager: SessionManager<any>
+    manager: TStateManager,
   ): void;
 
   public abstract ExitState(
-    manager: SessionManager<any>
+    manager: TStateManager,
   ): void;
-
 }

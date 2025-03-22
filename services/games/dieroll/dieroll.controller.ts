@@ -1,145 +1,114 @@
-import { Socket } from "socket.io";
 import { DieRollModel } from "./dieroll.model";
-import crypto from "node:crypto";
-import { DieRollBetType, TDierollBetResult } from "./dieroll.types";
+import { TDieRollGameResult, TDierollSessionJSON } from "./entities/dieroll.session";
+import { Socket } from "socket.io";
+import { AccountStoreInstance } from "@/index";
+import { DieRollStateFactory } from "./entities/state.factory";
+import { DierollSession } from "./entities/dieroll.session";
+import { DieRollBetType } from "./dieroll.types";
 import { z } from "zod";
-import { AckFunction } from "../types";
-import { AccountStoreInstance } from "../../..";
-import { Account } from "../../../utils/account";
-import { DierollStateFactory } from "./entities/dieroll.factory";
-import { DieRollSessionContext } from "./entities/dieroll.context";
-import { SessionManager } from "../../../utils/session/session.manager";
-import { DB } from "../../../database";
-import { dieroll } from "../../../schema/games/dieroll.schema";
+import { Account } from "@utils/account";
+import { DieRollGameState } from "./states";
+
+export type TDieRollAck = {
+	status: "SUCCESS" ;
+	session: TDierollSessionJSON;
+} | {
+	status: "ERROR";
+	message: string;
+}
 
 export class DieRollController {
-	private readonly model: DieRollModel = new DieRollModel();
-	private readonly StateFactory = new DierollStateFactory();
+	private model: DieRollModel;
+	private factory: DieRollStateFactory;
 
-	//#region Event Handlers
-	public HandleGenerate(socket_id: string) {
-		let account = AccountStoreInstance.GetUserFromHandshake(socket_id);
-
-		let serverSeed = this.GenerateServerSeed();
-		this.model.dieRollSessionSeedStore[account.Id] = serverSeed;
-		return serverSeed;
+	constructor() {
+		this.model = new DieRollModel();
+		this.factory = new DieRollStateFactory();
 	}
 
-	public async HandleBet(
-		socket: Socket,
-		bet_data: z.infer<typeof DieRollBetType>,
-		ack: AckFunction,
-		on_bet_fullfilled: (socket: Socket, result: TDierollBetResult) => void
-	) {
+	public async HandleGetSession(socket: Socket, callback: (serverSeedHash: string, session_data?: TDierollSessionJSON) => void) {
 		let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
-		let sessionSeeds = this.model.dieRollSessionSeedStore[account.Id];
+		let session = this.model.GetSession(account.Id);
 
-		if (!sessionSeeds)
-			return ack({
-				success: false,
-				error: "Generate a server seed first!",
+		if (session){
+			callback(session.ServerSeedHash, session.ToData());
+			return;
+		} 
+
+		session = new DierollSession(account);
+		
+		this.model.SetSession(account.Id, session);
+
+		callback(session.ServerSeedHash);
+
+	}
+
+	public async HandleRoll(socket:Socket,betParams: z.infer<typeof DieRollBetType>, ack: (ack: TDieRollAck) => void) {
+		let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+		let session = this.model.GetSession(account.Id);
+
+		if (!session) {
+			ack({
+				status: "ERROR",
+				message: "Session not found"
 			});
+			return;
+		}
 
-		let { serverSeed, serverSeedHash } = sessionSeeds;
+		let bet = DieRollBetType.parse(betParams);
 
-		// if (!serverSeed)
-		// 	return ack({
-		// 		success: false,
-		// 		error: "Generate a server seed first!",
-		// 	});
-
-		let parse = this.ParseParams(bet_data);
-
-		if (!parse.success) return ack(parse);
-
-		let betAmount = BigInt(parse.data.amount);
-		let balanceVerify = this.CheckBalance(account, betAmount);
-
-		if (!balanceVerify.success) return ack(balanceVerify);
-
-		let { client_seed, condition, target } = parse.data;
-
-		let data = await this.model.InsertToSessionTable({
-			amount: betAmount,
-			clientSeed: client_seed,
-			serverSeed: serverSeed,
-			serverSeedHash: serverSeedHash,
-			gameType: "DICEROLL",
-			user: account.Id,
-		});
-
-		let { id } = data[0];
-
-		let context = new DieRollSessionContext(
-			id,
-			serverSeed,
-			serverSeedHash,
-			client_seed,
-			account,
-			condition,
-			target,
-			this.CalculateMultiplier(condition, target),
-			betAmount
-		);
-
-		let session = new SessionManager(this.StateFactory, context);
-
-		this.model.dieRollSessionStore[id] = session;
-		ack({ success: true });
-
-		session.OnStateChangeEvent.RegisterEventListener(async (state) => {
-			console.log(state);
-		});
-
-		session.OnSessionComplete.RegisterEventListener(async (session_id) => {
-			let session = this.model.dieRollSessionStore[session_id];
-			let result = session.SessionContext.Result.GetData();
-
-			await this.HandleSessionComplete(session, socket.id);
-
-			on_bet_fullfilled(socket, {
-				isWon: result!.isWon,
-				payout:
-					BigInt(session.SessionContext.Multiplier) *
-					session.SessionContext.BetAmount,
-				resultRoll: result!.resultRoll,
-				sessionId: session.SessionContext.SessionId,
-				serverSeed: session.SessionContext.ServerSeed,
-				betAmount: session.SessionContext.BetAmount,
+		if (bet.target < 1) {
+			ack({
+				status: "ERROR",
+				message: "Target must be greater than 0"
 			});
+			return;
+		}
+
+		if (bet.target > 99) {
+			ack({
+				status: "ERROR",
+				message: "Target must be less than 100"
+			});
+			return;
+		}
+
+		if (BigInt(bet.amount) < 0n) {
+			ack({
+				status: "ERROR",
+				message: "Amount must be greater than 0"
+			});
+			return;
+		}
+
+		session.SetClientBetData({
+			bet: BigInt(bet.amount),
+			clientSeed: bet.client_seed,
+			multiplier: this.CalculateMultiplier(bet.condition, bet.target)
+		}, {
+			condition: bet.condition,
+			target: bet.target
 		});
+		
+		let stateManager = this.factory.CreateStateManager(session,DieRollGameState.START);
+		session.SetStateManager(stateManager);
 
-		session.Start();
+		ack({
+			status: "SUCCESS",
+			session: session.ToData()
+		});
+		
+		this.AddSessionListeners(session.AssociatedAccount, session);
+		session.SessionStartEvent.Raise();
 	}
 
-	//#endregion
-
-	//#region Private Methods
-	private async HandleSessionComplete(
-		session: SessionManager<DieRollSessionContext>,
-		socketId: string
-	) {
-		await this.InsertSessionResult(session);
-
-		delete this.model.dieRollSessionSeedStore[socketId];
-		delete this.model.dieRollSessionStore[session.SessionContext.SessionId];
-	}
-
-	private async InsertSessionResult(
-		session: SessionManager<DieRollSessionContext>
-	) {
-		let context = session.SessionContext;
-		let data = context.Result.GetData()!;
-
-		await DB.insert(dieroll).values({
-			condition: context.GameCondition,
-			multiplier: context.Multiplier,
-			target: context.GameTarget,
-			sessionId: context.SessionId,
-			result: data.resultRoll,
-			client_won: data.isWon,
+	private AddSessionListeners(account: Account, session: DierollSession) {
+		session.SessionCompleteEvent.RegisterEventListener(async(result: TDieRollGameResult) => {
+			session.AssociatedAccount.AssociatedSockets.Session.socketsLeave(session.GetSessionRoomId());
+			this.model.RemoveSession(account.Id);
 		});
 	}
+
 
 	private CalculateMultiplier(
 		condition: "OVER" | "UNDER",
@@ -169,49 +138,4 @@ export class DieRollController {
 		// Convert to basis points (1/10000)
 		return Math.round(multiplierWithEdge * 10000);
 	}
-
-	private ParseParams(
-		bet_data: z.infer<typeof DieRollBetType>
-	):
-		| { success: true; data: z.infer<typeof DieRollBetType> }
-		| { success: false; error: string } {
-		let parsedData = DieRollBetType.safeParse(bet_data);
-		if (!parsedData.success)
-			return { success: false, error: "Bet input failed to parse" };
-
-		if (parsedData.data.target < 2) {
-			return { success: false, error: "Target must be higher that 1" };
-		}
-
-		if (parsedData.data.target > 98) {
-			return {
-				success: false,
-				error: "Target must be lesser than 99",
-			};
-		}
-
-		return { success: true, data: parsedData.data };
-	}
-
-	private CheckBalance(
-		account: Account,
-		betAmount: bigint
-	): { success: true } | { success: false; error: string } {
-		if (account.Balance.GetData() < betAmount) {
-			return { success: false, error: "Insufficient Balance" };
-		}
-		return { success: true };
-	}
-
-	private GenerateServerSeed() {
-		const sSeed = crypto.randomBytes(32).toString("hex");
-		const seedHashRaw = crypto.createHash("sha256").update(sSeed);
-		const sSeedHash = seedHashRaw.digest("hex");
-
-		return {
-			serverSeed: sSeed,
-			serverSeedHash: sSeedHash,
-		};
-	}
-	//#endregion
 }

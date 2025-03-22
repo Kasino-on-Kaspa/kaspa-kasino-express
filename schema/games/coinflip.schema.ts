@@ -20,7 +20,7 @@ export const coinflip = p.pgTable("coinflip_results", {
   // Player's choice
   playerChoice: E_COINFLIP_OPTION().notNull(),
   // Result of the flip (only set when game is settled)
-  result: E_COINFLIP_OPTION(),
+  result: E_COINFLIP_OPTION().notNull(),
   level: p.integer().notNull(),
   // Multiplier for the bet
   multiplier: p.integer().notNull(),

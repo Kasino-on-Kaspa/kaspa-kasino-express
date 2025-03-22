@@ -1,7 +1,7 @@
 import * as p from "drizzle-orm/pg-core";
 import { users } from "./users.schema";
 
-export const E_BALANCE_LOG_TYPE = p.pgEnum("E_BALANCE_LOG_TYPE", ["DEPOSIT", "WITHDRAWAL", "BET", "WIN"])
+export const E_BALANCE_LOG_TYPE = p.pgEnum("E_BALANCE_LOG_TYPE", ["DEPOSIT", "WITHDRAWAL", "BET", "BET_RETURN"])
 
 export const balance_log = p.pgTable("balance_log", {
     id: p.uuid("id").primaryKey().defaultRandom(),

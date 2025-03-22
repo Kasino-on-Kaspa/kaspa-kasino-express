@@ -1,8 +1,7 @@
 import express from "express";
 import { createServer } from "node:http";
-import { DefaultEventsMap, Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 
-import { InitializeGameServices } from "./services/games";
 import authRoutes from "./services/auth/auth.routes";
 import userRoutes from "./services/user/user.routes";
 import {

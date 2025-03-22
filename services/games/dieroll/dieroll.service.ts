@@ -1,12 +1,13 @@
 import { DefaultEventsMap, Server, Socket } from "socket.io";
 import { Service } from "../../../utils/service/service";
-import { DieRollController } from "./dieroll.controller";
-import { DieRollBetType, TDierollBetResult } from "./dieroll.types";
+import { DieRollController, TDieRollAck } from "./dieroll.controller";
+import { DieRollBetType } from "./dieroll.types";
 import { z } from "zod";
-import { AckFunction } from "../types";
-import { DieRollClientMessage, DieRollServerMessage } from "./dieroll.messages";
+import { DieRollClientMessage } from "./dieroll.messages";
+import { TDierollSessionJSON } from "./entities/dieroll.session";
 
 const DierollNamespaceName = "/games/dieroll"
+
 class DieRollService extends Service {
 
   private controller: DieRollController = new DieRollController();
@@ -14,35 +15,25 @@ class DieRollService extends Service {
   public override Handler(socket: Socket): void {
     socket.on(
       DieRollClientMessage.PLACE_BET,
-      (bet_data: z.infer<typeof DieRollBetType>, ack: AckFunction) => {
-        return this.controller.HandleBet(
+      (bet_data: z.infer<typeof DieRollBetType>, ack: (ack: TDieRollAck) => void) => {
+        return this.controller.HandleRoll(
           socket,
           bet_data,
-          ack,
-          this.OnBetFullfilled
+          ack
         );
       }
     );
 
     socket.on(
       DieRollClientMessage.GET_SESSION_SEEDS,      
-      (callback: (serverSeedHash: string) => void) => {
-        let seeds = this.controller.HandleGenerate(socket.id);
-        callback(seeds.serverSeedHash);
+      (callback: (serverSeedHash: string, session_data?: TDierollSessionJSON) => void) => {
+        this.controller.HandleGetSession(socket,callback);
       }
     );
+    
   }
 
-  OnBetFullfilled(socket: Socket, result: TDierollBetResult): void {
-    let parseableResult = {
-      ...result,
-      payout: result.payout.toString(),
-      betAmount: result.betAmount.toString(),
-    }
-
-    console.log("OnBetFullfilled", parseableResult);
-    socket.emit(DieRollServerMessage.ROLL_RESULT, parseableResult);
-  }
+  
 }
 
 export function InitializeDierollService(io:Server){

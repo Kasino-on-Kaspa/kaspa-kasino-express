@@ -1,22 +1,17 @@
-import { DB } from "../../../database";
-import { sessionsTable } from "../../../schema/session.schema";
-import { SessionManager } from "../../../utils/session/session.manager";
-import { DieRollSessionContext } from "./entities/dieroll.context";
-
-interface ISocketServerSeedStore {
-  [socket_id: string]: { serverSeed: string; serverSeedHash: string };
-}
-interface ISocketSessionStore {
-  [socket_id: string]: SessionManager<DieRollSessionContext>;
-}
+import { DierollSession } from "./entities/dieroll.session";
 
 export class DieRollModel {
-  public readonly dieRollSessionSeedStore: ISocketServerSeedStore = {};
-  public readonly dieRollSessionStore: ISocketSessionStore = {};
+    private sessionStore: Record<string, DierollSession> = {};
 
-  public async InsertToSessionTable(
-    sessionData: typeof sessionsTable.$inferInsert
-  ) {
-    return await DB.insert(sessionsTable).values(sessionData).returning();
-  }
+    public GetSession(accountId: string) {
+        return this.sessionStore[accountId];
+    }
+
+    public SetSession(accountId: string, session: DierollSession) {
+        this.sessionStore[accountId] = session;
+    }
+
+    public RemoveSession(accountId: string) {
+        delete this.sessionStore[accountId];
+    }
 }
