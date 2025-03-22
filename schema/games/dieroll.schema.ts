@@ -5,6 +5,11 @@ export const E_DICEROLL_CONDITION = p.pgEnum("DicerollCondition", [
 	"OVER",
 	"UNDER",
 ]);
+export const E_DICEROLL_STATUS = p.pgEnum("DicerollStatus", [
+	"DRAW",
+	"WON",
+	"LOST",
+]);
 
 export const dieroll = p.pgTable("dieroll_result", {
 	id: p.uuid().primaryKey().defaultRandom(),
@@ -22,9 +27,10 @@ export const dieroll = p.pgTable("dieroll_result", {
 	// Result of the roll (only set when game is settled)
 	result: p.integer(),
 	
-	client_won: p.boolean(),
 	// Multiplier for the bet in basis points
 	multiplier: p.integer().notNull(),
+	
+	status: E_DICEROLL_STATUS().notNull(),
 	
 	// Settled at
 	settledAt: p.timestamp(),

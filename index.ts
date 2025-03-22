@@ -1,8 +1,7 @@
 import express from "express";
 import { createServer } from "node:http";
-import { DefaultEventsMap, Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 
-import { InitializeGameServices } from "./services/games";
 import authRoutes from "./services/auth/auth.routes";
 import userRoutes from "./services/user/user.routes";
 import {
@@ -10,10 +9,6 @@ import {
 	TAuthenticatedSocket,
 } from "./services/auth/socket.middleware";
 import { AccountStore } from "./services/user/entities/accounts";
-import { WalletSocketService } from "./services/wallet/wallet.socket";
-import { WalletService } from "./services/wallet/wallet.service";
-import { WalletBalanceProvider } from "./utils/wallet/balance";
-import { rpcClient } from "./utils/wallet";
 
 const app = express();
 const server = createServer(app);
