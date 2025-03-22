@@ -16,8 +16,8 @@ export class UserService {
 
   async updateUser(
     address: string,
-    updates: { username: string | null }
-  ): Promise<{ username: string | null } | null> {
+    updates: { username: string | null; referredBy: string | null }
+  ): Promise<{ username: string | null; referredBy: string | null } | null> {
     console.log("address", address, updates);
     const user = await DB.select()
       .from(users)
@@ -27,6 +27,7 @@ export class UserService {
     const updatedUser = {
       ...user,
       username: updates.username,
+      referredBy: updates.referredBy,
     };
 
     await DB.update(users).set(updatedUser).where(eq(users.address, address));
