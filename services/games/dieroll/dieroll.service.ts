@@ -6,36 +6,36 @@ import { z } from "zod";
 import { DieRollClientMessage } from "./dieroll.messages";
 import { TDierollSessionJSON } from "./entities/dieroll.session";
 
-const DierollNamespaceName = "/games/dieroll"
+const DierollNamespaceName = "/games/dieroll";
 
 class DieRollService extends Service {
-
   private controller: DieRollController = new DieRollController();
 
   public override Handler(socket: Socket): void {
     socket.on(
       DieRollClientMessage.PLACE_BET,
-      (bet_data: z.infer<typeof DieRollBetType>, ack: (ack: TDieRollAck) => void) => {
-        return this.controller.HandleRoll(
-          socket,
-          bet_data,
-          ack
-        );
+      (
+        bet_data: z.infer<typeof DieRollBetType>,
+        ack: (ack: TDieRollAck) => void
+      ) => {
+        return this.controller.HandleRoll(socket, bet_data, ack);
       }
     );
 
     socket.on(
-      DieRollClientMessage.GET_SESSION_SEEDS,      
-      (callback: (serverSeedHash: string, session_data?: TDierollSessionJSON) => void) => {
-        this.controller.HandleGetSession(socket,callback);
+      DieRollClientMessage.GET_SESSION,
+      (
+        callback: (
+          serverSeedHash: string,
+          session_data?: TDierollSessionJSON
+        ) => void
+      ) => {
+        this.controller.HandleGetSession(socket, callback);
       }
     );
-    
   }
-
-  
 }
 
-export function InitializeDierollService(io:Server){
-  return new DieRollService(io,DierollNamespaceName)
+export function InitializeDierollService(io: Server) {
+  return new DieRollService(io, DierollNamespaceName);
 }
