@@ -30,6 +30,16 @@ class CoinflipService extends Service {
     );
 
     socket.on(
+      CoinFlipClientMessage.CREATE_BET,
+      (
+        bet_data: z.infer<typeof BaseBetType>,
+        ack: (ack: TCoinflipAck) => void
+      ) => {
+        this.coinflipController.HandleNewBet(socket, bet_data, ack);
+      }
+    );
+
+    socket.on(
       CoinFlipClientMessage.FLIP_COIN,
       (
         choice: (typeof E_COINFLIP_OPTION.enumValues)[number],

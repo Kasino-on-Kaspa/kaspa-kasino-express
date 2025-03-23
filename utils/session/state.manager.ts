@@ -3,18 +3,25 @@ import { SessionBaseState } from "./base.state";
 import { SessionStateFactory } from "./session.factory";
 import { SessionManager } from "./session.manager";
 
-export abstract class SessionStateManager<TSession extends SessionManager<any,any>, TStates extends string = string> {
-  
+export abstract class SessionStateManager<
+  TSession extends SessionManager<any, any>,
+  TStates extends string = string
+> {
   private _currentState: SessionBaseState<this>;
   public abstract StateTimeoutDelay: number;
-  
-  public readonly OnStateChangeEvent = new ObservableEvent<TStates>();
-  
-  public readonly StateFactory: SessionStateFactory<SessionStateManager<TSession,TStates>>;
-  public readonly SessionManager: TSession;
-  
 
-  constructor(stateFactory: SessionStateFactory<SessionStateManager<TSession,TStates>>, startState: TStates, sessionManager: TSession) {
+  public readonly OnStateChangeEvent = new ObservableEvent<TStates>();
+
+  public readonly StateFactory: SessionStateFactory<
+    SessionStateManager<TSession, TStates>
+  >;
+  public readonly SessionManager: TSession;
+
+  constructor(
+    stateFactory: SessionStateFactory<SessionStateManager<TSession, TStates>>,
+    startState: TStates,
+    sessionManager: TSession
+  ) {
     this.StateFactory = stateFactory;
     this.SessionManager = sessionManager;
     this._currentState = this.StateFactory.GetState(startState);
@@ -32,10 +39,13 @@ export abstract class SessionStateManager<TSession extends SessionManager<any,an
   }
 
   public Start() {
+    console.log("Starting state");
+    this.OnStateChangeEvent.Raise(this._currentState.StateName as TStates);
     this._currentState.EnterState(this);
   }
-  
+
   public ChangeState(nextState: TStates) {
+    console.log("Changing state to", nextState);
     this._currentState.ExitState(this);
     this._currentState = this.StateFactory.GetState(nextState);
     this.OnStateChangeEvent.Raise(nextState);

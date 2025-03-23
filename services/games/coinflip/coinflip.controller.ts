@@ -81,12 +81,14 @@ export class CoinflipController {
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     let session = this.model.GetSession(account.Id);
-    
+
+    console.log("bet_data", bet_data);
+
     if (!session) {
       ack({ status: "ERROR", message: "No session found" });
       return;
     }
-    
+
     session.SetClientBetData({
       bet: BigInt(bet_data.amount),
       clientSeed: bet_data.client_seed,
@@ -97,6 +99,8 @@ export class CoinflipController {
       session,
       CoinflipSessionGameState.START
     );
+
+    console.log("stateManager", stateManager.CurrentState.StateName);
     session.SetStateManager(stateManager);
     this.AddSessionListeners(account, session);
 
@@ -183,6 +187,7 @@ export class CoinflipController {
     session
       .GetStateManager()
       ?.OnStateChangeEvent.RegisterEventListener(async (new_state) => {
+        console.log("new_state", new_state);
         account.AssociatedSockets.Session.emit(
           CoinFlipServerMessage.GAME_CHANGE_STATE,
           { session: session.ToData(), new_state: new_state }
