@@ -12,6 +12,7 @@ import { Account } from "../../../utils/account";
 import { TCoinflipSessionJSON } from "./entities/coinflip.session";
 
 const CoinflipNamespaceName = "/games/coinflip";
+
 class CoinflipService extends Service {
   private coinflipController: CoinflipController = new CoinflipController();
 
@@ -58,5 +59,5 @@ class CoinflipService extends Service {
 }
 
 export function InitializeCointFlip(io: Server) {
-  return new CoinflipService(io, CoinflipNamespaceName);
+  return new CoinflipService(io);
 }

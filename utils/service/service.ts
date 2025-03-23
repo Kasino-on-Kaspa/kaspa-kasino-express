@@ -7,20 +7,16 @@ export abstract class Service<
   TClientToServerEvents extends EventsMap = DefaultEventsMap,
   TServerToClientEvents extends EventsMap = DefaultEventsMap
 > {
-  protected readonly namespace: Namespace<
-    TClientToServerEvents,
-    TServerToClientEvents
-  >;
+
   protected readonly server: Server;
 
-  constructor(io: Server, namespace?: string) {
+  constructor(io: Server) {
     this.server = io;
-    this.namespace = namespace ? io.of(`${namespace}`) : io.of("/");
     this.HandleInitialize();
   }
 
   private HandleInitialize() {
-    this.namespace.on("connection", (socket) => {
+    this.server.on("connection", (socket) => {
       console.log(socket.client)  
       this.Handler(socket);
     });

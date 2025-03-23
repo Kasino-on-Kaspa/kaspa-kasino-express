@@ -6,7 +6,6 @@ import { z } from "zod";
 import { DieRollClientMessage } from "./dieroll.messages";
 import { TDierollSessionJSON } from "./entities/dieroll.session";
 
-const DierollNamespaceName = "/games/dieroll";
 
 class DieRollService extends Service {
   private controller: DieRollController = new DieRollController();
@@ -37,5 +36,5 @@ class DieRollService extends Service {
 }
 
 export function InitializeDierollService(io: Server) {
-  return new DieRollService(io, DierollNamespaceName);
+  return new DieRollService(io);
 }
