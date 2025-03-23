@@ -36,5 +36,7 @@ class DieRollService extends Service {
 }
 
 export function InitializeDierollService(io: Server) {
-  return new DieRollService(io);
+  let service = new DieRollService(io);
+  console.log("Service initialized DieRollService");
+  return service;
 }

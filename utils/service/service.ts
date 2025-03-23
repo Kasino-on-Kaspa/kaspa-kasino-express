@@ -16,8 +16,8 @@ export abstract class Service<
   }
 
   private HandleInitialize() {
-    this.server.on("connection", (socket) => {
-      console.log(socket.client)  
+    
+    this.server.on("connection", (socket) => {  
       this.Handler(socket);
     });
   }

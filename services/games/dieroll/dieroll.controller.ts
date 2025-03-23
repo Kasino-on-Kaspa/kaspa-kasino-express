@@ -108,6 +108,7 @@ export class DieRollController {
 		});
 		
 		this.AddSessionListeners(session.AssociatedAccount, session);
+		console.log("Session started");
 		session.SessionStartEvent.Raise();
 	}
 

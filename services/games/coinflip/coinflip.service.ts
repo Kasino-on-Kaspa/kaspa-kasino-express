@@ -59,5 +59,7 @@ class CoinflipService extends Service {
 }
 
 export function InitializeCointFlip(io: Server) {
-  return new CoinflipService(io);
+  let service = new CoinflipService(io);
+  console.log("Service initialized CoinflipService");
+  return service;
 }

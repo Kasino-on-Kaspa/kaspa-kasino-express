@@ -15,7 +15,7 @@ export type TDierollSessionJSON = {
   sessionId: string;
   serverSeedHash: string;
   clientGameData?: TDierollSessionClientGameData;
-  clientBetData?: TBetClientData;
+  clientBetData?: {bet:string,multiplier:number,clientSeed:string};
   gameResult?: TDieRollGameResult;
   gameResultIsWon?: "DRAW" | "WON" | "LOST";
 };
@@ -32,7 +32,7 @@ export class DierollSession extends SessionManager<TDierollSessionClientGameData
       sessionId: this.SessionId!,
       serverSeedHash: this.ServerSeedHash,
       clientGameData: this.ClientGameData,
-      clientBetData: this.ClientBetData,
+      clientBetData: this.ClientBetData ? {bet: this.ClientBetData.bet.toString(), multiplier: this.ClientBetData.multiplier , clientSeed: this.ClientBetData.clientSeed} : undefined,
       gameResult: this.GameResult,
       gameResultIsWon: this.GameResultIsWon,
     };
