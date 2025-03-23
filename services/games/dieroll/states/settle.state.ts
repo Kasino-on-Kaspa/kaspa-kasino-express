@@ -15,7 +15,6 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
     
     if (isWon == "WON") {
       manager.SessionManager.AssociatedAccount.AddBalance(payout, "BET_RETURN");
-      
     }
     
     if (isWon == "DRAW") {
