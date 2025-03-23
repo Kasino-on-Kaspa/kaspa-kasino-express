@@ -59,7 +59,7 @@ export class CoinflipController {
       ]);
 
       let [pendingSessionData, pendingSessionLogs] = await promise;
-      
+
       let session = this.GenerateSessionFromPendingSessionData(
         pendingSessionData,
         pendingSessionLogs,
@@ -85,22 +85,22 @@ export class CoinflipController {
       ack({ status: "ERROR", message: "No session found" });
       return;
     }
-    session.SetClientBetData(
-      {
-        bet: bet_data.amount,
-        clientSeed: bet_data.client_seed,
-        multiplier: this.GetMultiplier(),
-      }
+    session.SetClientBetData({
+      bet: BigInt(bet_data.amount),
+      clientSeed: bet_data.client_seed,
+      multiplier: this.GetMultiplier(),
+    });
+
+    let stateManager = this.factory.CreateStateManager(
+      session,
+      CoinflipSessionGameState.START
     );
-
-    let stateManager = this.factory.CreateStateManager(session,CoinflipSessionGameState.START);
     session.SetStateManager(stateManager);
-    this.AddSessionListeners(account,session);
+    this.AddSessionListeners(account, session);
 
-    this.model.SetSession(account.Id,session);
+    this.model.SetSession(account.Id, session);
 
     session.SessionStartEvent.Raise();
-
 
     ack({ status: "SUCCESS", session: session.ToData() });
   }
@@ -117,8 +117,11 @@ export class CoinflipController {
       ack({ status: "ERROR", message: "No session found" });
       return;
     }
-    
-    if (session.StateManager?.CurrentState.StateName != CoinflipSessionGameState.FLIP_CHOICE) {
+
+    if (
+      session.StateManager?.CurrentState.StateName !=
+      CoinflipSessionGameState.FLIP_CHOICE
+    ) {
       ack({ status: "ERROR", message: "Not in flip choice state" });
       return;
     }
@@ -139,7 +142,10 @@ export class CoinflipController {
       return;
     }
 
-    if (session.StateManager?.CurrentState.StateName != CoinflipSessionGameState.NEXT_CHOICE) {
+    if (
+      session.StateManager?.CurrentState.StateName !=
+      CoinflipSessionGameState.NEXT_CHOICE
+    ) {
       ack({ status: "ERROR", message: "Not in next choice state" });
       return;
     }
@@ -158,38 +164,41 @@ export class CoinflipController {
     session.SessionId = lastPendingSessionData.id;
     session.ServerSeedHash = lastPendingSessionData.serverSeed;
 
-    session.SetClientBetData(
-      {
-        bet: lastPendingSessionData.amount,
-        clientSeed: lastPendingSessionData.clientSeed,
-        multiplier: this.GetMultiplier(),
-      },
-    );
+    session.SetClientBetData({
+      bet: lastPendingSessionData.amount,
+      clientSeed: lastPendingSessionData.clientSeed,
+      multiplier: this.GetMultiplier(),
+    });
 
     session.SetStateManager(
-      this.factory.CreateStateManager(
-        session,
-        CoinflipSessionGameState.START
-      )
+      this.factory.CreateStateManager(session, CoinflipSessionGameState.START)
     );
 
     return session;
   }
 
   private AddSessionListeners(account: Account, session: CoinflipSession) {
-    session.GetStateManager()?.OnStateChangeEvent.RegisterEventListener( async (new_state) => {
-      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_CHANGE_STATE,{session: session.ToData(), new_state: new_state});
-    });
+    session
+      .GetStateManager()
+      ?.OnStateChangeEvent.RegisterEventListener(async (new_state) => {
+        account.AssociatedSockets.Session.emit(
+          CoinFlipServerMessage.GAME_CHANGE_STATE,
+          { session: session.ToData(), new_state: new_state }
+        );
+      });
 
     session.SessionResultEvent.RegisterEventListener(async (result) => {
-      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.FLIP_RESULT,{session: session.ToData(), result: result});
+      account.AssociatedSockets.Session.emit(
+        CoinFlipServerMessage.FLIP_RESULT,
+        { session: session.ToData(), result: result }
+      );
     });
 
     session.SessionCompleteEvent.RegisterEventListener(async () => {
-      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_ENDED ,{serverSeed: session.ServerSeed});
+      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_ENDED, {
+        serverSeed: session.ServerSeed,
+      });
     });
-    
-    
   }
 
   private GetMultiplier(houseEdge: number = 2): number {

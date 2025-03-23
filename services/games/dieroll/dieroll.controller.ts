@@ -1,5 +1,8 @@
 import { DieRollModel } from "./dieroll.model";
-import { TDieRollGameResult, TDierollSessionJSON } from "./entities/dieroll.session";
+import {
+  TDieRollGameResult,
+  TDierollSessionJSON,
+} from "./entities/dieroll.session";
 import { Socket } from "socket.io";
 import { AccountStoreInstance } from "@/index";
 import { DieRollStateFactory } from "./entities/state.factory";
@@ -10,148 +13,181 @@ import { Account } from "@utils/account";
 import { DieRollGameState } from "./states";
 import { DieRollServerMessage } from "./dieroll.messages";
 
-export type TDieRollAck = {
-	status: "SUCCESS" ;
-	session: TDierollSessionJSON;
-} | {
-	status: "ERROR";
-	message: string;
-}
+export type TDieRollAck =
+  | {
+      status: "SUCCESS";
+      session: TDierollSessionJSON;
+    }
+  | {
+      status: "ERROR";
+      message: string;
+    };
 
 export class DieRollController {
-	private model: DieRollModel;
-	private factory: DieRollStateFactory;
+  private model: DieRollModel;
+  private factory: DieRollStateFactory;
 
-	constructor() {
-		this.model = new DieRollModel();
-		this.factory = new DieRollStateFactory();
-	}
+  constructor() {
+    this.model = new DieRollModel();
+    this.factory = new DieRollStateFactory();
+  }
 
-	public async HandleGetSession(socket: Socket, callback: (serverSeedHash: string, session_data?: TDierollSessionJSON) => void) {
-		let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
-		let session = this.model.GetSession(account.Id);
+  public async HandleGetSession(
+    socket: Socket,
+    callback: (
+      serverSeedHash: string,
+      session_data?: TDierollSessionJSON
+    ) => void
+  ) {
+    let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+    let session = this.model.GetSession(account.Id);
 
-		if (session){
-			callback(session.ServerSeedHash, session.ToData());
-			return;
-		} 
+    if (session) {
+      callback(session.ServerSeedHash, session.ToData());
+      return;
+    }
 
-		session = new DierollSession(account);
-		
-		this.model.SetSession(account.Id, session);
+    session = new DierollSession(account);
 
-		callback(session.ServerSeedHash);
+    this.model.SetSession(account.Id, session);
 
-	}
+    callback(session.ServerSeedHash);
+  }
 
-	public async HandleRoll(socket:Socket,betParams: z.infer<typeof DieRollBetType>, ack: (ack: TDieRollAck) => void) {
-		let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
-		let session = this.model.GetSession(account.Id);
+  public async HandleRoll(
+    socket: Socket,
+    betParams: z.infer<typeof DieRollBetType>,
+    ack: (ack: TDieRollAck) => void
+  ) {
+    let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+    let session = this.model.GetSession(account.Id);
 
-		if (!session) {
-			ack({
-				status: "ERROR",
-				message: "Session not found"
-			});
-			return;
-		}
+    if (!session) {
+      ack({
+        status: "ERROR",
+        message: "Session not found",
+      });
+      return;
+    }
 
-		let {data:bet, success:ParseSuccess, error:ParseError} = DieRollBetType.safeParse(betParams);
+    let {
+      data: bet,
+      success: ParseSuccess,
+      error: ParseError,
+    } = DieRollBetType.safeParse(betParams);
 
-		if (!ParseSuccess || !bet) {
-			ack({
-				status: "ERROR",
-				message: "Invalid bet parameters"
-			});
-			return;
-		}
+    if (!ParseSuccess || !bet) {
+      ack({
+        status: "ERROR",
+        message: "Invalid bet parameters",
+      });
+      return;
+    }
 
-		if (bet.target < 1) {
-			ack({
-				status: "ERROR",
-				message: "Target must be greater than 0"
-			});
-			return;
-		}
+    if (bet.target < 1) {
+      ack({
+        status: "ERROR",
+        message: "Target must be greater than 0",
+      });
+      return;
+    }
 
-		if (bet.target > 99) {
-			ack({
-				status: "ERROR",
-				message: "Target must be less than 100"
-			});
-			return;
-		}
+    if (bet.target > 99) {
+      ack({
+        status: "ERROR",
+        message: "Target must be less than 100",
+      });
+      return;
+    }
 
-		if (BigInt(bet.amount) < 0n) {
-			ack({
-				status: "ERROR",
-				message: "Amount must be greater than 0"
-			});
-			return;
-		}
+    if (BigInt(bet.amount) < 0n) {
+      ack({
+        status: "ERROR",
+        message: "Amount must be greater than 0",
+      });
+      return;
+    }
 
-		session.SetClientBetData({
-			bet: BigInt(bet.amount),
-			clientSeed: bet.client_seed,
-			multiplier: this.CalculateMultiplier(bet.condition, bet.target)
-		}, {
-			condition: bet.condition,
-			target: bet.target
-		});
-		
-		let stateManager = this.factory.CreateStateManager(session,DieRollGameState.START);
-		session.SetStateManager(stateManager);
+    session.SetClientBetData(
+      {
+        bet: BigInt(bet.amount),
+        clientSeed: bet.client_seed,
+        multiplier: this.CalculateMultiplier(bet.condition, bet.target),
+      },
+      {
+        condition: bet.condition,
+        target: bet.target,
+      }
+    );
 
-		ack({
-			status: "SUCCESS",
-			session: session.ToData()
-		});
-		
-		this.AddSessionListeners(session.AssociatedAccount, session);
-		console.log("Session started");
-		session.SessionStartEvent.Raise();
-	}
+    let stateManager = this.factory.CreateStateManager(
+      session,
+      DieRollGameState.START
+    );
+    session.SetStateManager(stateManager);
 
-	private AddSessionListeners(account: Account, session: DierollSession) {
-		session.SessionResultEvent.RegisterEventListener(async(result: TDieRollGameResult) => {
-			account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(DieRollServerMessage.ROLL_RESULT, result);
-		});
-		
-		session.SessionCompleteEvent.RegisterEventListener(async(result: TDieRollGameResult) => {
-			account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(DieRollServerMessage.GAME_ENDED, {serverSeed: session.ServerSeed});
-			
-			session.AssociatedAccount.AssociatedSockets.Session.socketsLeave(session.GetSessionRoomId());
-			this.model.RemoveSession(account.Id);
-		});
-	}
+    ack({
+      status: "SUCCESS",
+      session: session.ToData(),
+    });
 
+    this.AddSessionListeners(session.AssociatedAccount, session);
+    console.log("Session started");
+    session.SessionStartEvent.Raise();
+  }
 
-	private CalculateMultiplier(
-		condition: "OVER" | "UNDER",
-		target: number,
-		houseEdge: number = 2
-	): number {
-		// Validate inputs
-		if (target < 1 || target > 99) {
-			throw new Error("Target must be between 1 and 99");
-		}
-		if (houseEdge < 0 || houseEdge > 100) {
-			throw new Error("House edge must be between 0 and 100");
-		}
+  private AddSessionListeners(account: Account, session: DierollSession) {
+    session.SessionResultEvent.RegisterEventListener(
+      async (result: TDieRollGameResult) => {
+        console.log("result", result);
+        account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(
+          DieRollServerMessage.ROLL_RESULT,
+          result
+        );
+      }
+    );
 
-		// Calculate win probability
-		const winProbability =
-			condition === "OVER"
-				? (100 - target) / 100 // Probability of rolling > target
-				: target / 100; // Probability of rolling ≤ target
+    session.SessionCompleteEvent.RegisterEventListener(
+      async (result: TDieRollGameResult) => {
+        account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(
+          DieRollServerMessage.GAME_ENDED,
+          { serverSeed: session.ServerSeed }
+        );
 
-		// Calculate fair multiplier (without house edge)
-		const fairMultiplier = 1 / winProbability;
+        session.AssociatedAccount.AssociatedSockets.Session.socketsLeave(
+          session.GetSessionRoomId()
+        );
+        this.model.RemoveSession(account.Id);
+      }
+    );
+  }
 
-		// Apply house edge
-		const multiplierWithEdge = fairMultiplier * (1 - houseEdge / 100);
+  private CalculateMultiplier(
+    condition: "OVER" | "UNDER",
+    target: number,
+    houseEdge: number = 2
+  ): number {
+    // Validate inputs
+    if (target < 1 || target > 99) {
+      throw new Error("Target must be between 1 and 99");
+    }
+    if (houseEdge < 0 || houseEdge > 100) {
+      throw new Error("House edge must be between 0 and 100");
+    }
 
-		// Convert to basis points (1/10000)
-		return Math.round(multiplierWithEdge * 10000);
-	}
+    // Calculate win probability
+    const winProbability =
+      condition === "OVER"
+        ? (100 - target) / 100 // Probability of rolling > target
+        : target / 100; // Probability of rolling ≤ target
+
+    // Calculate fair multiplier (without house edge)
+    const fairMultiplier = 1 / winProbability;
+
+    // Apply house edge
+    const multiplierWithEdge = fairMultiplier * (1 - houseEdge / 100);
+
+    // Convert to basis points (1/10000)
+    return Math.round(multiplierWithEdge * 10000);
+  }
 }
