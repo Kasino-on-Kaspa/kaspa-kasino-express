@@ -21,6 +21,9 @@ export type TCoinflipSessionJSON = {
   sessionId: string;
   serverSeedHash: string;
   clientGameData: TCoinflipSessionClientGameData;
+  logs: TCoinflipSessionLog[];
+  level: number;
+  maxLevel: number;
 };
 
 export class CoinflipSession extends SessionManager<
@@ -120,6 +123,9 @@ export class CoinflipSession extends SessionManager<
       sessionId: this.SessionId!,
       serverSeedHash: this.ServerSeedHash,
       clientGameData: this.ClientGameData!,
+      logs: this.TCoinflipSessionLog,
+      level: this.Level,
+      maxLevel: this.MAX_LEVEL,
     };
   }
 }

@@ -178,11 +178,15 @@ export class CoinflipController {
 
   private AddSessionListeners(account: Account, session: CoinflipSession) {
     session.GetStateManager()?.OnStateChangeEvent.RegisterEventListener( async (new_state) => {
-      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_CHANGE_STATE,new_state);
+      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_CHANGE_STATE,{session: session.ToData(), new_state: new_state});
     });
 
-    session.SessionCompleteEvent.RegisterEventListener(async (result) => {
-      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_ENDED ,result);
+    session.SessionResultEvent.RegisterEventListener(async (result) => {
+      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.FLIP_RESULT,{session: session.ToData(), result: result});
+    });
+
+    session.SessionCompleteEvent.RegisterEventListener(async () => {
+      account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_ENDED ,{serverSeed: session.ServerSeed});
     });
     
     
