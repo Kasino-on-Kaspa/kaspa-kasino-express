@@ -81,10 +81,12 @@ export class CoinflipController {
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     let session = this.model.GetSession(account.Id);
+    
     if (!session) {
       ack({ status: "ERROR", message: "No session found" });
       return;
     }
+    
     session.SetClientBetData({
       bet: BigInt(bet_data.amount),
       clientSeed: bet_data.client_seed,

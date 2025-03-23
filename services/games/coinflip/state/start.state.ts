@@ -13,10 +13,9 @@ export class CoinflipStartState extends SessionBaseState<CoinflipStateManager> {
 
   public async HandleStart(manager: CoinflipStateManager): Promise<void> {
     if (
-      !manager.SessionManager.ClientGameData ||
       !manager.SessionManager.ClientBetData
     ) {
-      throw new Error("Client game data or session id is not set");
+      throw new Error("Client game data is not set");
     }
 
     let session = await DB.insert(sessionsTable)
