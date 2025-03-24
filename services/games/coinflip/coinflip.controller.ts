@@ -89,9 +89,18 @@ export class CoinflipController {
       ack({ status: "ERROR", message: "No session found" });
       return;
     }
+    let betAmount = BigInt(bet_data.amount)
+    if (betAmount < 0n) {
+      ack({ status: "ERROR", message: "Amount must be greater than 0" });
+      return;
+    }
 
+    if (betAmount > account.Balance.GetData()) {
+      ack({ status: "ERROR", message: "Insufficient balance" });
+      return;
+    }
     session.SetClientBetData({
-      bet: BigInt(bet_data.amount),
+      bet: betAmount,
       clientSeed: bet_data.client_seed,
       multiplier: this.GetMultiplier(),
     });

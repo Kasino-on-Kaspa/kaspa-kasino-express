@@ -1,6 +1,8 @@
 import { SessionBaseState } from "@utils/session/base.state";
 import { DieRollGameState ,TDieRollGameState} from ".";
 import { DierollStateManager } from "../entities/state.manager";
+import { DB } from "@/database";
+import { dieroll } from "@schema/games/dieroll.schema";
 
 export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
   protected _stateName: TDieRollGameState = DieRollGameState.SETTLE;
@@ -9,16 +11,26 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
     this.HandleSettle(manager);
   }
   
-  public HandleSettle(manager: DierollStateManager): void {
+  public async HandleSettle(manager: DierollStateManager): Promise<void> {
     let isWon = manager.SessionManager.GetResultIsWon();
     let payout = manager.SessionManager.ClientBetData!.bet * BigInt(manager.SessionManager.ClientBetData!.multiplier);
     
+    
+    await DB.insert(dieroll).values({
+      sessionId: manager.SessionManager.SessionId!,
+      condition: manager.SessionManager.ClientGameData!.condition,
+      target: manager.SessionManager.ClientGameData!.target,
+      multiplier: manager.SessionManager.ClientBetData!.multiplier,
+      result: manager.SessionManager.GameResult,
+      status: manager.SessionManager.GameResultIsWon!,
+    }).execute();
+
     if (isWon == "WON") {
       manager.SessionManager.AssociatedAccount.AddBalance(payout, "BET_RETURN");
     }
     
     if (isWon == "DRAW") {
-      // manager.SessionManager.AssociatedAccount.AddBalance(manager.SessionManager.ClientBetData!.bet, "BET_RETURN");
+      manager.SessionManager.AssociatedAccount.AddBalance(manager.SessionManager.ClientBetData!.bet, "BET_RETURN");
     }
 
     manager.ChangeState(DieRollGameState.END);

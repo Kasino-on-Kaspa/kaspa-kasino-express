@@ -14,14 +14,6 @@ export class DieRollEndState extends SessionBaseState<DierollStateManager> {
 
   public async HandleEnd(manager: DierollStateManager): Promise<void> {
 
-    await DB.insert(dieroll).values({
-      sessionId: manager.SessionManager.SessionId!,
-      condition: manager.SessionManager.ClientGameData!.condition,
-      target: manager.SessionManager.ClientGameData!.target,
-      multiplier: manager.SessionManager.ClientBetData!.multiplier,
-      result: manager.SessionManager.GameResult,
-      status: manager.SessionManager.GameResultIsWon!,
-    }).execute();
     manager.SessionManager.SessionCompleteEvent.Raise(manager.SessionManager.GameResult!);
   }
 

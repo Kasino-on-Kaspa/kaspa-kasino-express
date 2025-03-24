@@ -100,7 +100,9 @@ export class DieRollController {
       return;
     }
 
-    if (BigInt(bet.amount) < 0n) {
+    let betAmount = BigInt(bet.amount)
+    
+    if (betAmount < 0n) {
       ack({
         status: "ERROR",
         message: "Amount must be greater than 0",
@@ -108,9 +110,17 @@ export class DieRollController {
       return;
     }
 
+    if (betAmount > account.Balance.GetData()) {
+      ack({
+        status: "ERROR",
+        message: "Insufficient balance",
+      });
+      return;
+    }
+
     session.SetClientBetData(
       {
-        bet: BigInt(bet.amount),
+        bet: betAmount,
         clientSeed: bet.client_seed,
         multiplier: this.CalculateMultiplier(bet.condition, bet.target),
       },
