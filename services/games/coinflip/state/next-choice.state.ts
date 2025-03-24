@@ -25,7 +25,7 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
   private HandleStateTimeout(manager: CoinflipStateManager): void {
     manager.SessionManager.UpdateLastLog({nextSelection: "PENDING"});
     manager.SessionManager.AddLastLogToDB();
-    manager.SessionManager.OnStateTimeoutEvent.Raise();
+    manager.ChangeState(CoinflipSessionGameState.TIMEOUT);
   }
   
   public HandleNextSelection(manager: CoinflipStateManager,choice: "CASHOUT" | "CONTINUE"): void {

@@ -11,4 +11,5 @@ export const enum CoinFlipServerMessage {
   GAME_CHANGE_STATE = "coinflip:game_change_state",
   FLIP_RESULT = "coinflip:flip_result",
   GAME_ENDED = "coinflip:game_ended",
+  GAME_TIMEOUT = "coinflip:game_timeout",
 }

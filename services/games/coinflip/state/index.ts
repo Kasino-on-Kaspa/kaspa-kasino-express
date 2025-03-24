@@ -5,6 +5,7 @@ export enum CoinflipSessionGameState {
     SETTLE = "SETTLE",
     NEXT_CHOICE = "NEXT_CHOICE",
     CASHOUT = "CASHOUT",
-    END = "END"
+    END = "END",
+    TIMEOUT = "TIMEOUT"
 }
 

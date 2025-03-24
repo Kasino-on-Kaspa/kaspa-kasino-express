@@ -193,7 +193,15 @@ export class CoinflipController {
           { session: session.ToData(), new_state: new_state }
         );
       });
-
+    
+    session.OnStateTimeoutEvent.RegisterEventListener(async () => {
+      this.model.RemoveSession(account.Id);
+      account.AssociatedSockets.Session.emit(
+        CoinFlipServerMessage.GAME_TIMEOUT,
+        { session: session.ToData() }
+      );
+    });
+    
     session.SessionResultEvent.RegisterEventListener(async (result) => {
       account.AssociatedSockets.Session.emit(
         CoinFlipServerMessage.FLIP_RESULT,

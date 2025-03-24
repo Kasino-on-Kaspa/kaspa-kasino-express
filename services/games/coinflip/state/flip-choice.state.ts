@@ -17,24 +17,30 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
       );
 
     this.Timeout = setTimeout(() => {
-      manager.SessionManager.OnStateTimeoutEvent.Raise();
+      this.HandleStateTimeout(manager);
     }, 1000);
   }
   
-  public HandleChoiceSelected(
+  public ExitState(manager: CoinflipStateManager): void {
+    this.UnregisterChoiceListener(manager);
+  }
+  
+  private HandleChoiceSelected(
     manager: CoinflipStateManager,
     choice: TCoinflipSessionClientGameData
   ) {
     manager.SessionManager.AddLog({ playerChoice: choice });
     manager.ChangeState(CoinflipSessionGameState.FLIP);
   }
-
-  public ExitState(manager: CoinflipStateManager): void {
-    if (!this.listenerIndex) return;
-
-    manager.SessionManager.GameChoiceEvent.UnRegisterEventListener(
-      this.listenerIndex
-    );
-    
+  private HandleStateTimeout(manager: CoinflipStateManager): void {
+    this.UnregisterChoiceListener(manager);
+    manager.ChangeState(CoinflipSessionGameState.TIMEOUT);
   }
+  
+  private UnregisterChoiceListener(manager: CoinflipStateManager): void {
+    if (this.listenerIndex) {
+      manager.SessionManager.GameChoiceEvent.UnRegisterEventListener(this.listenerIndex);
+    }
+  }
+  
 }
