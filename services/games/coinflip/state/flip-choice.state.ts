@@ -7,6 +7,7 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
   protected _stateName: string = CoinflipSessionGameState.FLIP_CHOICE;
   protected listenerIndex?: number;
   private Timeout?: NodeJS.Timeout;
+  private allAccountLogoutListener?: number;
 
   public EnterState(manager: CoinflipStateManager): void {
     this.listenerIndex =
@@ -15,6 +16,10 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
           this.HandleChoiceSelected(manager, choice);
         }
       );
+
+    this.allAccountLogoutListener = manager.SessionManager.AssociatedAccount.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => {
+      this.HandleStateTimeout(manager);
+    });
 
     this.Timeout = setTimeout(() => {
       this.HandleStateTimeout(manager);
@@ -33,7 +38,7 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
     manager.SessionManager.AddLog({ playerChoice: choice });
     manager.ChangeState(CoinflipSessionGameState.FLIP);
   }
-  
+
   private HandleStateTimeout(manager: CoinflipStateManager): void {
     this.UnregisterChoiceListener(manager);
     manager.ChangeState(CoinflipSessionGameState.TIMEOUT);
@@ -42,6 +47,9 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
   private UnregisterChoiceListener(manager: CoinflipStateManager): void {
     if (this.listenerIndex) {
       manager.SessionManager.GameChoiceEvent.UnRegisterEventListener(this.listenerIndex);
+    }
+    if (this.allAccountLogoutListener){
+      manager.SessionManager.AssociatedAccount.AssociatedSockets.OnAllSocketsDisconnect.UnRegisterEventListener(this.allAccountLogoutListener);
     }
     clearTimeout(this.Timeout);
   }
