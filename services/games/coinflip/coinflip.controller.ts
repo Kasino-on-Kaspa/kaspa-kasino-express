@@ -46,12 +46,14 @@ export class CoinflipController {
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     let session = this.model.GetSession(account.Id);
+    
     if (session) {
       callback(session.ServerSeedHash, session.ToData());
       return;
     }
     let pendingSession = await this.model.GetPendingSession(account.Id);
-
+    
+    
     if (pendingSession) {
       let promise = Promise.all([
         this.model.GetSessionDataFromDB(pendingSession.id),
@@ -59,7 +61,7 @@ export class CoinflipController {
       ]);
 
       let [pendingSessionData, pendingSessionLogs] = await promise;
-
+      
       let session = this.GenerateSessionFromPendingSessionData(
         pendingSessionData,
         pendingSessionLogs,
@@ -81,8 +83,7 @@ export class CoinflipController {
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     let session = this.model.GetSession(account.Id);
-
-    console.log("bet_data", bet_data);
+    
 
     if (!session) {
       ack({ status: "ERROR", message: "No session found" });
@@ -100,14 +101,13 @@ export class CoinflipController {
       CoinflipSessionGameState.START
     );
 
-    console.log("stateManager", stateManager.CurrentState.StateName);
     session.SetStateManager(stateManager);
     this.AddSessionListeners(account, session);
 
     this.model.SetSession(account.Id, session);
 
     session.SessionStartEvent.Raise();
-
+    
     ack({ status: "SUCCESS", session: session.ToData() });
   }
 
@@ -175,10 +175,19 @@ export class CoinflipController {
       clientSeed: lastPendingSessionData.clientSeed,
       multiplier: this.GetMultiplier(),
     });
+    let manager = this.factory.CreateStateManager(session, CoinflipSessionGameState.NEXT_CHOICE)
+    
+    if (!session.LastLog || session.LastLog.nextSelection == "CONTINUE"){
+      manager = this.factory.CreateStateManager(session, CoinflipSessionGameState.FLIP_CHOICE)
+    }
 
-    session.SetStateManager(
-      this.factory.CreateStateManager(session, CoinflipSessionGameState.START)
-    );
+    session.SetStateManager(manager);
+    
+    this.AddSessionListeners(account, session);
+    
+    this.model.SetSession(account.Id, session);
+
+    session.SessionStartEvent.Raise();
 
     return session;
   }
@@ -215,6 +224,7 @@ export class CoinflipController {
         serverSeed: session.ServerSeed,
       });
     });
+    
   }
 
   private GetMultiplier(houseEdge: number = 2): number {

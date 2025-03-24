@@ -3,7 +3,7 @@ import {
   CoinflipSession,
   TCoinflipSessionLog,
 } from "./entities/coinflip.session";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { coinflip } from "@schema/games/coinflip.schema";
 import { and } from "drizzle-orm";
 import { sessionsTable } from "@schema/session.schema";
@@ -24,7 +24,8 @@ export class CoinflipModel {
   }
 
   public async GetPendingSession(accountId: string) {
-    let pendingBet = await DB.transaction(
+    
+    let pendingSession = await DB.transaction(
       async (tx) => {
         let session = await tx
           .select()
@@ -32,27 +33,29 @@ export class CoinflipModel {
           .where(eq(sessionsTable.user, accountId))
           .limit(1);
 
-        if (!session[0]) {
-          return undefined;
-        }
-        
-        let pendingBet = await tx
+          if (!session[0]) {
+            return undefined;
+          }
+          
+          let pendingBet = await tx
           .select()
           .from(coinflip)
-          .where(
-            and(eq(coinflip.sessionId, session[0].id), eq(coinflip.next, "PENDING"))
-          )
+          .where(eq(coinflip.sessionId, session[0].id))
           .limit(1)
           .orderBy(desc(coinflip.createdAt));
-
+          
         if (pendingBet.length < 1) {
-          return undefined;
+          return session[0];
         }
 
-        return pendingBet[0];
+        if (pendingBet[0].next == "PENDING" || pendingBet[0].next == "CONTINUE") {
+          return session[0];
+        }
+
+        return undefined;
       }
     );
-    return pendingBet;
+    return pendingSession;
   }
 
   public async GetSessionLogsFromDB(sessionId: string) {

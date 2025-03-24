@@ -29,18 +29,17 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
     manager.ChangeState(CoinflipSessionGameState.TIMEOUT);
   }
   
-  public HandleNextSelection(manager: CoinflipStateManager,choice: "CASHOUT" | "CONTINUE"): void {
+  public async HandleNextSelection(manager: CoinflipStateManager,choice: "CASHOUT" | "CONTINUE"): Promise<void> {
+    this.UnregisterNextSelectionListener(manager);
     if (choice == "CASHOUT") {
-      this.UnregisterNextSelectionListener(manager);
       manager.SessionManager.UpdateLastLog({nextSelection: "CASHOUT"});
       manager.SessionManager.AddLastLogToDB();
       manager.ChangeState(CoinflipSessionGameState.CASHOUT);
       return;
     }
     else{
-      this.UnregisterNextSelectionListener(manager);
       manager.SessionManager.UpdateLastLog({nextSelection: "CONTINUE"});
-      manager.SessionManager.AddLastLogToDB();
+      await manager.SessionManager.AddLastLogToDB();
       manager.ChangeState(CoinflipSessionGameState.FLIP_CHOICE);
     }
   }

@@ -30,11 +30,13 @@ export class CoinflipStartState extends SessionBaseState<CoinflipStateManager> {
       .returning();
 
     manager.SessionManager.SessionId = session[0].id;
+
     let roomId = manager.SessionManager.GetSessionRoomId();
 
     manager.SessionManager.AssociatedAccount.AssociatedSockets.Session.socketsJoin(
       roomId
     );
+    
     await manager.SessionManager.AssociatedAccount.RemoveBalance(
       manager.SessionManager.ClientBetData.bet,
       "BET"

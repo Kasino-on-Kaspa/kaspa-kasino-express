@@ -13,7 +13,7 @@ export class CoinflipSettleState extends SessionBaseState<CoinflipStateManager> 
   }
 
   public async HandleSettle(manager: CoinflipStateManager) {
-    let lastLog = manager.SessionManager.LastLog;
+    let lastLog = manager.SessionManager.LastLog!;
     let result = lastLog.result;
     let playerChoice = lastLog.playerChoice;
 
@@ -30,6 +30,7 @@ export class CoinflipSettleState extends SessionBaseState<CoinflipStateManager> 
       manager.ChangeState(CoinflipSessionGameState.CASHOUT);
       return;
     }
+    
     manager.ChangeState(CoinflipSessionGameState.NEXT_CHOICE);
     return;
   }

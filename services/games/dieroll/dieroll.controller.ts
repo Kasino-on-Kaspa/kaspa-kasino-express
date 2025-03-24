@@ -132,14 +132,12 @@ export class DieRollController {
     });
 
     this.AddSessionListeners(session.AssociatedAccount, session);
-    console.log("Session started");
     session.SessionStartEvent.Raise();
   }
 
   private AddSessionListeners(account: Account, session: DierollSession) {
     session.SessionResultEvent.RegisterEventListener(
       async (result: TDieRollGameResult) => {
-        console.log("result", result);
         account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(
           DieRollServerMessage.ROLL_RESULT,
           result

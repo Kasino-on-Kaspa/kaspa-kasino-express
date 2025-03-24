@@ -65,7 +65,10 @@ export class CoinflipSession extends SessionManager<
     this._level++;
   }
 
-  public get LastLog(): TCoinflipSessionLog {
+  public get LastLog(): TCoinflipSessionLog|undefined {
+    if (this.TCoinflipSessionLog.length < 0) 
+      return undefined
+    
     return this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1];
   }
 
@@ -77,13 +80,19 @@ export class CoinflipSession extends SessionManager<
     if (!this.SessionId) {
       return false;
     }
-
+    
     let log = this.LastLog;
         
+    if (!log){
+      return false;
+    }
+    
+    
     if (!log.nextSelection || !log.result) {
       return false;
     }
-
+    
+    
     await DB.insert(coinflip)
       .values({
         sessionId: this.SessionId,
@@ -111,10 +120,12 @@ export class CoinflipSession extends SessionManager<
     result?: TCoinflipSessionGameResult;
     nextSelection?: "DEFEATED" | "CONTINUE" | "CASHOUT" | "PENDING";
   }): void {
+
+    let oldLog = this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1] 
     this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1] = {
-      ...this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1],
-      result,
-      nextSelection,
+      playerChoice: oldLog.playerChoice,
+      result : result??oldLog.result,
+      nextSelection: nextSelection??oldLog.nextSelection,
     };
   }
 

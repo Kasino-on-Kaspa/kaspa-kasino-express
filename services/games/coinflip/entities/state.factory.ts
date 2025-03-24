@@ -10,6 +10,7 @@ import { CoinflipSettleState } from "../state/settle.state";
 import { CoinflipNextChoiceState } from "../state/next-choice.state";
 import { CoinflipCashoutState } from "../state/cashout.state";
 import { CoinflipEndState } from "../state/end.state";
+import { CoinflipTimeoutState } from "../state/timeout.state";
 
 export class CoinflipStateFactory extends SessionStateFactory<CoinflipStateManager> {
     public GetState(stateName: string): SessionBaseState<CoinflipStateManager> {
@@ -28,6 +29,8 @@ export class CoinflipStateFactory extends SessionStateFactory<CoinflipStateManag
                 return new CoinflipCashoutState();
             case CoinflipSessionGameState.END:
                 return new CoinflipEndState();
+            case CoinflipSessionGameState.TIMEOUT:
+                return new CoinflipTimeoutState();
             default:
                 throw new Error(`State ${stateName} not found`);
         }
