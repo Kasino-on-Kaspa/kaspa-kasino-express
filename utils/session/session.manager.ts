@@ -19,8 +19,6 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   private _sessionId?: string;
   public ClientBetData?: TBetClientData;
   public ClientGameData?: TGameClientData;
-  public GameResult?: TGameResult;
-  public GameResultIsWon?: "DRAW" | "WON" | "LOST";
 
   //#region Session Events
   public SessionStopEvent: ObservableEvent<void>;
@@ -53,19 +51,6 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   }
 
 
-  //#region Game Result
-  public SetResult(isWon: "DRAW" | "WON" | "LOST", result: TGameResult): void {
-    this.GameResultIsWon = isWon;
-    this.GameResult = result;
-  }
-
-  public GetResult(): TGameResult {
-    return this.GameResult!;
-  }
-
-  public GetResultIsWon() {
-    return this.GameResultIsWon!;
-  }
 
   public abstract ToData() : {[key:string]:any};
   //#endregion

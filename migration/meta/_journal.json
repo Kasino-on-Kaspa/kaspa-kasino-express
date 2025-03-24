@@ -15,6 +15,13 @@
       "when": 1742556957649,
       "tag": "0001_furry_skreet",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1742825899777,
+      "tag": "0002_free_overlord",
+      "breakpoints": true
     }
   ]
 }

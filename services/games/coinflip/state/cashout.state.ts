@@ -11,14 +11,14 @@ export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager>
   }
 
   public async HandleCashout(manager: CoinflipStateManager): Promise<void> {
-    if (!manager.SessionManager.GameResultIsWon) {
+    if (!manager.SessionManager.LastLog || manager.SessionManager.LastLog.result != manager.SessionManager.LastLog.playerChoice) {
       return;
     }
     
     if (!manager.SessionManager.ClientBetData) {
       throw new Error("Client bet data not found");
     }
-
+    
     await manager.SessionManager.AssociatedAccount.AddBalance(manager.SessionManager.ClientBetData!.bet * BigInt(manager.SessionManager.ClientBetData!.multiplier ** manager.SessionManager.Level), "BET_RETURN");
     manager.ChangeState(CoinflipSessionGameState.END);
     return;

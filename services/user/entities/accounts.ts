@@ -23,7 +23,6 @@ export class AccountStore {
       account = await this.GetAccountFromDB(account_id);
     }
     account.AssociatedSockets.AddSockets(socket);
-    
   }
 
   public GetAllUsers(){
@@ -40,7 +39,13 @@ export class AccountStore {
       .limit(1);
     let account = new Account(result[0].users, {id:result[0].wallets.id, address:result[0].wallets.address}, this.io);
     this._userAccounts[account_id] = account;
+    account.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => {
+      this.RemoveUserStoredInstance(account_id);
+    });
     return account;
+  }
+  private RemoveUserStoredInstance(account_id: string) {
+    delete this._userAccounts[account_id];
   }
 
   public InstantiateDatabaseTimer(interval: number) {

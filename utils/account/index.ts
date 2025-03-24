@@ -50,13 +50,12 @@ export class Account {
     type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
   ) {
     this.balance.SetData(this.balance.GetData() + offset);
-
     await DB.insert(balance_log).values({
       account: this._id,
       amount: offset,
       type: type,
     });
-
+    
     this.HandleBalanceUpdate();
     this.isUpdated = true;
   }
