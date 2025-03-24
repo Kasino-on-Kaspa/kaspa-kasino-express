@@ -54,8 +54,8 @@ export class CoinflipController {
 
     if (pendingSession) {
       let promise = Promise.all([
-        this.model.GetSessionData(pendingSession.id),
-        this.model.GetSessionLogs(pendingSession.id),
+        this.model.GetSessionDataFromDB(pendingSession.id),
+        this.model.GetSessionLogsFromDB(pendingSession.id),
       ]);
 
       let [pendingSessionData, pendingSessionLogs] = await promise;
@@ -202,6 +202,7 @@ export class CoinflipController {
     });
 
     session.SessionCompleteEvent.RegisterEventListener(async () => {
+      this.model.RemoveSession(account.Id);
       account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_ENDED, {
         serverSeed: session.ServerSeed,
       });

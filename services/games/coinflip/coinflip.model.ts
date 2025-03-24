@@ -11,30 +11,50 @@ import { sessionsTable } from "@schema/session.schema";
 export class CoinflipModel {
   private sessions: Record<string, CoinflipSession> = {};
 
-  public GetSession(sessionId: string): CoinflipSession | undefined {
-    return this.sessions[sessionId];
+  public GetSession(accountId: string): CoinflipSession | undefined {
+    return this.sessions[accountId];
   }
 
-  public SetSession(sessionId: string, session: CoinflipSession) {
-    this.sessions[sessionId] = session;
+  public SetSession(accountId: string, session: CoinflipSession) {
+    this.sessions[accountId] = session;
   }
 
-  public RemoveSession(sessionId: string) {
-    delete this.sessions[sessionId];
+  public RemoveSession(accountId: string) {
+    delete this.sessions[accountId];
   }
 
   public async GetPendingSession(accountId: string) {
-    let pendingBet = await DB.select()
-      .from(coinflip)
-      .where(
-        and(eq(coinflip.sessionId, accountId), eq(coinflip.next, "PENDING"))
-      )
-      .limit(1)
-      .orderBy(desc(coinflip.createdAt));
-    return pendingBet[0];
+    let pendingBet = await DB.transaction(
+      async (tx) => {
+        let session = await tx
+          .select()
+          .from(sessionsTable)
+          .where(eq(sessionsTable.user, accountId))
+          .limit(1);
+        if (!session) {
+          return undefined;
+        }
+        
+        let pendingBet = await tx
+          .select()
+          .from(coinflip)
+          .where(
+            and(eq(coinflip.sessionId, session[0].id), eq(coinflip.next, "PENDING"))
+          )
+          .limit(1)
+          .orderBy(desc(coinflip.createdAt));
+
+        if (pendingBet.length < 1) {
+          return undefined;
+        }
+
+        return pendingBet[0];
+      }
+    );
+    return pendingBet;
   }
 
-  public async GetSessionLogs(sessionId: string) {
+  public async GetSessionLogsFromDB(sessionId: string) {
     let sessionLogs = await DB.select({
       playerChoice: coinflip.playerChoice,
       result: coinflip.result,
@@ -47,7 +67,7 @@ export class CoinflipModel {
     return sessionLogs;
   }
 
-  public async GetSessionData(sessionId: string) {
+  public async GetSessionDataFromDB(sessionId: string) {
     let sessionData = await DB.select()
       .from(sessionsTable)
       .where(eq(sessionsTable.id, sessionId))

@@ -6,9 +6,7 @@ import { z } from "zod";
 import { E_COINFLIP_OPTION } from "../../../schema/games/coinflip.schema";
 import {
   CoinFlipClientMessage,
-  CoinFlipServerMessage,
 } from "./coinflip.messages";
-import { Account } from "../../../utils/account";
 import { TCoinflipSessionJSON } from "./entities/coinflip.session";
 
 const CoinflipNamespaceName = "/games/coinflip";
@@ -24,6 +22,7 @@ class CoinflipService extends Service {
           serverSeedHash: string,
           session_data?: TCoinflipSessionJSON
         ) => void
+        
       ) => {
         this.coinflipController.HandleGetSession(socket, callback);
       }
