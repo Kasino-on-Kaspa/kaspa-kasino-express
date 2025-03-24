@@ -31,7 +31,8 @@ export class CoinflipModel {
           .from(sessionsTable)
           .where(eq(sessionsTable.user, accountId))
           .limit(1);
-        if (!session) {
+
+        if (!session[0]) {
           return undefined;
         }
         

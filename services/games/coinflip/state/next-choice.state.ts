@@ -19,10 +19,11 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
 
     this.pushToDBTimeout = setTimeout(() => {
       this.HandleStateTimeout(manager);
-    }, 1000);
+    }, manager.StateTimeoutDelay);
   }
 
   private HandleStateTimeout(manager: CoinflipStateManager): void {
+    this.UnregisterNextSelectionListener(manager);
     manager.SessionManager.UpdateLastLog({nextSelection: "PENDING"});
     manager.SessionManager.AddLastLogToDB();
     manager.ChangeState(CoinflipSessionGameState.TIMEOUT);
@@ -47,6 +48,7 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
     if (this.nextSelectionListener) {
       manager.SessionManager.GameNextSelectionEvent.UnRegisterEventListener(this.nextSelectionListener);
     }
+    clearTimeout(this.pushToDBTimeout);
   }
   public ExitState(manager: CoinflipStateManager): void { 
     this.UnregisterNextSelectionListener(manager);
