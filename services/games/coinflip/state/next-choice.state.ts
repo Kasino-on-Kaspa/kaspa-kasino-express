@@ -10,6 +10,7 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
 
   private nextSelectionListener?: number;
   private pushToDBTimeout?: NodeJS.Timeout;
+  private allAccountLogoutListener?: number;
   public EnterState(manager: CoinflipStateManager): void {
     manager.SessionManager.IncrementLevel();
 
@@ -17,9 +18,14 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
       this.HandleNextSelection(manager,choice);
     });
 
+    this.allAccountLogoutListener = manager.SessionManager.AssociatedAccount.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => {
+      this.HandleStateTimeout(manager);
+    });
+
     this.pushToDBTimeout = setTimeout(() => {
       this.HandleStateTimeout(manager);
     }, manager.StateTimeoutDelay);
+    
   }
 
   private HandleStateTimeout(manager: CoinflipStateManager): void {
@@ -46,6 +52,9 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
   private UnregisterNextSelectionListener(manager: CoinflipStateManager): void {
     if (this.nextSelectionListener) {
       manager.SessionManager.GameNextSelectionEvent.UnRegisterEventListener(this.nextSelectionListener);
+    }
+    if (this.allAccountLogoutListener){
+      manager.SessionManager.AssociatedAccount.AssociatedSockets.OnAllSocketsDisconnect.UnRegisterEventListener(this.allAccountLogoutListener);
     }
     clearTimeout(this.pushToDBTimeout);
   }
