@@ -11,29 +11,32 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
 
   public EnterState(manager: CoinflipStateManager): void {
     this.listenerIndex =
-      manager.SessionManager.GameChoiceEvent.RegisterEventListener(
-        async (choice) => {
-          this.HandleChoiceSelected(manager, choice);
-        }
-      );
-
+    manager.SessionManager.GameChoiceEvent.RegisterEventListener(
+      async (choice) => {
+        console.log("Enter Coinflip Flip Choice state");
+        this.HandleChoiceSelected(manager, choice);
+      }
+    );
+    
     this.allAccountLogoutListener = manager.SessionManager.AssociatedAccount.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => {
+      console.log("Enter Coinflip Flip Choice state");
       this.HandleStateTimeout(manager);
     });
-
+    
     this.Timeout = setTimeout(() => {
+      console.log("Enter Coinflip Flip Choice state");
       this.HandleStateTimeout(manager);
     }, manager.StateTimeoutDelay);
-  }
-  
-  public ExitState(manager: CoinflipStateManager): void {
-    this.UnregisterChoiceListener(manager);
-  }
-  
-  private HandleChoiceSelected(
-    manager: CoinflipStateManager,
-    choice: TCoinflipSessionClientGameData
-  ) {
+    }
+    
+    public ExitState(manager: CoinflipStateManager): void {
+    }
+    
+    private HandleChoiceSelected(
+      manager: CoinflipStateManager,
+      choice: TCoinflipSessionClientGameData
+    ) {
+    console.log("Choice selected", choice);
     this.UnregisterChoiceListener(manager);
     manager.SessionManager.AddLog({ playerChoice: choice });
     manager.ChangeState(CoinflipSessionGameState.FLIP);

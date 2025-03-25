@@ -122,6 +122,7 @@ export class CoinflipSession extends SessionManager<
   }): void {
 
     let oldLog = this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1] 
+    
     this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1] = {
       playerChoice: oldLog.playerChoice,
       result : result??oldLog.result,

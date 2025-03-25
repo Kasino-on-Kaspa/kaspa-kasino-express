@@ -30,7 +30,7 @@ export const users = p.pgTable("users", {
 
   createdAt: p.timestamp().notNull().defaultNow(),
 
-  referrelCode: p
+  referralCode: p
     .varchar({
       length: 12,
     })
@@ -38,5 +38,5 @@ export const users = p.pgTable("users", {
     .unique()
     .$defaultFn(() => crypto.randomBytes(6).toString("hex")),
 
-  referredBy: p.uuid().references((): p.AnyPgColumn => users.referrelCode),
+  referredBy: p.uuid().references((): p.AnyPgColumn => users.referralCode),
 });

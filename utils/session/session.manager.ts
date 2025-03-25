@@ -23,7 +23,7 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   //#region Session Events
   public SessionStopEvent: ObservableEvent<void>;
   public SessionStartEvent: ObservableEvent<void>;
-  public SessionCompleteEvent: ObservableEvent<TGameResult>;
+  public SessionCompleteEvent: ObservableEvent<void>;
   public OnStateTimeoutEvent: ObservableEvent<void>;
   public SessionResultEvent: ObservableEvent<TGameResult>;
   //#endregion
@@ -36,7 +36,7 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
 
     this.SessionStopEvent = new ObservableEvent<void>();
     this.SessionStartEvent = new ObservableEvent<void>(); 
-    this.SessionCompleteEvent = new ObservableEvent<TGameResult>();
+    this.SessionCompleteEvent = new ObservableEvent<void>();
     this.OnStateTimeoutEvent = new ObservableEvent<void>();
     this.SessionResultEvent = new ObservableEvent<TGameResult>();
   } 

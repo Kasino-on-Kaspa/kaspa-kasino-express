@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1741886228562,
-      "tag": "0000_living_argent",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1742556957649,
-      "tag": "0001_furry_skreet",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1742825899777,
-      "tag": "0002_free_overlord",
+      "when": 1742891100622,
+      "tag": "0000_bored_prodigy",
       "breakpoints": true
     }
   ]

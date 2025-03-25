@@ -6,7 +6,7 @@ export class CoinflipEndState extends SessionBaseState<CoinflipStateManager> {
   protected _stateName: string = CoinflipSessionGameState.END;
 
   public EnterState(manager: CoinflipStateManager): void {
-    manager.SessionManager.SessionCompleteEvent.Raise(manager.SessionManager.GameResult!);
+    manager.SessionManager.SessionCompleteEvent.Raise();
   }
 
   public ExitState(manager: CoinflipStateManager): void {

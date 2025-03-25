@@ -1,5 +1,8 @@
-CREATE TYPE "public"."E_BALANCE_LOG_TYPE" AS ENUM('DEPOSIT', 'WITHDRAWAL', 'BET', 'WIN');--> statement-breakpoint
+CREATE TYPE "public"."E_BALANCE_LOG_TYPE" AS ENUM('DEPOSIT', 'WITHDRAWAL', 'BET', 'BET_RETURN');--> statement-breakpoint
+CREATE TYPE "public"."CoinflipStatus" AS ENUM('CONTINUE', 'CASHOUT', 'PENDING', 'DEFEATED');--> statement-breakpoint
+CREATE TYPE "public"."CoinflipChoice" AS ENUM('HEADS', 'TAILS');--> statement-breakpoint
 CREATE TYPE "public"."DicerollCondition" AS ENUM('OVER', 'UNDER');--> statement-breakpoint
+CREATE TYPE "public"."DicerollStatus" AS ENUM('DRAW', 'WON', 'LOST');--> statement-breakpoint
 CREATE TYPE "public"."GameType" AS ENUM('DICEROLL', 'COINFLIP');--> statement-breakpoint
 CREATE TYPE "public"."TransactionType" AS ENUM('DEPOSIT', 'WITHDRAWAL');--> statement-breakpoint
 CREATE TABLE "balance_log" (
@@ -10,14 +13,26 @@ CREATE TABLE "balance_log" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "coinflip_results" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"sessionId" uuid NOT NULL,
+	"playerChoice" "CoinflipChoice" NOT NULL,
+	"result" "CoinflipChoice" NOT NULL,
+	"level" integer NOT NULL,
+	"multiplier" integer NOT NULL,
+	"next" "CoinflipStatus" NOT NULL,
+	"client_won" boolean NOT NULL,
+	"createdAt" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "dieroll_result" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"sessionId" uuid NOT NULL,
 	"target" integer NOT NULL,
 	"condition" "DicerollCondition" NOT NULL,
 	"result" integer,
-	"client_won" boolean,
 	"multiplier" integer NOT NULL,
+	"status" "DicerollStatus" NOT NULL,
 	"settledAt" timestamp
 );
 --> statement-breakpoint
@@ -48,7 +63,7 @@ CREATE TABLE "users" (
 	"xOnlyPublicKey" varchar NOT NULL,
 	"username" varchar,
 	"wallet" uuid NOT NULL,
-	"balance" bigint DEFAULT '0' NOT NULL,
+	"balance" bigint DEFAULT 0 NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "users_address_unique" UNIQUE("address"),
 	CONSTRAINT "users_xOnlyPublicKey_unique" UNIQUE("xOnlyPublicKey")
@@ -74,6 +89,7 @@ CREATE TABLE "wallets" (
 );
 --> statement-breakpoint
 ALTER TABLE "balance_log" ADD CONSTRAINT "balance_log_account_users_id_fk" FOREIGN KEY ("account") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "coinflip_results" ADD CONSTRAINT "coinflip_results_sessionId_sessions_id_fk" FOREIGN KEY ("sessionId") REFERENCES "public"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dieroll_result" ADD CONSTRAINT "dieroll_result_sessionId_sessions_id_fk" FOREIGN KEY ("sessionId") REFERENCES "public"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_users_id_fk" FOREIGN KEY ("user") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_user_users_id_fk" FOREIGN KEY ("user") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

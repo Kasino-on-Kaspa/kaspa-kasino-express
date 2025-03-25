@@ -15,6 +15,7 @@ import { CoinflipSessionGameState } from "./state";
 import { BaseBetType } from "../types";
 import { CoinFlipServerMessage } from "./coinflip.messages";
 import { z } from "zod";
+import { CoinflipStateManager } from "./entities/state.manager";
 
 type TPendingSessionData = typeof sessionsTable.$inferSelect;
 
@@ -53,7 +54,6 @@ export class CoinflipController {
     }
     let pendingSession = await this.model.GetPendingSession(account.Id);
     
-    
     if (pendingSession) {
       let promise = Promise.all([
         this.model.GetSessionDataFromDB(pendingSession.id),
@@ -62,17 +62,21 @@ export class CoinflipController {
 
       let [pendingSessionData, pendingSessionLogs] = await promise;
       
+
       let session = this.GenerateSessionFromPendingSessionData(
         pendingSessionData,
         pendingSessionLogs,
         account
       );
-
+      
+      session.SessionStartEvent.Raise();
       callback(pendingSessionData.serverSeedHash, session.ToData());
       return;
     }
+
     session = new CoinflipSession(account);
-    this.model.SetSession(account.Id, session);
+    this.AddSessionListeners(account, session);
+    this.model.SetSession(account.Id, session)
     callback(session.ServerSeedHash);
   }
 
@@ -151,12 +155,23 @@ export class CoinflipController {
     ack: (ack: TCoinflipAck) => void
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+
+    if (!account) {
+      ack({ status: "ERROR", message: "No account found" });
+      return;
+    }
+    
     let session = this.model.GetSession(account.Id);
     if (!session) {
       ack({ status: "ERROR", message: "No session found" });
       return;
     }
 
+    if (session.SessionId){
+      ack({ status: "ERROR", message: "An active session already exists" });
+      return;
+    }
+    
     if (
       session.StateManager?.CurrentState.StateName !=
       CoinflipSessionGameState.NEXT_CHOICE
@@ -184,20 +199,21 @@ export class CoinflipController {
       clientSeed: lastPendingSessionData.clientSeed,
       multiplier: this.GetMultiplier(),
     });
-    let manager = this.factory.CreateStateManager(session, CoinflipSessionGameState.NEXT_CHOICE)
+    
+    let manager: CoinflipStateManager;
     
     if (!session.LastLog || session.LastLog.nextSelection == "CONTINUE"){
       manager = this.factory.CreateStateManager(session, CoinflipSessionGameState.FLIP_CHOICE)
+    }
+    else{
+      manager = this.factory.CreateStateManager(session, CoinflipSessionGameState.NEXT_CHOICE)
     }
 
     session.SetStateManager(manager);
     
     this.AddSessionListeners(account, session);
-    
     this.model.SetSession(account.Id, session);
-
-    session.SessionStartEvent.Raise();
-
+    
     return session;
   }
 
@@ -205,7 +221,6 @@ export class CoinflipController {
     session
       .GetStateManager()
       ?.OnStateChangeEvent.RegisterEventListener(async (new_state) => {
-        console.log("new_state", new_state);
         account.AssociatedSockets.Session.emit(
           CoinFlipServerMessage.GAME_CHANGE_STATE,
           { session: session.ToData(), new_state: new_state }

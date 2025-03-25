@@ -31,8 +31,8 @@ export class CoinflipModel {
           .select()
           .from(sessionsTable)
           .where(eq(sessionsTable.user, accountId))
+          .orderBy(desc(sessionsTable.createdAt))
           .limit(1);
-
           if (!session[0]) {
             return undefined;
           }
@@ -44,9 +44,10 @@ export class CoinflipModel {
           .limit(1)
           .orderBy(desc(coinflip.createdAt));
           
-        if (pendingBet.length < 1) {
-          return session[0];
-        }
+          if (pendingBet.length < 1) {
+            return session[0];
+          }
+          console.log("Session", pendingBet);
 
         if (pendingBet[0].next == "PENDING" || pendingBet[0].next == "CONTINUE") {
           return session[0];
