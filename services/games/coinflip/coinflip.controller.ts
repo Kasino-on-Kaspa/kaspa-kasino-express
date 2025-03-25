@@ -11,7 +11,7 @@ import { AccountStoreInstance } from "@/index";
 import { coinflip as CoinflipSchema } from "@schema/games/coinflip.schema";
 import { sessionsTable } from "@schema/session.schema";
 import { Account } from "@utils/account";
-import { CoinflipSessionGameState } from "./state";
+import { CoinflipSessionGameState } from "./states";
 import { BaseBetType } from "../types";
 import { CoinFlipServerMessage } from "./coinflip.messages";
 import { z } from "zod";
@@ -42,14 +42,14 @@ export class CoinflipController {
     socket: Socket,
     callback: (
       serverSeedHash: string,
-      session_data?: TCoinflipSessionJSON
+      session?: {data:TCoinflipSessionJSON,resume_state: CoinflipSessionGameState}
     ) => void
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     let session = this.model.GetSession(account.Id);
     
     if (session) {
-      callback(session.ServerSeedHash, session.ToData());
+      callback(session.ServerSeedHash, {data:session.ToData(),resume_state: session.StateManager?.CurrentState.StateName as CoinflipSessionGameState});
       return;
     }
     let pendingSession = await this.model.GetPendingSession(account.Id);
@@ -63,14 +63,14 @@ export class CoinflipController {
       let [pendingSessionData, pendingSessionLogs] = await promise;
       
 
-      let session = this.GenerateSessionFromPendingSessionData(
+      let {session,resume_state} = this.GenerateSessionFromPendingSessionData(
         pendingSessionData,
         pendingSessionLogs,
         account
       );
       
       session.SessionStartEvent.Raise();
-      callback(pendingSessionData.serverSeedHash, session.ToData());
+      callback(pendingSessionData.serverSeedHash, {data:session.ToData() , resume_state: resume_state});
       return;
     }
 
@@ -189,7 +189,7 @@ export class CoinflipController {
     lastPendingSessionData: TPendingSessionData,
     lastPendingSessionLog: TCoinflipSessionLog[],
     account: Account
-  ): CoinflipSession {
+  ): {session: CoinflipSession,resume_state: CoinflipSessionGameState} {
     let session = new CoinflipSession(account, lastPendingSessionLog);
     session.SessionId = lastPendingSessionData.id;
     session.ServerSeedHash = lastPendingSessionData.serverSeed;
@@ -201,20 +201,16 @@ export class CoinflipController {
     });
     
     let manager: CoinflipStateManager;
-    
-    if (!session.LastLog || session.LastLog.nextSelection == "CONTINUE"){
-      manager = this.factory.CreateStateManager(session, CoinflipSessionGameState.FLIP_CHOICE)
-    }
-    else{
-      manager = this.factory.CreateStateManager(session, CoinflipSessionGameState.NEXT_CHOICE)
-    }
+    let resume_state: CoinflipSessionGameState = !session.LastLog || session.LastLog.nextSelection == "CONTINUE" ? CoinflipSessionGameState.FLIP_CHOICE : CoinflipSessionGameState.NEXT_CHOICE;
 
+    manager = this.factory.CreateStateManager(session, resume_state)
+    
     session.SetStateManager(manager);
     
     this.AddSessionListeners(account, session);
     this.model.SetSession(account.Id, session);
     
-    return session;
+    return {session,resume_state};
   }
 
   private AddSessionListeners(account: Account, session: CoinflipSession) {

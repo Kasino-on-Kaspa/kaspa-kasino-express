@@ -2,15 +2,8 @@ import { SessionStateFactory } from "@utils/session/session.factory";
 import { CoinflipStateManager } from "./state.manager";
 import { CoinflipSession } from "./coinflip.session";
 import { SessionBaseState } from "@utils/session/base.state";
-import { CoinflipSessionGameState } from "../state";
-import { CoinflipStartState } from "../state/start.state";
-import { CoinflipFlipChoiceState } from "../state/flip-choice.state";
-import { CoinflipFlipState } from "../state/flip.state";
-import { CoinflipSettleState } from "../state/settle.state";
-import { CoinflipNextChoiceState } from "../state/next-choice.state";
-import { CoinflipCashoutState } from "../state/cashout.state";
-import { CoinflipEndState } from "../state/end.state";
-import { CoinflipTimeoutState } from "../state/timeout.state";
+import { CoinflipSessionGameState } from "../states";
+import { CoinflipStartState,CoinflipCashoutState,CoinflipTimeoutState,CoinflipFlipChoiceState,CoinflipFlipState,CoinflipSettleState,CoinflipNextChoiceState,CoinflipEndState } from "../states/";
 
 export class CoinflipStateFactory extends SessionStateFactory<CoinflipStateManager> {
     public GetState(stateName: string): SessionBaseState<CoinflipStateManager> {

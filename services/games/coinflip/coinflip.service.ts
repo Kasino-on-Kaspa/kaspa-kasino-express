@@ -8,6 +8,7 @@ import {
   CoinFlipClientMessage,
 } from "./coinflip.messages";
 import { TCoinflipSessionJSON } from "./entities/coinflip.session";
+import { CoinflipSessionGameState } from "./states";
 
 const CoinflipNamespaceName = "/games/coinflip";
 
@@ -20,7 +21,8 @@ class CoinflipService extends Service {
       (
         callback: (
           serverSeedHash: string,
-          session_data?: TCoinflipSessionJSON
+          session?: {data:TCoinflipSessionJSON,resume_state: CoinflipSessionGameState},
+
         ) => void
         
       ) => {
