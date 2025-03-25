@@ -103,6 +103,12 @@ export class CoinflipController {
       ack({ status: "ERROR", message: "Insufficient balance" });
       return;
     }
+    
+    if (session.SessionId){
+      ack({ status: "ERROR", message: "An active session already exists" });
+      return;
+    }
+
     session.SetClientBetData({
       bet: betAmount,
       clientSeed: bet_data.client_seed,
@@ -159,6 +165,7 @@ export class CoinflipController {
     if (!account) {
       ack({ status: "ERROR", message: "No account found" });
       return;
+      
     }
     
     let session = this.model.GetSession(account.Id);
@@ -167,10 +174,7 @@ export class CoinflipController {
       return;
     }
 
-    if (session.SessionId){
-      ack({ status: "ERROR", message: "An active session already exists" });
-      return;
-    }
+    console.log("SESSION_NEXT", choice);
     
     if (
       session.StateManager?.CurrentState.StateName !=
