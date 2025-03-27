@@ -11,7 +11,7 @@ class WalletSocketService extends Service {
             await this.HandleRefreshWallet(socket);
         });
 
-        socket.on("wallet:withdraw", async (user_address: string, amount: bigint) => {
+        socket.on("wallet:withdraw", async (user_address: string, amount: string) => {
             await this.HandleWalletWithdraw(socket, user_address, amount);
         });
         
@@ -30,8 +30,8 @@ class WalletSocketService extends Service {
         })
     }
     
-    private async HandleWalletWithdraw(socket: Socket,user_address: string, amount: bigint) {
-      await this.WalletController.HandleWalletWithdraw(socket, user_address, amount);
+    private async HandleWalletWithdraw(socket: Socket,user_address: string, amount: string) {
+      await this.WalletController.HandleWalletWithdraw(socket, user_address, BigInt(amount));
     }
 }
 

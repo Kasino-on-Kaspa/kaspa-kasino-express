@@ -88,7 +88,7 @@ export class WalletController {
     const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     if (!account) return;
     
-    await account.Wallet.RemoveBalance(-amount, "WITHDRAWAL");
+    await account.Wallet.RemoveBalance(amount, "WITHDRAWAL");
     WithdrawalQueue.Instance.add(user_address, amount, account!.Wallet.id);
   }
 }
