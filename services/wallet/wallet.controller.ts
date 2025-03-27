@@ -1,81 +1,86 @@
-import { Response } from "express";
-import { AuthenticatedRequest } from "../auth/auth.middleware";
-import { WalletService } from "./wallet.service";
+import { DB } from "../../database";
+import { eq } from "drizzle-orm";
+import { WalletBalanceProvider } from "../../utils/wallet/balance";
+import { utxos } from "../../schema/utxos.schema";
+import { AccountStoreInstance, WalletDBQueueInstance } from "../..";
+import { rpcClient } from "../../utils/wallet";
+import { Socket } from "socket.io";
+import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
 
 export class WalletController {
-  // Add rate limiting
-  private lastUpdateTime: Record<string, number> = {};
-  private readonly UPDATE_COOLDOWN_MS = 5000; // 5 seconds between updates
+  async updateWalletBalance(socket: Socket) {
+    const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
 
-  updateWalletBalance = async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const address = req.user?.address;
-      if (!address) {
-        res.status(401).json({ message: "Unauthorized" });
-        return;
-      }
+    if (!account) {
+      throw new Error("Account not found in store");
+    }
 
-      // Rate limiting
-      const now = Date.now();
-      const lastUpdate = this.lastUpdateTime[address] || 0;
-      if (now - lastUpdate < this.UPDATE_COOLDOWN_MS) {
-        res.status(429).json({
-          message: "Please wait before requesting another balance update",
-        });
-        return;
-      }
-      this.lastUpdateTime[address] = now;
+    // Get all UTXOs from the blockchain
+    const allUtxos = await WalletBalanceProvider.getUtxos([
+      account.Wallet.address,
+    ]);
 
-      // Use the service which now utilizes Account methods
-      const result = await WalletService.updateWalletBalance(address);
+    // Get all UTXOs we've already seen
+    const seenUtxos = await DB.select()
+      .from(utxos)
+      .where(eq(utxos.address, account.Wallet.address));
 
-      // Log the balance update
-      console.log(`Balance updated for ${address}: ${result!.balance}`);
+    const dagInfo = await rpcClient.getBlockDagInfo();
 
-      res.status(200).json(result);
-    } catch (e) {
-      console.error(e);
-      if (e instanceof Error && e.message === "Wallet not found") {
-        res.status(404).json({ message: e.message });
-      } else {
-        res.status(500).json({ message: "Failed to update wallet balance" });
+    // Find UTXOs that we haven't seen before
+    const unseenUtxos = allUtxos.filter((utxo) => {
+      // Check if this UTXO is already in our database
+      return !seenUtxos.some(
+        (seenUtxo) =>
+          seenUtxo.txId === utxo.outpoint?.transactionId &&
+          seenUtxo.vout === utxo.outpoint?.index &&
+          // Check "confirmation"
+          utxo.utxoEntry!.blockDaaScore < dagInfo.virtualDaaScore
+      );
+    });
+
+    // Calculate the balance change from new UTXOs (in SOMPI)
+    let balanceDelta = BigInt(0);
+
+    for (const utxo of unseenUtxos) {
+      if (utxo.utxoEntry?.amount) {
+        balanceDelta += BigInt(utxo.utxoEntry.amount);
       }
     }
-  };
 
-  getWalletBalance = async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const address = req.user?.address;
-      if (!address) {
-        res.status(401).json({ message: "Unauthorized" });
-        return;
-      }
+    // Map the unseen UTXOs to our database format
+    const utxoMap = unseenUtxos.map((u) => {
+      return {
+        address: u.address,
+        amount: BigInt(u.utxoEntry!.amount),
+        txId: u.outpoint!.transactionId,
+        vout: u.outpoint!.index,
+        scriptPubKey: u.utxoEntry!.scriptPublicKey,
+      };
+    });
 
-      // const wallet = await WalletService.getUserWallet();
-      res.status(200).json({
-        balance: 0,
-        address: "wallet.walletAddress",
-      });
-    } catch (e) {
-      console.error(e);
-      if (e instanceof Error && e.message === "Wallet not found") {
-        res.status(404).json({ message: e.message });
-      } else {
-        res.status(500).json({ message: "Failed to get wallet balance" });
-      }
-    }
-  };
+    // Insert the new UTXOs into the database
+    if (utxoMap.length == 1) return;
 
-  getDepositWallet = async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const wallet_id = req.body.wallet_id;
+    await DB.insert(utxos).values(utxoMap);
 
-      const wallet = await WalletService.getDepositWallet(wallet_id);
+    if (balanceDelta <= 0) return;
 
-      res.status(200).json(wallet);
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ message: "Failed to get deposit wallet" });
-    }
-  };
+    if (account.IsDeleted)
+      WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(account.Wallet.id, balanceDelta,"DEPOSIT");
+    else await account.Wallet.AddBalance(balanceDelta, "DEPOSIT");
+  }
+
+  GetWalletFromSocket(socket: Socket) {
+    const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+    return account?.Wallet;
+  }
+
+  async HandleWalletWithdraw(socket: Socket,user_address: string, amount: bigint) {
+    const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+    if (!account) return;
+    
+    await account.Wallet.RemoveBalance(-amount, "WITHDRAWAL");
+    WithdrawalQueue.Instance.add(user_address, amount, account!.Wallet.id);
+  }
 }

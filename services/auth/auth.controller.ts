@@ -33,6 +33,7 @@ export class AuthController {
       }
 
       let user = await authService.getUserByAddress(authData.address);
+      
       if (!user) {
         user = await authService.createUser(
           authData.address,
@@ -56,15 +57,15 @@ export class AuthController {
         user: {
           address: authData.address,
           publicKey: authData.publicKey,
-          referralCode: user?.referrelCode,
+          referralCode: user?.referralCode,
           referredBy: user?.referredBy,
-          balance: user?.balance.toString(),
           id: user?.id,
           username: user?.username,
           createdAt: user?.createdAt,
           depositAddress: user?.wallet,
         },
       });
+      
     } catch (error) {
       console.error("Sign-in error:", error);
       res.status(500).json({ message: "Internal server error" });

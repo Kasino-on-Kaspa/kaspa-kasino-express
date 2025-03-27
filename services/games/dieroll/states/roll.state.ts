@@ -47,7 +47,7 @@ export class DieRollRollState extends SessionBaseState<DierollStateManager> {
     result: number
   ): void {
     manager.SessionManager.SetResult(isWon, result);
-    manager.SessionManager.SessionResultEvent.Raise(manager.SessionManager.GetResult());
+    manager.SessionManager.SessionResultEvent.Raise(manager.SessionManager.GetResult()!);
     manager.ChangeState(DieRollGameState.SETTLE);
   }
 

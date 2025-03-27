@@ -110,7 +110,7 @@ export class DieRollController {
       return;
     }
 
-    if (betAmount > account.Balance.GetData()) {
+    if (betAmount > account.Wallet.balance.GetData()) {
       ack({
         status: "ERROR",
         message: "Insufficient balance",
@@ -156,7 +156,7 @@ export class DieRollController {
     );
 
     session.SessionCompleteEvent.RegisterEventListener(
-      async (result: TDieRollGameResult) => {
+      async () => {
         account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(
           DieRollServerMessage.GAME_ENDED,
           { serverSeed: session.ServerSeed }

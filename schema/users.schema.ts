@@ -22,12 +22,6 @@ export const users = p.pgTable("users", {
     .references(() => wallets.id)
     .notNull(),
 
-  // User's balance
-  balance: p
-    .bigint({ mode: "bigint" })
-    .notNull()
-    .default(sql`0`),
-
   createdAt: p.timestamp().notNull().defaultNow(),
 
   referralCode: p

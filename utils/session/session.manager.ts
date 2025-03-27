@@ -28,7 +28,8 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   public SessionResultEvent: ObservableEvent<TGameResult>;
   //#endregion
   
-    
+  
+
   constructor(sessionId?: string, serverSeed?: string) {
     this._sessionId = sessionId;
     this.ServerSeed = serverSeed ?? this.GenerateServerSeed();

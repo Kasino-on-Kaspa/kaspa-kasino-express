@@ -26,6 +26,21 @@ export class DierollSession extends SessionManager<TDierollSessionClientGameData
     super();
     this.AssociatedAccount = associatedAccount;
   }
+  private GameResult?: TDieRollGameResult;
+  private GameResultIsWon?: "DRAW" | "WON" | "LOST";
+
+  public SetResult(isWon: "DRAW" | "WON" | "LOST",result: TDieRollGameResult) {
+    this.GameResult = result;
+    this.GameResultIsWon = isWon;
+  }
+
+  public GetResult() {
+    return this.GameResult
+  }
+  
+  public GetResultIsWon() {
+    return this.GameResultIsWon;
+  }
 
   public ToData(): TDierollSessionJSON {
     return {

@@ -1,101 +1,60 @@
-import { Server } from "socket.io";
-import { DB } from "../../database";
-import { balance_log, E_BALANCE_LOG_TYPE } from "../../schema/balance.schema";
+import { Server, Socket } from "socket.io";
 import { users } from "../../schema/users.schema";
-import { ObservableData } from "../observables/data";
-import { ObservableEvent } from "../observables/event";
 import { AccountSockets } from "./sockets";
-
+import { Wallet } from "./wallet";
+import { WalletDBQueueHandler } from "@utils/queue-manager/wallet-updater";
 export class Account {
   private _id: string;
   private _address: string;
-  private _xOnlyPublicKey: string;
   private _username: string | null;
-  private _wallet: { id: string; address: string };
+  private _wallet: Wallet;
 
-  private balance: ObservableData<bigint>;
+  private isDeleted: boolean = false;
 
-  private isUpdated: boolean = false;
+
 
   public readonly AssociatedSockets: AccountSockets;
+  
 
   constructor(
     user: typeof users.$inferSelect,
-    wallet: { id: string; address: string },
+    wallet: Wallet,
     io: Server
   ) {
     this._id = user.id;
     this._address = user.address;
-    this._xOnlyPublicKey = user.xOnlyPublicKey;
     this._username = user.username;
     this._wallet = wallet;
-    this.balance = new ObservableData<bigint>(BigInt(user.balance));
+    
     this.AssociatedSockets = new AccountSockets(io, this._id);
 
     this.AssociatedSockets.OnSocketAdded.RegisterEventListener(
       async (socket) => {
-        socket.emit("account:handshake", {
-          address: this._address,
-          wallet: this._wallet.address,
-          id: this._id,
-          username: this._username,
-          balance: this.balance.GetData().toString(),
-        });
+        this.RegisterSocketEvents(socket);
       }
     );
-  }
 
-  public async AddBalance(
-    offset: bigint,
-    type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
-  ) {
-    this.balance.SetData(this.balance.GetData() + offset);
-    await DB.insert(balance_log).values({
-      account: this._id,
-      amount: offset,
-      type: type,
-    });
     
-    this.HandleBalanceUpdate();
-    this.isUpdated = true;
   }
 
-  private HandleBalanceUpdate() {
-    this.AssociatedSockets.Session.emit(
-      "account:balance",
-      this.balance.GetData().toString()
-    );
+  public static async InitAccount(user: typeof users.$inferSelect, io: Server, walletDBQueue: WalletDBQueueHandler) {
+    let wallet = await Wallet.InitWallet(user.wallet, walletDBQueue);
+    return new Account(user, wallet, io);
   }
 
-  public async UpdateAccountDB() {
-    if (!this.isUpdated) return;
+  private RegisterSocketEvents(socket: Socket) {
 
-    await DB.update(users).set({
-      balance: this.Balance.GetData(),
+    socket.emit("account:handshake", {
+      address: this._address,
+      wallet: this._wallet.address,
+      id: this._id,
+      username: this._username,
+      balance: this._wallet.balance.toString(),
     });
 
-    this.isUpdated = false;
-  }
-
-  public async RemoveBalance(
-    offset: bigint,
-    type: (typeof E_BALANCE_LOG_TYPE.enumValues)[number]
-  ) {
-    this.balance.SetData(this.balance.GetData() - offset);
-
-    await DB.insert(balance_log).values({
-      account: this._id,
-      amount: offset,
-      type: type,
+    socket.on("disconnect", async () => {
+      this.AssociatedSockets.RemoveSocket(socket);
     });
-
-    this.HandleBalanceUpdate();
-
-    this.isUpdated = true;
-  }
-
-  public get Balance() {
-    return this.balance;
   }
 
   public get Address() {
@@ -105,4 +64,19 @@ export class Account {
   public get Id() {
     return this._id;
   }
+
+  public get Wallet() {
+    return this._wallet;
+  }
+
+  public get IsDeleted() {
+    return this.isDeleted;
+  }
+
+  public set IsDeleted(value: boolean) {
+    if (this.isDeleted) return;
+    this.isDeleted = value;
+  }
+
+
 }

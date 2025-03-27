@@ -3,6 +3,7 @@ import { authService } from "./auth.service";
 import { userService } from "../user/user.service";
 import { Socket } from "socket.io";
 import { ClientToServerEvents, IAuthenticatedSocketData, ServerToClientEvents } from "../../typings";
+import { AccountStoreInstance } from "@/index";
 
 export type TAuthenticatedSocket = Socket<
   ClientToServerEvents,
@@ -43,7 +44,12 @@ export const socketAuthMiddleware = async (
 
     // Attach user data to socket
     socket.data.user = user;
+    
     socket.join(payload.address);
+
+    await AccountStoreInstance.AddUserHandshake(socket, socket.data.user.id);
+    
+
     next();
   } catch (error) {
     console.error("Socket authentication error:", error);

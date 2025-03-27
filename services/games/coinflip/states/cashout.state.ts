@@ -19,7 +19,7 @@ export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager>
       throw new Error("Client bet data not found");
     }
     
-    await manager.SessionManager.AssociatedAccount.AddBalance(manager.SessionManager.ClientBetData!.bet * BigInt(manager.SessionManager.ClientBetData!.multiplier ** manager.SessionManager.Level), "BET_RETURN");
+    await manager.SessionManager.AssociatedAccount.Wallet.AddBalance(manager.SessionManager.ClientBetData!.bet * BigInt(manager.SessionManager.ClientBetData!.multiplier ** manager.SessionManager.Level), "BET_RETURN");
     manager.ChangeState(CoinflipSessionGameState.END);
     return;
   }

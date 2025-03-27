@@ -14,7 +14,7 @@ export class DieRollEndState extends SessionBaseState<DierollStateManager> {
 
   public async HandleEnd(manager: DierollStateManager): Promise<void> {
 
-    manager.SessionManager.SessionCompleteEvent.Raise(manager.SessionManager.GameResult!);
+    manager.SessionManager.SessionCompleteEvent.Raise();
   }
 
   public ExitState(manager: DierollStateManager): void {

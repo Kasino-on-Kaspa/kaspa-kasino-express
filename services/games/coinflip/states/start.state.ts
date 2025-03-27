@@ -37,7 +37,7 @@ export class CoinflipStartState extends SessionBaseState<CoinflipStateManager> {
       roomId
     );
     
-    await manager.SessionManager.AssociatedAccount.RemoveBalance(
+    await manager.SessionManager.AssociatedAccount.Wallet.RemoveBalance(
       manager.SessionManager.ClientBetData.bet,
       "BET"
     );

@@ -99,7 +99,7 @@ export class CoinflipController {
       return;
     }
 
-    if (betAmount > account.Balance.GetData()) {
+    if (betAmount > account.Wallet.balance.GetData()) {
       ack({ status: "ERROR", message: "Insufficient balance" });
       return;
     }

@@ -21,16 +21,16 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
       condition: manager.SessionManager.ClientGameData!.condition,
       target: manager.SessionManager.ClientGameData!.target,
       multiplier: manager.SessionManager.ClientBetData!.multiplier,
-      result: manager.SessionManager.GameResult,
-      status: manager.SessionManager.GameResultIsWon!,
+      result: manager.SessionManager.GetResult()!,
+      status: manager.SessionManager.GetResultIsWon()!,
     }).execute();
 
     if (isWon == "WON") {
-      manager.SessionManager.AssociatedAccount.AddBalance(payout, "BET_RETURN");
+      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
     }
     
     if (isWon == "DRAW") {
-      manager.SessionManager.AssociatedAccount.AddBalance(manager.SessionManager.ClientBetData!.bet, "BET_RETURN");
+      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(manager.SessionManager.ClientBetData!.bet, "BET_RETURN");
     }
 
     manager.ChangeState(DieRollGameState.END);

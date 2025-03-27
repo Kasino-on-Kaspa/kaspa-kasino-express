@@ -29,7 +29,7 @@ export class DieRollStartState extends SessionBaseState<DierollStateManager> {
     let roomId = manager.SessionManager.GetSessionRoomId();
 
     manager.SessionManager.AssociatedAccount.AssociatedSockets.Session.socketsJoin(roomId);
-    await manager.SessionManager.AssociatedAccount.RemoveBalance(manager.SessionManager.ClientBetData.bet,"BET");
+    await manager.SessionManager.AssociatedAccount.Wallet.RemoveBalance(manager.SessionManager.ClientBetData.bet,"BET");
     
     manager.ChangeState(DieRollGameState.ROLL);
   }
