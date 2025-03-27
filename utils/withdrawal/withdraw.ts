@@ -6,8 +6,10 @@ import { rpcClient } from "../wallet";
 export async function createWithdrawalTransaction(
 	outputs: PaymentOutput[]
 ) {
-
-    const utxos = await rpcClient.getUtxosByAddresses([process.env.MASTER_ADDRESS!])
+    const rawUtxos = await rpcClient.getUtxosByAddresses([process.env.MASTER_ADDRESS!])
+    
+    // TODO: Handle coinbase utxos
+    const utxos = {error: rawUtxos.error, entries: rawUtxos.entries.filter(e => !e.utxoEntry?.isCoinbase)}
 
 	const generator = buildTransactionGenerator({
 		outputs: outputs,

@@ -22,9 +22,9 @@ export class WithdrawalQueue {
 	private lastProcessedTime: number = 0;
 	private processingTimer: NodeJS.Timeout | null = null;
 
-	private readonly MAX_BATCH_SIZE = 20;
-	private readonly MIN_GAP_MS = 5000; // 5 seconds
-	private readonly PROCESS_DELAY_MS = 30000; // 30 seconds
+	private readonly MAX_BATCH_SIZE = 3;
+	private readonly MIN_GAP_MS = 0; // 5 seconds
+	private readonly PROCESS_DELAY_MS = 0; // 30 seconds
 	private readonly MAX_RETRIES = 3;
 
 	private constructor() {}
@@ -38,6 +38,7 @@ export class WithdrawalQueue {
 
 	public add(address: string, amount: bigint, userId: string) {
 		// Record balance log entries
+		console.log("Adding withdrawal request to queue", address, amount);
 		this.queue.push({
 			address,
 			amount,
@@ -73,6 +74,7 @@ export class WithdrawalQueue {
 	}
 
 	private async processQueue() {
+
 		if (this.isProcessing || this.queue.length === 0) {
 			return;
 		}
@@ -86,9 +88,9 @@ export class WithdrawalQueue {
 			);
 			return;
 		}
-
+	
 		this.isProcessing = true;
-
+		console.log("Processing withdrawal queue started");
 		try {
 			// Take up to MAX_BATCH_SIZE items from the queue
 			const itemsToProcess = this.queue.slice(0, this.MAX_BATCH_SIZE);
@@ -112,9 +114,8 @@ export class WithdrawalQueue {
 				}));
 
 				// Insert both transaction and balance log records
-				await DB.transaction(async (tx) => {
-					await tx.insert(transactions).values(transactionRecords);
-				});
+				await DB.insert(transactions).values(transactionRecords);
+
 
 				// Remove the processed items from queue only if successful
 				this.queue.splice(0, itemsToProcess.length);

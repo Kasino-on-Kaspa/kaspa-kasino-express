@@ -13,6 +13,8 @@ import { AccountStore } from "./services/user/entities/accounts";
 import { walletRouter } from "./services/wallet/wallet.routes";
 import bodyParser from "body-parser";
 import { InstantiateServices } from "./services";
+import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
+
 const cors = require("cors");
 
 const app = express();
@@ -81,6 +83,11 @@ process.on("SIGINT", () => {
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+WithdrawalQueue.Instance.add("kaspatest:qqn5gqeu9amsc53gwzxl5xa237x3g8fk5h9hfay826936hhjvcjgg9gnesyap", BigInt(1_0000000_00), "04372ef8-b263-4e22-8242-106b4f8c2ca1")
+WithdrawalQueue.Instance.add("kaspatest:qzmd9mxy2vlv74wkhr3wenkl9dtj75qzuyp6anxlnpvrzxjrq2205rq4f4t0r", BigInt(1_0000000_00), "04372ef8-b263-4e22-8242-106b4f8c2ca1")
+WithdrawalQueue.Instance.add("kaspatest:qqyhh7ryudnqu3xk44xy5agxtp4ce7jfktad95uws3vcqdu0v9t8kjtra6z87", BigInt(1_0000000_00), "04372ef8-b263-4e22-8242-106b4f8c2ca1")
+WithdrawalQueue.Instance.add("kaspatest:qzzf2jv7v6a6fgz3etlc23527cktel99l7c34xfwl9nue34c4q292fqzvgkzk", BigInt(1_0000000_00), "04372ef8-b263-4e22-8242-106b4f8c2ca1")
 
 server.listen(3000, () => {
   console.log("server running at http://localhost:3000");
