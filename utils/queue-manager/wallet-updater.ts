@@ -10,31 +10,30 @@ export class WalletDBQueueHandler{
 
     private timer: NodeJS.Timeout | null = null;
 
-    private MAX_UPDATE_DELAY = 10000;
     
-    public async AddOrUpdateWalletBalanceTask(walletID: string, balanceDelta: bigint,reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN") {
+    public async AddOrUpdateWalletBalanceTask(walletID: string, oldBalance: bigint, newBalance: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN") {
 
         let index = this.walletTasks[walletID];
 
-        await this.AddBalanceLog(walletID, balanceDelta < 0 ? -balanceDelta : balanceDelta, reason);
+        await this.AddBalanceLog(walletID, oldBalance, newBalance, reason);
         
         if (index) {
-            this.walletQueue[index].update.balance += balanceDelta;
+            this.walletQueue[index].update.balance = newBalance;
         } else {
-            let newLength = this.walletQueue.push({walletID: walletID, update: {balance: balanceDelta}});
+            let newLength = this.walletQueue.push({walletID: walletID, update: {balance: newBalance}});
             this.walletTasks[walletID] = newLength - 1;
         }
     }
 
-    private async AddBalanceLog(walletID: string, balanceDelta: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN") {
-        await DB.insert(balance_log).values({walletID: walletID, amount: balanceDelta, type: reason});
+    private async AddBalanceLog(walletID: string, oldBalance: bigint, newBalance: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN") {
+        await DB.insert(balance_log).values({walletID: walletID, amount: newBalance - oldBalance, type: reason});
     }
 
     public InstantiateProcessQueueTimer() {
         this.timer = setInterval(() => {
             if (this.walletQueue.length <= 0) return;
             this.ProcessQueue();
-        }, this.MAX_UPDATE_DELAY);
+        }, 1000);
     }
 
     public ClearProcessQueueTimer() {
@@ -56,6 +55,7 @@ export class WalletDBQueueHandler{
 
         this.walletQueue = [];
         this.walletTasks = {};
+        console.log("Processing queue");
         
         while (currentQueue.length > 0) {
             let task = currentQueue.shift();

@@ -12,7 +12,7 @@ export class Wallet {
 
   private _isUpdated: boolean = false;
 
-  public readonly OnUpdate = new ObservableEvent<{balance: bigint}>();
+  public readonly OnUpdate = new ObservableEvent<{balance: string}>();
 
   private readonly walletDBQueue: WalletDBQueueHandler;
 
@@ -33,15 +33,20 @@ export class Wallet {
   }
 
   public async AddBalance(amount: bigint, reason: "BET_RETURN"| "BET"|"DEPOSIT"|"WITHDRAWAL" ) {
-    this._balance.SetData(this._balance.GetData() + amount);
-    await this.walletDBQueue.AddOrUpdateWalletBalanceTask(this._id, amount, reason);
-    this.OnUpdate.Raise({balance: this._balance.GetData()})
+    let oldBalance = this._balance.GetData();
+    let newBalance = this._balance.GetData() + amount;
+    this._balance.SetData(newBalance);
+    
+    await this.walletDBQueue.AddOrUpdateWalletBalanceTask(this._id, oldBalance, newBalance, reason);
+    this.OnUpdate.Raise({balance: this._balance.GetData().toString()})
   }
   
   public async RemoveBalance(amount: bigint, reason: "BET_RETURN"| "BET"|"DEPOSIT"|"WITHDRAWAL" ) {
-    this._balance.SetData(this._balance.GetData() - amount);
-    await this.walletDBQueue.AddOrUpdateWalletBalanceTask(this._id, -amount, reason);
-    this.OnUpdate.Raise({balance: this._balance.GetData()})
+    let oldBalance = this._balance.GetData();
+    let newBalance = this._balance.GetData() - amount;
+    this._balance.SetData(newBalance);
+    await this.walletDBQueue.AddOrUpdateWalletBalanceTask(this._id, oldBalance, newBalance, reason);
+    this.OnUpdate.Raise({balance: this._balance.GetData().toString()})
   }
 
 
