@@ -65,10 +65,9 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-
-for(let i = 0; i < 100; i++) {
-  WithdrawalQueue.Instance.add("kaspatest:qqn5gqeu9amsc53gwzxl5xa237x3g8fk5h9hfay826936hhjvcjgg9gnesyap", kaspaToSompi(Math.random() * 100), "4c6f129a-c2d1-4d3c-890d-5d3d7ce628ba")
-}
+// for(let i = 0; i < 100; i++) {
+//   WithdrawalQueue.Instance.add("kaspatest:qqn5gqeu9amsc53gwzxl5xa237x3g8fk5h9hfay826936hhjvcjgg9gnesyap", kaspaToSompi(Math.random() * 100), "4c6f129a-c2d1-4d3c-890d-5d3d7ce628ba")
+// }
 
 // Keypair.random().toAddress(NetworkType.Testnet).toString()
 
@@ -79,7 +78,6 @@ InstantiateServices(io);
 io.on("connection", async (socket: TAuthenticatedSocket) => {
   console.log(`User connected: ${socket.data.user.address}`);
 });
-
 
 process.on("SIGINT", () => {
   process.exit(0);

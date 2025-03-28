@@ -10,12 +10,14 @@ import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
 export class WalletController {
   async updateWalletBalance(socket: Socket) {
     const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
-    console.log("Updating wallet balance for account:", account?.Wallet.address);
+    console.log(
+      "Updating wallet balance for account:",
+      account?.Wallet.address
+    );
 
     if (!account) {
       throw new Error("Account not found in store");
     }
-
 
     // Get all UTXOs from the blockchain
     const allUtxos = await WalletBalanceProvider.getUtxos([
@@ -69,14 +71,17 @@ export class WalletController {
 
     if (balanceDelta <= 0) return;
 
-
     if (!account.IsDeleted)
       return await account.Wallet.AddBalance(balanceDelta, "DEPOSIT");
-      
+
     let oldBalance = account.Wallet.balance.GetData();
     let newBalance = oldBalance + balanceDelta;
-    WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(account.Wallet.id, oldBalance, newBalance,"DEPOSIT");
-    
+    WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(
+      account.Wallet.id,
+      oldBalance,
+      newBalance,
+      "DEPOSIT"
+    );
   }
 
   GetWalletFromSocket(socket: Socket) {
@@ -84,11 +89,15 @@ export class WalletController {
     return account?.Wallet;
   }
 
-  async HandleWalletWithdraw(socket: Socket,user_address: string, amount: bigint) {
+  async HandleWalletWithdraw(
+    socket: Socket,
+    user_address: string,
+    amount: bigint
+  ) {
     const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     if (!account) return;
-    
+
     await account.Wallet.RemoveBalance(amount, "WITHDRAWAL");
-    WithdrawalQueue.Instance.add(user_address, amount, account!.Wallet.id);
+    WithdrawalQueue.Instance.add(user_address, amount, account!.Id);
   }
 }
