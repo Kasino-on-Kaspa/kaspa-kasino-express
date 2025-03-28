@@ -4,10 +4,9 @@ export interface User {
   xOnlyPublicKey: string;
   username: string | null;
   wallet: string;
-  balance: bigint;
   createdAt: Date;
-  referrelCode?: string;
-  referredBy?: string;
+  referralCode?: string;
+  referredBy?: string | null;
 }
 
 export interface UpdateUserDto {

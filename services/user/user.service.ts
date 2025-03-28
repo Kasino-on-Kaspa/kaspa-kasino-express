@@ -53,7 +53,6 @@ export class UserService {
       xOnlyPublicKey,
       wallet: walletId,
       createdAt: new Date(),
-      balance: 0n,
       username: null,
     };
 
@@ -64,8 +63,8 @@ export class UserService {
   async getUserByReferrelCode(referrelCode: string): Promise<User | null> {
     const user = await DB.select()
       .from(users)
-      .where(eq(users.referrelCode, referrelCode));
-    return (user[0] as User) || null;
+      .where(eq(users.referralCode, referrelCode));
+    return user[0] || null;
   }
 }
 

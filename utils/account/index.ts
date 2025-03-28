@@ -11,21 +11,14 @@ export class Account {
 
   private isDeleted: boolean = false;
 
-
-
   public readonly AssociatedSockets: AccountSockets;
-  
 
-  constructor(
-    user: typeof users.$inferSelect,
-    wallet: Wallet,
-    io: Server
-  ) {
+  constructor(user: typeof users.$inferSelect, wallet: Wallet, io: Server) {
     this._id = user.id;
     this._address = user.address;
     this._username = user.username;
     this._wallet = wallet;
-    
+
     this.AssociatedSockets = new AccountSockets(io, this._id);
 
     this.AssociatedSockets.OnSocketAdded.RegisterEventListener(
@@ -33,23 +26,24 @@ export class Account {
         this.RegisterSocketEvents(socket);
       }
     );
-
-    
   }
 
-  public static async InitAccount(user: typeof users.$inferSelect, io: Server, walletDBQueue: WalletDBQueueHandler) {
+  public static async InitAccount(
+    user: typeof users.$inferSelect,
+    io: Server,
+    walletDBQueue: WalletDBQueueHandler
+  ) {
     let wallet = await Wallet.InitWallet(user.wallet, walletDBQueue);
     return new Account(user, wallet, io);
   }
 
   private RegisterSocketEvents(socket: Socket) {
-
     socket.emit("account:handshake", {
       address: this._address,
       wallet: this._wallet.address,
       id: this._id,
       username: this._username,
-      balance: this._wallet.balance.toString(),
+      balance: this._wallet.balance.GetData().toString(),
     });
 
     socket.on("disconnect", async () => {
@@ -77,6 +71,4 @@ export class Account {
     if (this.isDeleted) return;
     this.isDeleted = value;
   }
-
-
 }

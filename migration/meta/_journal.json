@@ -8,6 +8,13 @@
       "when": 1742891100622,
       "tag": "0000_bored_prodigy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1743133144750,
+      "tag": "0001_petite_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }
