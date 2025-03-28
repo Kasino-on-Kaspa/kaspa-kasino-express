@@ -13,6 +13,8 @@ import { AccountStore } from "./services/user/entities/accounts";
 import bodyParser from "body-parser";
 import { InstantiateServices } from "./services";
 import { WalletDBQueueHandler } from "@utils/queue-manager/wallet-updater";
+import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
+import { kaspaToSompi, Keypair, NetworkType } from "@kcoin/kaspa-web3.js";
 
 const cors = require("cors");
 
@@ -63,6 +65,12 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
+
+for(let i = 0; i < 100; i++) {
+  WithdrawalQueue.Instance.add("kaspatest:qqn5gqeu9amsc53gwzxl5xa237x3g8fk5h9hfay826936hhjvcjgg9gnesyap", kaspaToSompi(Math.random() * 100), "4c6f129a-c2d1-4d3c-890d-5d3d7ce628ba")
+}
+
+// Keypair.random().toAddress(NetworkType.Testnet).toString()
 
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);

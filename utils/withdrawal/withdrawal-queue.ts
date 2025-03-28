@@ -12,22 +12,26 @@ type WithdrawalQueueItem = {
 	amount: bigint;
 	createdAt: number;
 	retryCount: number;
-	userId: string; // User ID for transaction recording
+	userId: string;
+	nextRetryTime?: number; // When to retry if failed
 };
 
 export class WithdrawalQueue {
 	private static instance: WithdrawalQueue | null = null;
 	private queue: WithdrawalQueueItem[] = [];
 	private isProcessing: boolean = false;
-	private lastProcessedTime: number = 0;
 	private processingTimer: NodeJS.Timeout | null = null;
+	private currentProcessingPromise: Promise<void> | null = null;
 
-	private readonly MAX_BATCH_SIZE = 3;
-	private readonly MIN_GAP_MS = 0; // 5 seconds
-	private readonly PROCESS_DELAY_MS = 0; // 30 seconds
+	private readonly RETRY_DELAY_MS = 30000; // 30 seconds between retries
 	private readonly MAX_RETRIES = 3;
+	private readonly PROCESS_CHECK_INTERVAL = 1000; // Check queue every second
+	private readonly ORPHAN_RETRY_DELAY_MS = 2000; // 2 seconds for orphan transactions
 
-	private constructor() {}
+	private constructor() {
+		// Start the processing loop
+		this.startProcessingLoop();
+	}
 
 	public static get Instance(): WithdrawalQueue {
 		if (!WithdrawalQueue.instance) {
@@ -36,8 +40,31 @@ export class WithdrawalQueue {
 		return WithdrawalQueue.instance;
 	}
 
+	private startProcessingLoop() {
+		const checkQueue = async () => {
+			if (!this.isProcessing && this.queue.length > 0) {
+				const nextItem = this.queue[0];
+				const now = Date.now();
+
+				// Skip if the item is waiting for retry
+				if (nextItem.nextRetryTime && nextItem.nextRetryTime > now) {
+					this.processingTimer = setTimeout(checkQueue, this.PROCESS_CHECK_INTERVAL);
+					return;
+				}
+
+				// Start processing without waiting for the promise to complete
+				this.currentProcessingPromise = this.processNextTransaction();
+				this.currentProcessingPromise.catch(error => {
+					console.error("Error in processing promise:", error);
+					this.currentProcessingPromise = null;
+				});
+			}
+			this.processingTimer = setTimeout(checkQueue, this.PROCESS_CHECK_INTERVAL);
+		};
+		checkQueue();
+	}
+
 	public add(address: string, amount: bigint, userId: string) {
-		// Record balance log entries
 		console.log("Adding withdrawal request to queue", address, amount);
 		this.queue.push({
 			address,
@@ -46,115 +73,113 @@ export class WithdrawalQueue {
 			retryCount: 0,
 			userId,
 		});
-
-		// Clear existing timer if any
-		if (this.processingTimer) {
-			clearTimeout(this.processingTimer);
-		}
-
-		// Schedule processing
-		if (this.queue.length >= this.MAX_BATCH_SIZE) {
-			// If we have enough items, process as soon as minimum gap allows
-			const timeSinceLastProcess = Date.now() - this.lastProcessedTime;
-			const timeToWait = Math.max(
-				0,
-				this.MIN_GAP_MS - timeSinceLastProcess
-			);
-			this.processingTimer = setTimeout(
-				() => this.processQueue(),
-				timeToWait
-			);
-		} else {
-			// Otherwise, schedule for the standard delay
-			this.processingTimer = setTimeout(
-				() => this.processQueue(),
-				this.PROCESS_DELAY_MS
-			);
-		}
+		// Sort queue by nextRetryTime or createdAt
+		this.queue.sort((a, b) => {
+			const aTime = a.nextRetryTime || a.createdAt;
+			const bTime = b.nextRetryTime || b.createdAt;
+			return aTime - bTime;
+		});
 	}
 
-	private async processQueue() {
-
+	private async processNextTransaction(): Promise<void> {
 		if (this.isProcessing || this.queue.length === 0) {
 			return;
 		}
 
-		const timeSinceLastProcess = Date.now() - this.lastProcessedTime;
-		if (timeSinceLastProcess < this.MIN_GAP_MS) {
-			// If we haven't waited long enough, schedule for later
-			this.processingTimer = setTimeout(
-				() => this.processQueue(),
-				this.MIN_GAP_MS - timeSinceLastProcess
-			);
+		const now = Date.now();
+		const nextItem = this.queue[0];
+
+		// Skip if the item is waiting for retry
+		if (nextItem.nextRetryTime && nextItem.nextRetryTime > now) {
 			return;
 		}
-	
+
 		this.isProcessing = true;
-		console.log("Processing withdrawal queue started");
+		console.log("Processing withdrawal transaction", nextItem.address, nextItem.amount);
+
 		try {
-			// Take up to MAX_BATCH_SIZE items from the queue
-			const itemsToProcess = this.queue.slice(0, this.MAX_BATCH_SIZE);
+			const output: PaymentOutput = {
+				address: Address.fromString(nextItem.address),
+				amount: nextItem.amount,
+			};
 
-			// Create outputs for all items in this batch
-			const outputs: PaymentOutput[] = itemsToProcess.map((item) => ({
-				address: Address.fromString(item.address),
-				amount: item.amount,
-			}));
-
-			const txHash = await createWithdrawalTransaction(outputs);
+			const txHash = await createWithdrawalTransaction([output]);
 
 			if (txHash) {
-				// Record transactions in the database
-				const transactionRecords = itemsToProcess.map((item) => ({
+				// Record successful transaction
+				await DB.insert(transactions).values({
 					txId: txHash,
-					value: item.amount,
+					value: nextItem.amount,
 					type: "WITHDRAWAL" as const,
-					user: item.userId,
+					user: nextItem.userId,
 					createdAt: new Date(),
-				}));
-
-				// Insert both transaction and balance log records
-				await DB.insert(transactions).values(transactionRecords);
-
-
-				// Remove the processed items from queue only if successful
-				this.queue.splice(0, itemsToProcess.length);
-				console.log(
-					`Batch withdrawal processed successfully. Transaction hash: ${txHash}`
-				);
-			} else {
-				// Increment retry count for failed items
-				itemsToProcess.forEach((item, index) => {
-					if (this.queue[index].retryCount >= this.MAX_RETRIES) {
-						console.error(
-							`Maximum retries reached for withdrawal to ${item.address}`
-						);
-						// Remove items that have reached max retries
-						this.queue.shift();
-					} else {
-						this.queue[index].retryCount++;
-					}
 				});
-				console.error(`Failed to process batch withdrawal`);
+
+				// Remove the processed item from queue
+				this.queue.shift();
+				console.log(`Withdrawal processed successfully. Transaction hash: ${txHash}`);
+			} else {
+				// Handle failed transaction
+				if (nextItem.retryCount >= this.MAX_RETRIES) {
+					console.error(`Maximum retries reached for withdrawal to ${nextItem.address}`);
+					this.queue.shift(); // Remove from queue after max retries
+				} else {
+					// Schedule retry
+					nextItem.retryCount++;
+					nextItem.nextRetryTime = now + (this.RETRY_DELAY_MS * nextItem.retryCount);
+					console.log(`Withdrawal failed, scheduled retry ${nextItem.retryCount} for ${nextItem.address}`);
+				}
 			}
-		} catch (error) {
-			console.error("Error processing withdrawal batch:", error);
+		} catch (error: any) {
+			console.error("Error processing withdrawal:", error);
+			
+			// Check if the error indicates the transaction was already accepted
+			if (error?.message?.includes("was already accepted by the consensus")) {
+				// Extract transaction hash from the error message
+				const txHashMatch = error.message.match(/transaction ([a-f0-9]+) was already accepted/);
+				if (txHashMatch) {
+					const txHash = txHashMatch[1];
+					// Record successful transaction
+					await DB.insert(transactions).values({
+						txId: txHash,
+						value: nextItem.amount,
+						type: "WITHDRAWAL" as const,
+						user: nextItem.userId,
+						createdAt: new Date(),
+					});
+					// Remove the processed item from queue
+					this.queue.shift();
+					console.log(`Withdrawal already processed. Transaction hash: ${txHash}`);
+					return;
+				}
+			}
+
+			// Check if the error is an orphan transaction error
+			if (error?.message?.includes("is an orphan where orphan is disallowed")) {
+				console.log(`Transaction is orphaned, will retry with longer delay for ${nextItem.address}`);
+				if (nextItem.retryCount >= this.MAX_RETRIES) {
+					console.error(`Maximum retries reached for orphaned withdrawal to ${nextItem.address}`);
+					this.queue.shift();
+				} else {
+					nextItem.retryCount++;
+					// Use longer delay for orphan transactions
+					nextItem.nextRetryTime = now + (this.ORPHAN_RETRY_DELAY_MS * nextItem.retryCount);
+					console.log(`Orphaned withdrawal, scheduled retry ${nextItem.retryCount} for ${nextItem.address}`);
+				}
+				return;
+			}
+
+			// Handle other errors similar to failed transaction
+			if (nextItem.retryCount >= this.MAX_RETRIES) {
+				console.error(`Maximum retries reached for withdrawal to ${nextItem.address}`);
+				this.queue.shift();
+			} else {
+				nextItem.retryCount++;
+				nextItem.nextRetryTime = now + (this.RETRY_DELAY_MS * nextItem.retryCount);
+				console.log(`Withdrawal error, scheduled retry ${nextItem.retryCount} for ${nextItem.address}`);
+			}
 		} finally {
 			this.isProcessing = false;
-			this.lastProcessedTime = Date.now();
-
-			// If there are more items in the queue, schedule next processing
-			if (this.queue.length > 0) {
-				this.processingTimer = setTimeout(
-					() => this.processQueue(),
-					Math.min(
-						this.PROCESS_DELAY_MS,
-						this.queue.length >= this.MAX_BATCH_SIZE
-							? this.MIN_GAP_MS
-							: this.PROCESS_DELAY_MS
-					)
-				);
-			}
 		}
 	}
 
