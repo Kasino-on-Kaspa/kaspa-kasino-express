@@ -56,18 +56,14 @@ export class WalletDBQueueHandler{
         this.walletQueue = [];
         this.walletTasks = {};
         console.log("Processing queue");
-        
-        while (currentQueue.length > 0) {
-            let task = currentQueue.shift();
-            if (!task) return;
-            await this.processTask(task);
-            this.RemoveWalletTask(task.walletID);
-        }
+        await DB.transaction(async (tx) => {
+            while (currentQueue.length > 0) {
+                let task = currentQueue.shift();
+                if (!task) return;
+                await tx.update(wallets).set({balance: task.update.balance}).where(eq(wallets.id, task.walletID));
+                this.RemoveWalletTask(task.walletID);
+            }
+        })
     }
 
-    private async processTask(task: {walletID: string, update: {balance: bigint}}) {
-        let wallet = await DB.update(wallets).set({balance: task.update.balance}).where(eq(wallets.id, task.walletID));
-        console.log(`Updated wallet ${task.walletID} balance to ${task.update.balance}`);
-        return wallet;
-    }
 }

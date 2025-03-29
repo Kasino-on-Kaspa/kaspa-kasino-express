@@ -3,6 +3,7 @@ import type { PaymentOutput } from "@kcoin/kaspa-web3.js";
 import { RpcUtxosByAddressesEntry } from "@kcoin/kaspa-web3.js/dist/rpc/types";
 import { config } from "dotenv";
 import { kasToSompi } from "../constants";
+
 config();
 
 export function buildTransactionGenerator({

@@ -76,7 +76,7 @@ export class UserController {
         }
       }
 
-      if (referredBy == user.referrelCode) {
+      if (referredBy == user.referralCode) {
         res
           .status(400)
           .json({ message: "Referred by user cannot be the same" });
