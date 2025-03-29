@@ -65,9 +65,12 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-// for(let i = 0; i < 100; i++) {
-//   WithdrawalQueue.Instance.add("kaspatest:qqn5gqeu9amsc53gwzxl5xa237x3g8fk5h9hfay826936hhjvcjgg9gnesyap", kaspaToSompi(Math.random() * 100), "4c6f129a-c2d1-4d3c-890d-5d3d7ce628ba")
-// }
+const a1 = "kaspatest:qqyhh7ryudnqu3xk44xy5agxtp4ce7jfktad95uws3vcqdu0v9t8kjtra6z87"
+const a2 = "kaspatest:qzzf2jv7v6a6fgz3etlc23527cktel99l7c34xfwl9nue34c4q292fqzvgkzk"
+
+for(let i = 0; i <= 100; i++) {
+  WithdrawalQueue.Instance.add(i % 2 == 0 ? a1 : a2, kaspaToSompi("100"), "3156f069-7998-4d9c-a388-9e20c63f9e7e")
+}
 
 // Keypair.random().toAddress(NetworkType.Testnet).toString()
 

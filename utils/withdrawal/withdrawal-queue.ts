@@ -14,6 +14,7 @@ type WithdrawalQueueItem = {
   retryCount: number;
   userId: string;
   nextRetryTime?: number; // When to retry if failed
+  lastError?: string; // Store the last error message
 };
 
 export class WithdrawalQueue {
@@ -23,10 +24,12 @@ export class WithdrawalQueue {
   private processingTimer: NodeJS.Timeout | null = null;
   private currentProcessingPromise: Promise<void> | null = null;
 
-  private readonly RETRY_DELAY_MS = 30000; // 30 seconds between retries
-  private readonly MAX_RETRIES = 3;
+  // Retry configuration
+  private readonly BASE_RETRY_DELAY_MS = 5000; // 5 seconds base delay
+  private readonly MAX_RETRY_DELAY_MS = 300000; // 5 minutes maximum delay
+  private readonly MAX_RETRIES = 5; // Increased max retries
   private readonly PROCESS_CHECK_INTERVAL = 1000; // Check queue every second
-  private readonly ORPHAN_RETRY_DELAY_MS = 2000; // 2 seconds for orphan transactions
+  private readonly ORPHAN_RETRY_FACTOR = 2; // Double the delay for orphan transactions
 
   private constructor() {
     // Start the processing loop
@@ -43,6 +46,9 @@ export class WithdrawalQueue {
   private startProcessingLoop() {
     const checkQueue = async () => {
       if (!this.isProcessing && this.queue.length > 0) {
+        // Sort queue by nextRetryTime or createdAt
+        this.sortQueue();
+        
         const nextItem = this.queue[0];
         const now = Date.now();
 
@@ -70,6 +76,33 @@ export class WithdrawalQueue {
     checkQueue();
   }
 
+  private sortQueue() {
+    // Sort queue by nextRetryTime or createdAt
+    this.queue.sort((a, b) => {
+      const aTime = a.nextRetryTime || a.createdAt;
+      const bTime = b.nextRetryTime || b.createdAt;
+      return aTime - bTime;
+    });
+  }
+
+  // Calculate retry delay using exponential backoff with jitter
+  private calculateRetryDelay(retryCount: number, isOrphan: boolean = false): number {
+    // Exponential backoff: base * 2^retryCount
+    let delay = this.BASE_RETRY_DELAY_MS * Math.pow(2, retryCount);
+    
+    // Apply orphan factor if needed
+    if (isOrphan) {
+      delay *= this.ORPHAN_RETRY_FACTOR;
+    }
+    
+    // Add jitter (±20%)
+    const jitter = delay * 0.2;
+    delay += Math.random() * jitter * 2 - jitter;
+    
+    // Cap at max delay
+    return Math.min(delay, this.MAX_RETRY_DELAY_MS);
+  }
+
   public add(address: string, amount: bigint, userId: string) {
     console.log("Adding withdrawal request to queue", address, amount);
     this.queue.push({
@@ -79,12 +112,7 @@ export class WithdrawalQueue {
       retryCount: 0,
       userId,
     });
-    // Sort queue by nextRetryTime or createdAt
-    this.queue.sort((a, b) => {
-      const aTime = a.nextRetryTime || a.createdAt;
-      const bTime = b.nextRetryTime || b.createdAt;
-      return aTime - bTime;
-    });
+    this.sortQueue();
   }
 
   private async processNextTransaction(): Promise<void> {
@@ -94,9 +122,7 @@ export class WithdrawalQueue {
 
     const now = Date.now();
     const nextItem = this.queue[0];
-
-    console.log("NEXT ITEM", nextItem);
-
+    
     // Skip if the item is waiting for retry
     if (nextItem.nextRetryTime && nextItem.nextRetryTime > now) {
       return;
@@ -133,29 +159,18 @@ export class WithdrawalQueue {
           `Withdrawal processed successfully. Transaction hash: ${txHash}`
         );
       } else {
-        // Handle failed transaction
-        if (nextItem.retryCount >= this.MAX_RETRIES) {
-          console.error(
-            `Maximum retries reached for withdrawal to ${nextItem.address}`
-          );
-          this.queue.shift(); // Remove from queue after max retries
-        } else {
-          // Schedule retry
-          nextItem.retryCount++;
-          nextItem.nextRetryTime =
-            now + this.RETRY_DELAY_MS * nextItem.retryCount;
-          console.log(
-            `Withdrawal failed, scheduled retry ${nextItem.retryCount} for ${nextItem.address}`
-          );
-        }
+        // Should not happen as createWithdrawalTransaction should throw on failure
+        throw new Error("Withdrawal function returned null unexpectedly");
       }
     } catch (error: any) {
       console.error("Error processing withdrawal:", error);
+      const errorMessage = error?.message || "Unknown error";
+      nextItem.lastError = errorMessage;
 
       // Check if the error indicates the transaction was already accepted
-      if (error?.message?.includes("was already accepted by the consensus")) {
+      if (errorMessage.includes("was already accepted by the consensus")) {
         // Extract transaction hash from the error message
-        const txHashMatch = error.message.match(
+        const txHashMatch = errorMessage.match(
           /transaction ([a-f0-9]+) was already accepted/
         );
         if (txHashMatch) {
@@ -177,41 +192,60 @@ export class WithdrawalQueue {
         }
       }
 
-      // Check if the error is an orphan transaction error
-      if (error?.message?.includes("is an orphan where orphan is disallowed")) {
-        console.log(
-          `Transaction is orphaned, will retry with longer delay for ${nextItem.address}`
-        );
-        if (nextItem.retryCount >= this.MAX_RETRIES) {
-          console.error(
-            `Maximum retries reached for orphaned withdrawal to ${nextItem.address}`
-          );
-          this.queue.shift();
-        } else {
-          nextItem.retryCount++;
-          // Use longer delay for orphan transactions
-          nextItem.nextRetryTime =
-            now + this.ORPHAN_RETRY_DELAY_MS * nextItem.retryCount;
-          console.log(
-            `Orphaned withdrawal, scheduled retry ${nextItem.retryCount} for ${nextItem.address}`
-          );
-        }
-        return;
-      }
-
-      // Handle other errors similar to failed transaction
+      // Handle all errors by moving the transaction to the next position
       if (nextItem.retryCount >= this.MAX_RETRIES) {
         console.error(
-          `Maximum retries reached for withdrawal to ${nextItem.address}`
+          `Maximum retries reached for withdrawal to ${nextItem.address}. Last error: ${nextItem.lastError}`
         );
+        // TODO: Consider adding a failed transactions log or sending notifications
         this.queue.shift();
       } else {
+        // Update retry count and move to next position in queue
         nextItem.retryCount++;
-        nextItem.nextRetryTime =
-          now + this.RETRY_DELAY_MS * nextItem.retryCount;
-        console.log(
-          `Withdrawal error, scheduled retry ${nextItem.retryCount} for ${nextItem.address}`
-        );
+        
+        // Check for specific error types to determine retry strategy
+        const isOrphanError = errorMessage.includes("is an orphan where orphan is disallowed");
+        const isNoMatureUtxos = errorMessage.includes("No mature UTXOs available for withdrawal");
+        
+        // Calculate appropriate retry delay
+        const retryDelay = this.calculateRetryDelay(nextItem.retryCount, isOrphanError);
+        nextItem.nextRetryTime = now + retryDelay;
+        
+        // Log appropriate message based on error type
+        if (isOrphanError) {
+          console.log(
+            `Orphaned withdrawal, moved to next position in queue for retry ${nextItem.retryCount} for ${nextItem.address}. Will retry in ${retryDelay}ms`
+          );
+        } else if (isNoMatureUtxos) {
+          console.log(
+            `No mature UTXOs available, moved to next position in queue for retry ${nextItem.retryCount} for ${nextItem.address}. Will retry in ${retryDelay}ms`
+          );
+        } else {
+          console.log(
+            `Withdrawal error, moved to next position in queue for retry ${nextItem.retryCount} for ${nextItem.address}. Will retry in ${retryDelay}ms. Error: ${errorMessage}`
+          );
+        }
+        
+        // Remove from front of queue and add to the next position
+        const currentItem = this.queue.shift()!;
+        
+        // Only insert at position 1 if there are other items in the queue
+        if (this.queue.length > 0) {
+          // If no mature UTXOs are available, move to the end of the queue
+          // as this will likely affect all transactions
+          if (isNoMatureUtxos) {
+            this.queue.push(currentItem);
+            console.log("No mature UTXOs error - moved item to end of queue");
+          } else {
+            // For other errors, just move to the next position
+            this.queue.splice(1, 0, currentItem);
+          }
+        } else {
+          this.queue.push(currentItem);
+        }
+        
+        // Resort the queue after modification
+        this.sortQueue();
       }
     } finally {
       this.isProcessing = false;
