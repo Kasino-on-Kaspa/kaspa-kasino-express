@@ -40,7 +40,7 @@ export class Accumulator {
 				(a, b) =>
 					(b.utxoEntry?.amount || 0) - (a.utxoEntry?.amount || 0)
 			)
-			.slice(0, 20);
+			.slice(0, 10);
 
 		// Skip if no UTXOs to accumulate
 		if (utxosToAccumulate.length === 0) {

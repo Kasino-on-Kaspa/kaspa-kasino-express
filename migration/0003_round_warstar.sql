@@ -1,0 +1,1 @@
+ALTER TABLE "utxos" DROP CONSTRAINT "utxos_txId_vout_pk";

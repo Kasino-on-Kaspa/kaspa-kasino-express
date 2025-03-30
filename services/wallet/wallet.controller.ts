@@ -20,6 +20,9 @@ export class WalletController {
       account.Wallet.address,
     ]);
 
+    // Filter out coinbase transactions
+    const nonCoinbaseUtxos = allUtxos.filter(utxo => !utxo.utxoEntry?.isCoinbase);
+
     // Get all UTXOs we've already seen
     const seenUtxos = await DB.select()
       .from(utxos)
@@ -28,7 +31,7 @@ export class WalletController {
     const dagInfo = await rpcClient.getBlockDagInfo();
 
     // Find UTXOs that we haven't seen before
-    const unseenUtxos = allUtxos.filter((utxo) => {
+    const unseenUtxos = nonCoinbaseUtxos.filter((utxo) => {
       // Check if this UTXO is already in our database
       return !seenUtxos.some(
         (seenUtxo) =>
