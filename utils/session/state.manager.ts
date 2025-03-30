@@ -15,6 +15,7 @@ export abstract class SessionStateManager<
   public readonly StateFactory: SessionStateFactory<
     SessionStateManager<TSession, TStates>
   >;
+  
   public readonly SessionManager: TSession;
 
   constructor(

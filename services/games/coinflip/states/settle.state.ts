@@ -19,6 +19,7 @@ export class CoinflipSettleState extends SessionBaseState<CoinflipStateManager> 
 
     if (result != playerChoice) {
       manager.SessionManager.UpdateLastLog({ nextSelection: "DEFEATED" });
+      manager.SessionManager.Payout = -manager.SessionManager.ClientBetData!.bet;
       await manager.SessionManager.AddLastLogToDB();
       manager.ChangeState(CoinflipSessionGameState.END);
       return;

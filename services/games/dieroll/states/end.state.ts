@@ -14,7 +14,11 @@ export class DieRollEndState extends SessionBaseState<DierollStateManager> {
 
   public async HandleEnd(manager: DierollStateManager): Promise<void> {
 
-    manager.SessionManager.SessionCompleteEvent.Raise();
+    manager.SessionManager.SessionCompleteEvent.Raise({
+      account: manager.SessionManager.AssociatedAccount,
+      payout: manager.SessionManager.Payout!,
+      bet: manager.SessionManager.ClientBetData!.bet,
+    });
   }
 
   public ExitState(manager: DierollStateManager): void {

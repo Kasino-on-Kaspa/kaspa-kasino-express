@@ -13,7 +13,6 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
   
   public async HandleSettle(manager: DierollStateManager): Promise<void> {
     let isWon = manager.SessionManager.GetResultIsWon();
-    let payout = Number(manager.SessionManager.ClientBetData!.bet) * (manager.SessionManager.ClientBetData!.multiplier / (100 * 100));
     
     
     await DB.insert(dieroll).values({
@@ -24,14 +23,23 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
       result: manager.SessionManager.GetResult()!,
       status: manager.SessionManager.GetResultIsWon()!,
     }).execute();
-
+    
+    let payout:bigint;
+    
     if (isWon == "WON") {
-      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(BigInt(Math.floor(payout)), "BET_RETURN");
+      payout = BigInt(Math.floor(Number(manager.SessionManager.ClientBetData!.bet) * (manager.SessionManager.ClientBetData!.multiplier / (100 * 100))));
+      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
     }
     
-    if (isWon == "DRAW") {
-      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(manager.SessionManager.ClientBetData!.bet, "BET_RETURN");
+    else if (isWon == "DRAW") {
+      payout = manager.SessionManager.ClientBetData!.bet;
+      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
     }
+    else {
+      payout = -manager.SessionManager.ClientBetData!.bet;
+    }
+
+    manager.SessionManager.Payout = payout;
 
     manager.ChangeState(DieRollGameState.END);
   }

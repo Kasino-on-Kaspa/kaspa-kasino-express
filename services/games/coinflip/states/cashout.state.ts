@@ -20,8 +20,9 @@ export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager>
     }
     let netMultiplier = manager.SessionManager.ClientBetData!.multiplier / (100 * 100);
     
-    let payout = Number(manager.SessionManager.ClientBetData!.bet) * (netMultiplier ** manager.SessionManager.Level);
-    await manager.SessionManager.AssociatedAccount.Wallet.AddBalance(BigInt(Math.floor(payout)), "BET_RETURN");
+    let payout = BigInt(Math.floor(Number(manager.SessionManager.ClientBetData!.bet) * (netMultiplier ** manager.SessionManager.Level)));
+    manager.SessionManager.Payout = payout;
+    manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
 
     manager.ChangeState(CoinflipSessionGameState.END);
     return;

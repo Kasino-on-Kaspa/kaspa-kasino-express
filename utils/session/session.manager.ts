@@ -2,6 +2,7 @@ import { Socket } from "socket.io";
 import { ObservableEvent } from "../observables/event";
 import { SessionStateManager } from "./state.manager";
 import crypto from "crypto";
+import { Account } from "@utils/account";
 
 export type TBetClientData = {
   clientSeed: string;
@@ -19,11 +20,11 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   private _sessionId?: string;
   public ClientBetData?: TBetClientData;
   public ClientGameData?: TGameClientData;
-
+  public Payout?: bigint;
   //#region Session Events
   public SessionStopEvent: ObservableEvent<void>;
   public SessionStartEvent: ObservableEvent<void>;
-  public SessionCompleteEvent: ObservableEvent<void>;
+  public SessionCompleteEvent: ObservableEvent<{account: Account,payout: bigint,bet: bigint}>;
   public OnStateTimeoutEvent: ObservableEvent<void>;
   public SessionResultEvent: ObservableEvent<TGameResult>;
   //#endregion
@@ -37,7 +38,7 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
 
     this.SessionStopEvent = new ObservableEvent<void>();
     this.SessionStartEvent = new ObservableEvent<void>(); 
-    this.SessionCompleteEvent = new ObservableEvent<void>();
+    this.SessionCompleteEvent = new ObservableEvent();
     this.OnStateTimeoutEvent = new ObservableEvent<void>();
     this.SessionResultEvent = new ObservableEvent<TGameResult>();
   } 

@@ -234,6 +234,7 @@ export class CoinflipController {
       );
     });
     
+    
     session.SessionResultEvent.RegisterEventListener(async (result) => {
       account.AssociatedSockets.Session.emit(
         CoinFlipServerMessage.FLIP_RESULT,
