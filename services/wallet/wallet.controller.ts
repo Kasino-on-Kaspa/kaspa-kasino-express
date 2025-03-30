@@ -56,6 +56,7 @@ export class WalletController {
         txId: u.outpoint!.transactionId,
         vout: u.outpoint!.index,
         scriptPubKey: u.utxoEntry!.scriptPublicKey,
+        blockDaaScore: u.utxoEntry!.blockDaaScore,
       };
     });
 

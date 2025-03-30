@@ -18,6 +18,9 @@ export const utxos = p.pgTable("utxos", {
 	// ScriptPubKey
 	scriptPubKey: p.varchar().notNull(),
 
+	// Block DaaScore
+	blockDaaScore: p.integer().notNull(),
+
 	// Spent
 	spent: p.boolean().default(false),
 
