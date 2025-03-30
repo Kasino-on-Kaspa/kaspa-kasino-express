@@ -1,5 +1,5 @@
 import { DB } from "../../database";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { WalletBalanceProvider } from "../../utils/wallet/balance";
 import { utxos } from "../../schema/utxos.schema";
 import { AccountStoreInstance, WalletDBQueueInstance } from "../..";
@@ -23,7 +23,7 @@ export class WalletController {
     // Get all UTXOs we've already seen
     const seenUtxos = await DB.select()
       .from(utxos)
-      .where(eq(utxos.address, account.Wallet.address) && eq(utxos.spent, true));
+      .where(and(eq(utxos.address, account.Wallet.address), eq(utxos.spent, false)));
 
     const dagInfo = await rpcClient.getBlockDagInfo();
 

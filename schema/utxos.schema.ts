@@ -4,10 +4,10 @@ export const utxos = p.pgTable("utxos", {
 	id: p.uuid().primaryKey().defaultRandom(),
 
 	// Transaction ID
-	txId: p.varchar().notNull(),
+	txId: p.varchar().notNull().primaryKey(),
 
 	// Vout
-	vout: p.integer().notNull(),
+	vout: p.integer().notNull().primaryKey(),
     
 	// Utxo owner
 	address: p.varchar().notNull(),
