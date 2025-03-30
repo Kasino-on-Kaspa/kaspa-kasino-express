@@ -12,7 +12,6 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
   private pushToDBTimeout?: NodeJS.Timeout;
   private allAccountLogoutListener?: number;
   public EnterState(manager: CoinflipStateManager): void {
-    manager.SessionManager.IncrementLevel();
 
     this.nextSelectionListener = manager.SessionManager.GameNextSelectionEvent.RegisterEventListener(async (choice) => {
       this.HandleNextSelection(manager,choice);
@@ -46,6 +45,7 @@ export class CoinflipNextChoiceState extends SessionBaseState<CoinflipStateManag
     else{
       manager.SessionManager.UpdateLastLog({nextSelection: "CONTINUE"});
       await manager.SessionManager.AddLastLogToDB();
+      manager.SessionManager.IncrementLevel();
       manager.ChangeState(CoinflipSessionGameState.FLIP_CHOICE);
     }
   }

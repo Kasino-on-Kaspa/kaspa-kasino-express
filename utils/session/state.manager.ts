@@ -39,13 +39,11 @@ export abstract class SessionStateManager<
   }
 
   public Start() {
-    console.log("Starting state");
     this.OnStateChangeEvent.Raise(this._currentState.StateName as TStates);
     this._currentState.EnterState(this);
   }
 
   public ChangeState(nextState: TStates) {
-    console.log("Changing state to", nextState);
     this._currentState.ExitState(this);
     this._currentState = this.StateFactory.GetState(nextState);
     this.OnStateChangeEvent.Raise(nextState);

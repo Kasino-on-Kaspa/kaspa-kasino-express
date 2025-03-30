@@ -18,7 +18,7 @@ export class UserService {
     address: string,
     updates: { username: string | null; referredBy: string | null }
   ): Promise<{ username: string | null; referredBy: string | null } | null> {
-    console.log("address", address, updates);
+    
     const user = await DB.select()
       .from(users)
       .where(eq(users.address, address));

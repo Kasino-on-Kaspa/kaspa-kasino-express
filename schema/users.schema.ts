@@ -32,5 +32,5 @@ export const users = p.pgTable("users", {
     .unique()
     .$defaultFn(() => crypto.randomBytes(6).toString("hex")),
 
-  referredBy: p.uuid().references((): p.AnyPgColumn => users.referralCode),
+  referredBy: p.varchar().references((): p.AnyPgColumn => users.referralCode),
 });

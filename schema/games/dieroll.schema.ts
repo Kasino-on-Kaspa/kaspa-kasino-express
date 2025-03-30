@@ -32,6 +32,5 @@ export const dieroll = p.pgTable("dieroll_result", {
 	
 	status: E_DICEROLL_STATUS().notNull(),
 	
-	// Settled at
-	settledAt: p.timestamp(),
+	created_at: p.timestamp().defaultNow(),
 });

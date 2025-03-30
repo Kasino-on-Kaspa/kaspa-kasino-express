@@ -87,7 +87,6 @@ export class AuthService {
 
   refreshAccessToken(refreshToken: string): string | null {
     const payload = this.verifyRefreshToken(refreshToken);
-    console.log(payload);
     if (!payload) return null;
 
     // Generate new access token with the same payload

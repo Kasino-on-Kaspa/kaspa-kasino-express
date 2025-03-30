@@ -13,7 +13,7 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
   
   public async HandleSettle(manager: DierollStateManager): Promise<void> {
     let isWon = manager.SessionManager.GetResultIsWon();
-    let payout = manager.SessionManager.ClientBetData!.bet * BigInt(manager.SessionManager.ClientBetData!.multiplier);
+    let payout = Number(manager.SessionManager.ClientBetData!.bet) * (manager.SessionManager.ClientBetData!.multiplier / (100 * 100));
     
     
     await DB.insert(dieroll).values({
@@ -26,7 +26,7 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
     }).execute();
 
     if (isWon == "WON") {
-      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
+      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(BigInt(Math.floor(payout)), "BET_RETURN");
     }
     
     if (isWon == "DRAW") {

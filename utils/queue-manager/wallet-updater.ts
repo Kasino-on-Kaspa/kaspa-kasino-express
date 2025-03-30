@@ -55,7 +55,6 @@ export class WalletDBQueueHandler{
 
         this.walletQueue = [];
         this.walletTasks = {};
-        console.log("Processing queue");
         await DB.transaction(async (tx) => {
             while (currentQueue.length > 0) {
                 let task = currentQueue.shift();

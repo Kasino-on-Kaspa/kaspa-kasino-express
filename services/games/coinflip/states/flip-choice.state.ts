@@ -13,18 +13,15 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
     this.listenerIndex =
     manager.SessionManager.GameChoiceEvent.RegisterEventListener(
       async (choice) => {
-        console.log("Enter Coinflip Flip Choice state");
         this.HandleChoiceSelected(manager, choice);
       }
-    );
-    
+    );  
+
     this.allAccountLogoutListener = manager.SessionManager.AssociatedAccount.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => {
-      console.log("Enter Coinflip Flip Choice state");
       this.HandleStateTimeout(manager);
     });
-    
+
     this.Timeout = setTimeout(() => {
-      console.log("Enter Coinflip Flip Choice state");
       this.HandleStateTimeout(manager);
     }, manager.StateTimeoutDelay);
     }

@@ -117,12 +117,12 @@ export class DieRollController {
       });
       return;
     }
-
+    let multiplier = this.CalculateMultiplier(bet.condition, bet.target);
     session.SetClientBetData(
       {
         bet: betAmount,
         clientSeed: bet.client_seed,
-        multiplier: this.CalculateMultiplier(bet.condition, bet.target),
+        multiplier: multiplier,
       },
       {
         condition: bet.condition,

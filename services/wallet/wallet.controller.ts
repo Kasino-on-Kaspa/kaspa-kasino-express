@@ -10,11 +10,7 @@ import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
 export class WalletController {
   async updateWalletBalance(socket: Socket) {
     const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
-    console.log(
-      "Updating wallet balance for account:",
-      account?.Wallet.address
-    );
-
+    
     if (!account) {
       throw new Error("Account not found in store");
     }
@@ -24,7 +20,6 @@ export class WalletController {
       account.Wallet.address,
     ]);
 
-    console.log("All UTXOs:", allUtxos);
     // Get all UTXOs we've already seen
     const seenUtxos = await DB.select()
       .from(utxos)

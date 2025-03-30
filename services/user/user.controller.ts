@@ -52,8 +52,6 @@ export class UserController {
 
       const { username, referredBy } = req.body;
 
-      console.log(username, referredBy);
-
       // Validate username
       if (username && !this.isValidUsername(username)) {
         res.status(400).json({ message: "Invalid username format" });

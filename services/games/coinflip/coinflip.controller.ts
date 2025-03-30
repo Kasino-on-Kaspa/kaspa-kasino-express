@@ -174,7 +174,6 @@ export class CoinflipController {
       return;
     }
 
-    console.log("SESSION_NEXT", choice);
     
     if (
       session.StateManager?.CurrentState.StateName !=
@@ -255,7 +254,6 @@ export class CoinflipController {
     const fairMultiplier = 1 / 0.5;
 
     const multiplierWithEdge = fairMultiplier * (1 - houseEdge / 100);
-
     return Math.round(multiplierWithEdge * 10000);
   }
   //#endregion
