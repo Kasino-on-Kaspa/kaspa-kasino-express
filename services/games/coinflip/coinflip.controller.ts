@@ -16,6 +16,7 @@ import { BaseBetType } from "../types";
 import { CoinFlipServerMessage } from "./coinflip.messages";
 import { z } from "zod";
 import { CoinflipStateManager } from "./entities/state.manager";
+import { EventBus } from "@utils/eventbus";
 
 type TPendingSessionData = typeof sessionsTable.$inferSelect;
 
@@ -245,7 +246,8 @@ export class CoinflipController {
     });
 
     session.SessionCompleteEvent.RegisterEventListener(async ({account,result,bet,payout}) => {
-      this.io.serverSideEmit("gamelog:new",{account: {username: account.Address,id: account.Id}, result, bet, payout});
+      console.log("Session complete event", {account,result,bet,payout});
+      EventBus.Instance.emit("gamelog:new",{account: {username: account.Address,id: account.Id}, result, bet, payout});
 
       this.model.RemoveSession(account.Id);
       account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_ENDED, {

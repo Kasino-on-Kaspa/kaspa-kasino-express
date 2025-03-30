@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { GameLogModel } from "./game-log.model";
+import { EventBus } from "@utils/eventbus";
 
 export class GameLogController {
     private readonly gameLogModel: GameLogModel;
@@ -17,13 +18,14 @@ export class GameLogController {
             bet: BigInt(data.bet),
             payout: BigInt(data.payout),
         });
+        
         if (data.result === "WIN"){
             this.io.emit("log:new", {username: data.account.username, result: data.result, bet: data.bet, payout: data.payout});
         }
     }
 
     public handleStatsUpdated(){
-        this.io.serverSideEmit("stats:updated");
+        EventBus.Instance.emit("stats:updated");
     }
 
     private RegisterStatsUpdatedListener(){

@@ -13,8 +13,6 @@ export abstract class Service<
     this.server = io;
     this.router = Router();
     this.HandleInitialize();
-    this.InitializeRoutes();
-    this.HandleInitializeRoutes(express);
   }
 
   private HandleInitialize() {
@@ -26,7 +24,8 @@ export abstract class Service<
 
   public InitializeRoutes() {}
 
-  private HandleInitializeRoutes(express: Express) {
+  protected HandleInitializeRoutes(express: Express) {
+    this.InitializeRoutes();
     express.use(this.router);
   }
 

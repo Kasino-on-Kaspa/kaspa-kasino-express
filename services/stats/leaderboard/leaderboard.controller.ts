@@ -11,5 +11,7 @@ export class LeaderboardController {
 
   public async refreshLeaderboard(): Promise<void> {
     await this.model.refreshLeaderboard();
+    console.log(await this.model.getLeaderboard());
+
   }
 }

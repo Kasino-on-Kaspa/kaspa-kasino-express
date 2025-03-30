@@ -2,6 +2,7 @@ import { Service } from "@utils/service/service";
 import { Server, Socket } from "socket.io";
 import { GameLogController } from "./game-log.controller";
 import { Express } from "express";
+import { EventBus } from "@utils/eventbus";
 
 export class GameLogService extends Service {
     private readonly gameLogController: GameLogController;
@@ -13,7 +14,7 @@ export class GameLogService extends Service {
 
 
     public override ServerEventsHandler(){
-        this.server.on("gamelog:new", (data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) => {
+        EventBus.Instance.on("gamelog:new", (data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) => {
             this.handleNewLog(data);
         });
     }

@@ -1,5 +1,3 @@
-import { DB } from "@/database";
-import { GameStatsSchema } from "../../../schema/game-stats.schema";
 import { StatsUpdater } from "@utils/queue-manager/stats-updater";
 export class GameLogModel {
     private readonly statsUpdater: StatsUpdater;

@@ -12,6 +12,7 @@ import { z } from "zod";
 import { Account } from "@utils/account";
 import { DieRollGameState } from "./states";
 import { DieRollServerMessage } from "./dieroll.messages";
+import { EventBus } from "@utils/eventbus";
 
 export type TDieRollAck =
   | {
@@ -160,7 +161,7 @@ export class DieRollController {
     session.SessionCompleteEvent.RegisterEventListener(
       async () => {
 
-        this.io.serverSideEmit("gamelog:new", {
+        EventBus.Instance.emit("gamelog:new", {
           account: {username: account.Address,id: account.Id},
           bet: session.ClientBetData!.bet,
           payout: session.Payout!,

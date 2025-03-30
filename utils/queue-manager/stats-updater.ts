@@ -3,7 +3,7 @@ import { GameStatsSchema } from "@schema/game-stats.schema";
 import { ObservableEvent } from "@utils/observables/event";
 import { sql } from "drizzle-orm";
 
-const INTERVAL_TIME = 300_000;
+const INTERVAL_TIME = 1_000;
 
 export class StatsUpdater {
   private accountStats: { [accountID: string]: number } = {};
@@ -65,6 +65,7 @@ export class StatsUpdater {
   }
 
   public async UpdateStats(task: {accountID: string, update: {add_won_amount: bigint, add_bet_amount: bigint}}) {
+    console.log("Updating stats for account", task.accountID);
     await DB.insert(GameStatsSchema).values({
       account_id: task.accountID,
       total_won_amount: task.update.add_won_amount,

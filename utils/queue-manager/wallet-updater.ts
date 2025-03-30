@@ -15,9 +15,9 @@ export class WalletDBQueueHandler{
     
     public async AddOrUpdateWalletBalanceTask(walletID: string, oldBalance: bigint, newBalance: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN") {
 
-        let index = this.walletTasks[walletID];
 
         await this.AddBalanceLog(walletID, oldBalance, newBalance, reason);
+        let index = this.walletTasks[walletID];        
         
         if (index) {
             this.walletQueue[index].update.balance = newBalance;
