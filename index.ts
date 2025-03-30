@@ -16,7 +16,6 @@ import { WalletDBQueueHandler } from "@utils/queue-manager/wallet-updater";
 import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
 import { kaspaToSompi, Keypair, NetworkType } from "@kcoin/kaspa-web3.js";
 import { Accumulator } from "@utils/withdrawal/accumulator";
-import { Adapter } from "socket.io-adapter";
 
 const cors = require("cors");
 

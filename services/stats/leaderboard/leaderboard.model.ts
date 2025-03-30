@@ -4,6 +4,7 @@ import { users } from "@schema/users.schema";
 import { eq, sql } from "drizzle-orm";
 
 type TLeaderboard = {
+  address: string;
   username: string;
   totalWonAmount: bigint;
   totalBetAmount: bigint;
@@ -23,7 +24,8 @@ export class LeaderboardModel {
 
   private async getLeaderboardFromDB(): Promise<TLeaderboard[]> {
     const leaderboard = await DB.select({
-      username: users.username || users.xOnlyPublicKey || "Anonymous",
+      address: users.address,
+      ...(users.username ? { username: users.username } : {username: sql`Anonymous`}),
       totalWonAmount: GameStatsSchema.total_won_amount || 0n,
       totalBetAmount: GameStatsSchema.total_bet_amount || 0n,
       betAmountRank: sql<number>`RANK() OVER (ORDER BY ${GameStatsSchema.total_bet_amount} DESC)`,
