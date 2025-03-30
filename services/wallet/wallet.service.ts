@@ -2,6 +2,7 @@ import { AccountStoreInstance } from "@/index";
 import { Service } from "@utils/service/service";
 import { Socket, Server } from "socket.io";
 import { WalletController } from "./wallet.controller";
+import { Express } from "express";
 
 class WalletSocketService extends Service {
     private readonly WalletController: WalletController = new WalletController();
@@ -36,6 +37,6 @@ class WalletSocketService extends Service {
 }
 
 
-export function InitializeWalletSocketService(io: Server) {
-  return new WalletSocketService(io);
+export function InitializeWalletSocketService(io: Server, express: Express) {
+  return new WalletSocketService(io, express);
 }
