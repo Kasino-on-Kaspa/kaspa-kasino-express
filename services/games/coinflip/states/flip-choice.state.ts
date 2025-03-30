@@ -33,7 +33,6 @@ export class CoinflipFlipChoiceState extends SessionBaseState<CoinflipStateManag
       manager: CoinflipStateManager,
       choice: TCoinflipSessionClientGameData
     ) {
-    console.log("Choice selected", choice);
     this.UnregisterChoiceListener(manager);
     manager.SessionManager.AddLog({ playerChoice: choice });
     manager.ChangeState(CoinflipSessionGameState.FLIP);

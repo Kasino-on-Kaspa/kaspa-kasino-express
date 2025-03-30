@@ -9,7 +9,7 @@ import {
 } from "./coinflip.messages";
 import { TCoinflipSessionJSON } from "./entities/coinflip.session";
 import { CoinflipSessionGameState } from "./states";
-
+import { Express } from "express";
 const CoinflipNamespaceName = "/games/coinflip";
 
 class CoinflipService extends Service {
@@ -59,8 +59,8 @@ class CoinflipService extends Service {
   }
 }
 
-export function InitializeCointFlip(io: Server) {
-  let service = new CoinflipService(io);
+export function InitializeCointFlip(io: Server, express: Express) {
+  let service = new CoinflipService(io, express);
   console.log("Service initialized CoinflipService");
   return service;
 }

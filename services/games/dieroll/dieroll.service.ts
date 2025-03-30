@@ -5,7 +5,7 @@ import { DieRollBetType } from "./dieroll.types";
 import { z } from "zod";
 import { DieRollClientMessage } from "./dieroll.messages";
 import { TDierollSessionJSON } from "./entities/dieroll.session";
-
+import { Express } from "express";
 
 class DieRollService extends Service {
   private controller: DieRollController = new DieRollController();
@@ -35,8 +35,8 @@ class DieRollService extends Service {
   }
 }
 
-export function InitializeDierollService(io: Server) {
-  let service = new DieRollService(io);
+export function InitializeDierollService(io: Server, express: Express) {
+  let service = new DieRollService(io, express);
   console.log("Service initialized DieRollService");
   return service;
 }
