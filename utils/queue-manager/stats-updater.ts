@@ -3,7 +3,7 @@ import { GameStatsSchema } from "@schema/game-stats.schema";
 import { ObservableEvent } from "@utils/observables/event";
 import { sql } from "drizzle-orm";
 
-const INTERVAL_TIME = 1000;
+const INTERVAL_TIME = 60_000;
 
 export class StatsUpdater {
   private accountStats: { [accountID: string]: number } = {};

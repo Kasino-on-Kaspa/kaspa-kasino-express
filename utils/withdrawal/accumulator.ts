@@ -34,7 +34,17 @@ export class Accumulator {
 		// Filter out dust UTXOs (less than 1 KAS = 100,000,000 sompi)
 		// Sort by amount (largest first) and take top 20
 		const KAS_TO_SOMPI = 100000000;
-		const utxosToAccumulate = this.utxos
+		// Deduplicate UTXOs based on transaction ID and output index
+		const uniqueUtxos = Array.from(
+			new Map(
+				this.utxos.map(utxo => [
+					`${utxo.outpoint?.transactionId}-${utxo.outpoint?.index}`,
+					utxo
+				])
+			).values()
+		);
+
+		const utxosToAccumulate = uniqueUtxos
 			.filter((utxo) => (utxo.utxoEntry?.amount ?? 0) >= KAS_TO_SOMPI)
 			.sort(
 				(a, b) =>

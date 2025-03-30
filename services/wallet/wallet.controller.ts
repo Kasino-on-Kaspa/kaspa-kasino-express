@@ -36,9 +36,7 @@ export class WalletController {
       return !seenUtxos.some(
         (seenUtxo) =>
           seenUtxo.txId === utxo.outpoint?.transactionId &&
-          seenUtxo.vout === utxo.outpoint?.index &&
-          // Check "confirmation"
-          utxo.utxoEntry!.blockDaaScore < dagInfo.virtualDaaScore
+          seenUtxo.vout === utxo.outpoint?.index
       );
     });
 
@@ -46,6 +44,8 @@ export class WalletController {
     let balanceDelta = BigInt(0);
 
     for (const utxo of unseenUtxos) {
+      console.log(utxo.outpoint?.transactionId, utxo.outpoint?.index)
+      console.log(utxo.utxoEntry?.blockDaaScore, dagInfo.virtualDaaScore)
       if (utxo.utxoEntry?.amount) {
         balanceDelta += BigInt(utxo.utxoEntry.amount);
       }

@@ -6,8 +6,8 @@ import { eq, sql } from "drizzle-orm";
 type TLeaderboard = {
   address: string;
   username: string;
-  totalWonAmount: bigint;
-  totalBetAmount: bigint;
+  totalWonAmount: string;
+  totalBetAmount: string;
   betAmountRank: number;
   wonAmountRank: number;
 };
@@ -25,9 +25,9 @@ export class LeaderboardModel {
   private async getLeaderboardFromDB(): Promise<TLeaderboard[]> {
     const leaderboard = await DB.select({
       address: users.address,
-      ...(users.username ? { username: users.username } : {username: sql`Anonymous`}),
-      totalWonAmount: GameStatsSchema.total_won_amount || 0n,
-      totalBetAmount: GameStatsSchema.total_bet_amount || 0n,
+      username: sql`COALESCE(${users.username}, 'Anonymous')`,
+      totalWonAmount: sql<string>`CAST(${GameStatsSchema.total_won_amount} AS VARCHAR)`,
+      totalBetAmount: sql<string>`CAST(${GameStatsSchema.total_bet_amount} AS VARCHAR)`,
       betAmountRank: sql<number>`RANK() OVER (ORDER BY ${GameStatsSchema.total_bet_amount} DESC)`,
       wonAmountRank: sql<number>`RANK() OVER (ORDER BY ${GameStatsSchema.total_won_amount} DESC)`,
     })

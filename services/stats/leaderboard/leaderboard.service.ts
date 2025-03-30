@@ -14,7 +14,9 @@ export class LeaderboardService extends Service {
   }
 
   public override InitializeRoutes(): void {
-    this.router.get("/leaderboard", this.LeaderboardController.getLeaderboard);
+    this.router.get("/leaderboard", async (req, res) => {
+      await this.LeaderboardController.getLeaderboard(req, res);
+    });
   }
 
   public override ServerEventsHandler(): void {
