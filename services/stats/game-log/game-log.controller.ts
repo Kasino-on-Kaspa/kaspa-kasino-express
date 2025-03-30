@@ -13,15 +13,14 @@ export class GameLogController {
     }
 
     public handleNewLog(data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) {
+        if (data.result !== "WIN") return;
         this.gameLogModel.UpdateOrAddStats({
             account_id: data.account.id,
             bet: BigInt(data.bet),
             payout: BigInt(data.payout),
         });
         
-        if (data.result === "WIN"){
-            this.io.emit("log:new", {username: data.account.username, result: data.result, bet: data.bet, payout: data.payout});
-        }
+        this.io.emit("log:new", {username: data.account.username, result: data.result, bet: data.bet, payout: data.payout});
     }
 
     public handleStatsUpdated(){
