@@ -8,7 +8,12 @@ import { TDierollSessionJSON } from "./entities/dieroll.session";
 import { Express } from "express";
 
 class DieRollService extends Service {
-  private controller: DieRollController = new DieRollController();
+  private controller: DieRollController;
+
+  constructor(io: Server, express: Express) {
+    super(io, express);
+    this.controller = new DieRollController(io);
+  }
 
   public override Handler(socket: Socket): void {
     socket.on(

@@ -11,13 +11,14 @@ export class GameLogService extends Service {
         this.gameLogController = new GameLogController(io);
     }
 
-    public override Handler(_socket: Socket) {
-        this.server.on("log:new", (data: {account: {username: string,id: string},result: boolean, bet:number,payout:number}) => {
+
+    public override ServerEventsHandler(){
+        this.server.on("gamelog:new", (data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) => {
             this.handleNewLog(data);
         });
     }
-
-    private handleNewLog(data: {account: {username: string,id: string},result: boolean, bet:number , payout:number}) {
+    
+    private handleNewLog(data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number , payout:number}) {
         this.gameLogController.handleNewLog(data);
     }
 

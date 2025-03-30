@@ -3,10 +3,16 @@ import { GameStatsSchema } from "../../../schema/game-stats.schema";
 import { StatsUpdater } from "@utils/queue-manager/stats-updater";
 export class GameLogModel {
     private readonly statsUpdater: StatsUpdater;
+
+    public get OnStatsUpdated(){
+        return this.statsUpdater.StatsUpdatedEvent;
+    }
+    
     constructor(){
         this.statsUpdater = new StatsUpdater();
         this.statsUpdater.InstantiateProcessQueueTimer();
     }
+    
     public async UpdateOrAddStats(data: {account_id: string, bet:bigint,payout:bigint}) {
         let won_amount = data.payout - data.bet;
         let bet_amount = data.bet;

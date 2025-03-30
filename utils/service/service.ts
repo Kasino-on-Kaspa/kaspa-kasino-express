@@ -21,6 +21,7 @@ export abstract class Service<
     this.server.on("connection", (socket) => {  
       this.Handler(socket);
     });
+    this.ServerEventsHandler();
   }
 
   public InitializeRoutes() {}
@@ -30,4 +31,6 @@ export abstract class Service<
   }
 
   public Handler(socket: Socket): void {}
+
+  public ServerEventsHandler() {}
 }

@@ -1,5 +1,6 @@
 import { DB } from "@/database";
 import { GameStatsSchema } from "@schema/game-stats.schema";
+import { ObservableEvent } from "@utils/observables/event";
 import { sql } from "drizzle-orm";
 
 const INTERVAL_TIME = 300_000;
@@ -10,6 +11,12 @@ export class StatsUpdater {
     accountID: string;
     update: { add_won_amount: bigint; add_bet_amount: bigint };
   }[] = [];
+
+  private statsUpdatedEvent: ObservableEvent<void> = new ObservableEvent<void>();
+
+  public get StatsUpdatedEvent(){
+    return this.statsUpdatedEvent;
+  }
 
   private timer: NodeJS.Timeout | null = null;
 
@@ -54,6 +61,7 @@ export class StatsUpdater {
       if (!task) return;
       await this.UpdateStats(task);
     }
+    this.statsUpdatedEvent.Raise();
   }
 
   public async UpdateStats(task: {accountID: string, update: {add_won_amount: bigint, add_bet_amount: bigint}}) {

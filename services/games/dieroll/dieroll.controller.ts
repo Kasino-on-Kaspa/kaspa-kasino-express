@@ -3,7 +3,7 @@ import {
   TDieRollGameResult,
   TDierollSessionJSON,
 } from "./entities/dieroll.session";
-import { Socket } from "socket.io";
+import { Socket, Server } from "socket.io";
 import { AccountStoreInstance } from "@/index";
 import { DieRollStateFactory } from "./entities/state.factory";
 import { DierollSession } from "./entities/dieroll.session";
@@ -26,10 +26,12 @@ export type TDieRollAck =
 export class DieRollController {
   private model: DieRollModel;
   private factory: DieRollStateFactory;
+  private io: Server;
 
-  constructor() {
+  constructor(io: Server) {
     this.model = new DieRollModel();
     this.factory = new DieRollStateFactory();
+    this.io = io;
   }
 
   public async HandleGetSession(
@@ -157,6 +159,13 @@ export class DieRollController {
 
     session.SessionCompleteEvent.RegisterEventListener(
       async () => {
+
+        this.io.serverSideEmit("gamelog:new", {
+          account: {username: account.Address,id: account.Id},
+          bet: session.ClientBetData!.bet,
+          payout: session.Payout!,
+        });
+
         account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(
           DieRollServerMessage.GAME_ENDED,
           { serverSeed: session.ServerSeed }

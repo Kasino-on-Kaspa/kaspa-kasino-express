@@ -13,7 +13,12 @@ import { Express } from "express";
 const CoinflipNamespaceName = "/games/coinflip";
 
 class CoinflipService extends Service {
-  private coinflipController: CoinflipController = new CoinflipController();
+  private coinflipController: CoinflipController ;
+  
+  constructor(io: Server, express: Express) {
+    super(io, express);
+    this.coinflipController = new CoinflipController(io);
+  }
 
   override Handler(socket: Socket): void {
     socket.on(

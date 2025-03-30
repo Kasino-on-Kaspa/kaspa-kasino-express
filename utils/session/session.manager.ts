@@ -24,7 +24,7 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   //#region Session Events
   public SessionStopEvent: ObservableEvent<void>;
   public SessionStartEvent: ObservableEvent<void>;
-  public SessionCompleteEvent: ObservableEvent<{account: Account,payout: bigint,bet: bigint}>;
+  public SessionCompleteEvent: ObservableEvent<{account: Account,payout: bigint,bet: bigint,result:"WIN" | "LOSE" | "DRAW"}>;
   public OnStateTimeoutEvent: ObservableEvent<void>;
   public SessionResultEvent: ObservableEvent<TGameResult>;
   //#endregion

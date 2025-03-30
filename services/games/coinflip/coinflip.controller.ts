@@ -1,4 +1,4 @@
-import { Socket } from "socket.io";
+import { Socket, Server } from "socket.io";
 import { CoinflipModel } from "./coinflip.model";
 import {
   CoinflipSession,
@@ -32,10 +32,12 @@ export type TCoinflipAck =
 export class CoinflipController {
   private model: CoinflipModel;
   private factory: CoinflipStateFactory;
-
-  constructor() {
+  private io: Server;
+  
+  constructor(io: Server) {
     this.model = new CoinflipModel();
     this.factory = new CoinflipStateFactory();
+    this.io = io;
   }
 
   public async HandleGetSession(
@@ -242,7 +244,9 @@ export class CoinflipController {
       );
     });
 
-    session.SessionCompleteEvent.RegisterEventListener(async () => {
+    session.SessionCompleteEvent.RegisterEventListener(async ({account,result,bet,payout}) => {
+      this.io.serverSideEmit("gamelog:new",{account: {username: account.Address,id: account.Id}, result, bet, payout});
+
       this.model.RemoveSession(account.Id);
       account.AssociatedSockets.Session.emit(CoinFlipServerMessage.GAME_ENDED, {
         serverSeed: session.ServerSeed,
