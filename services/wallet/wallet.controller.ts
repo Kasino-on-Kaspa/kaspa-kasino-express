@@ -23,7 +23,7 @@ export class WalletController {
     // Get all UTXOs we've already seen
     const seenUtxos = await DB.select()
       .from(utxos)
-      .where(eq(utxos.address, account.Wallet.address));
+      .where(eq(utxos.address, account.Wallet.address) && eq(utxos.spent, true));
 
     const dagInfo = await rpcClient.getBlockDagInfo();
 

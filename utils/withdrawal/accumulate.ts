@@ -16,7 +16,7 @@ export async function createAccumulationTransaction(
 		outputs: [
 			{
 				address: Address.fromString(process.env.MASTER_ADDRESS!),
-				amount: BigInt(netUtxoValue - Number(calculatedFee)),
+				amount: BigInt(netUtxoValue - Number(calculatedFee) * 1.01),
 			},
 		],
 		utxos: inputs,

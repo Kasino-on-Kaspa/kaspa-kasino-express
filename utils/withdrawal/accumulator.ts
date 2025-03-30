@@ -7,7 +7,7 @@ import { wallets } from "@schema/wallets.schema";
 
 type DBUtxoRecord = typeof utxos.$inferSelect;
 
-class Accumulator {
+export class Accumulator {
 	private static instance: Accumulator;
 	private utxos: RpcUtxosByAddressesEntry[] = [];
 	private isSyncing: boolean = false;
