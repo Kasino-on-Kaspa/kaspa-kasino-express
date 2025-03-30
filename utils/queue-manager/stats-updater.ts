@@ -56,6 +56,7 @@ export class StatsUpdater {
     if (!this.timer) return;
     let tasks = this.taskQueue;
     this.taskQueue = [];
+    this.accountStats = {};
     while (tasks.length > 0) {
       const task = tasks.shift();
       if (!task) return;
