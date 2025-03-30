@@ -11,7 +11,7 @@ import {
 import { AccountStore } from "./services/user/entities/accounts";
 
 import bodyParser from "body-parser";
-import { InstantiateServices } from "./services";
+import { AuthorizedServices, UnauthorizedServices } from "./services";
 import { WalletDBQueueHandler } from "@utils/queue-manager/wallet-updater";
 import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
 import { kaspaToSompi, Keypair, NetworkType } from "@kcoin/kaspa-web3.js";
@@ -77,7 +77,9 @@ Accumulator.Instance.sync().then(() => {
 
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);
-InstantiateServices(io, app);
+
+AuthorizedServices(io, app);
+UnauthorizedServices(io, app);
 
 io.on("connection", async (socket: TAuthenticatedSocket) => {
   console.log(`User connected: ${socket.data.user.address}`);

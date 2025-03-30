@@ -3,6 +3,8 @@ import { balance_log } from "@schema/balance.schema";
 import { wallets } from "@schema/wallets.schema";
 import { eq } from "drizzle-orm";
 
+const INTERVAL_TIME = 5000;
+
 export class WalletDBQueueHandler{
     
     private walletTasks: {[walletID: string]: number} = {};
@@ -33,7 +35,7 @@ export class WalletDBQueueHandler{
         this.timer = setInterval(() => {
             if (this.walletQueue.length <= 0) return;
             this.ProcessQueue();
-        }, 1000);
+        }, INTERVAL_TIME);
     }
 
     public ClearProcessQueueTimer() {
