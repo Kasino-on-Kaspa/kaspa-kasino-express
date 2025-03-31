@@ -66,7 +66,6 @@ export class StatsUpdater {
   }
 
   public async UpdateStats(task: {accountID: string, update: {add_won_amount: bigint, add_bet_amount: bigint}}) {
-    console.log("Updating stats for account", task.accountID);
     await DB.insert(GameStatsSchema).values({
       account_id: task.accountID,
       total_won_amount: task.update.add_won_amount,
