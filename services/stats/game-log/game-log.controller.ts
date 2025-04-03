@@ -13,14 +13,20 @@ export class GameLogController {
     }
 
     public handleNewLog(data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) {
-        if (data.result !== "WIN") return;
+        // if (data.result !== "WIN") return;
         this.gameLogModel.UpdateOrAddStats({
             account_id: data.account.id,
             bet: BigInt(data.bet),
             payout: BigInt(data.payout),
         });
         
-        this.io.emit("log:new", {username: data.account.username, result: data.result, bet: data.bet, payout: data.payout});
+        // Convert BigInt values to strings before emitting
+        this.io.emit("log:new", {
+            username: data.account.username, 
+            result: data.result, 
+            bet: data.bet.toString(), 
+            payout: data.payout.toString()
+        });
     }
 
     public handleStatsUpdated(){
