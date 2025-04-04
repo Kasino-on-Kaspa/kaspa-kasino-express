@@ -43,5 +43,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoia2Fzc
 DELETE http://localhost:3000/users/me HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoia2FzcGE6cXpsdnNoZnZ5dHNrbTl0NHBhY2ZxMnI5cmZ1Z3FkdXMwMmVzZTU4bGR4dXh4djQyODBkdmpyeXB2Z3dtYyIsInB1YmxpY0tleSI6IjAzYmVjODVkMmMyMmUxNmQ5NTc1MGY3MDkwMjg2NTFhNzg4MDM3OTA3YWIzMGNkMGZmNjliODYzMzJhYTNiZGFjOSIsIm5vbmNlIjoiYjcxbWs0c2NncmR2bDJhcmMwdHp6IiwiZXhwaXJ5IjoxNzQxNTMxMjAzLCJpYXQiOjE3NDE3OTIwNjYsImV4cCI6MTc0MTc5Mjk2Nn0.bUsh6ZnyEyjlSjimGCnG6fvWtScZgMcraehylNWy2so
 
+###
 
+GET http://localhost:3000/game-wins/coinflip HTTP/1.1
+
+###
+
+GET http://localhost:3000/game-wins/dieroll HTTP/1.1
 

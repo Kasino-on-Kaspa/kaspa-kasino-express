@@ -7,7 +7,7 @@ import { EventBus } from "@utils/eventbus";
 export class LeaderboardService extends Service {
   private readonly LeaderboardController;
 
-  constructor(io: Server, express: Express){
+  constructor(io: Server, express: Express) {
     super(io, express);
     this.LeaderboardController = new LeaderboardController();
     this.HandleInitializeRoutes(express);
@@ -17,13 +17,19 @@ export class LeaderboardService extends Service {
     this.router.get("/leaderboard", async (req, res) => {
       await this.LeaderboardController.getLeaderboard(req, res);
     });
+
+    this.router.get("/game-wins/:gameName", async (req, res) => {
+      await this.LeaderboardController.getHighWinsLuckyWinsUsingGameName(
+        req,
+        res
+      );
+    });
   }
 
   public override ServerEventsHandler(): void {
     EventBus.Instance.on("stats:updated", () => {
       this.LeaderboardController.refreshLeaderboard();
     });
-    
   }
 }
 
