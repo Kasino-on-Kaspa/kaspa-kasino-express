@@ -33,6 +33,7 @@
     "socket.io": "^4.8.1",
     "tsc-watch": "^6.2.1",
     "typescript": "^5.8.2",
+    "websocket": "^1.0.35",
     "zod": "^3.24.2"
   },
   "devDependencies": {

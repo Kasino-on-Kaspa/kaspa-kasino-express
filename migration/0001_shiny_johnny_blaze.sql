@@ -1,0 +1,1 @@
+ALTER TABLE "game_stats" ALTER COLUMN "account_id" SET DATA TYPE uuid;

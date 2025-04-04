@@ -1,26 +1,42 @@
-# Use Node.js v20 as the base image
-FROM node:20-alpine
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install pnpm globally
 RUN npm install -g pnpm
+RUN pnpm config set store-dir /app/.pnpm-store
 
-# Copy package files
 COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies
 RUN pnpm install
 
-# Copy the rest of the application
 COPY . .
 
-# Build the application
+# Generate database artifacts
 RUN pnpm run db:generate
 
-# Expose the port the app runs on
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN npm install -g pnpm
+RUN pnpm config set store-dir /app/.pnpm-store
+RUN apk add --no-cache ws
+
+# Copy only production dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod
+RUN pnpm add ws
+
+# Copy source files
+COPY --from=builder /app/index.ts ./
+COPY --from=builder /app/schema ./schema
+COPY --from=builder /app/services ./services
+COPY --from=builder /app/utils ./utils
+COPY --from=builder /app/typings.ts ./
+COPY --from=builder /app/database.ts ./
+COPY --from=builder /app/drizzle.config.ts ./
+COPY --from=builder /app/migration ./migration
+COPY --from=builder /app/tsconfig.json ./
+
 EXPOSE 3000
 
-# Command to run the application
-CMD ["pnpm", "run", "dev"] 
+CMD ["pnpm", "tsx", "index.ts"] 

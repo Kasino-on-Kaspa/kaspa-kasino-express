@@ -5,29 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1743323590955,
-      "tag": "0000_blue_the_phantom",
+      "when": 1743743557521,
+      "tag": "0000_faithful_dormammu",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1743338143652,
-      "tag": "0001_far_adam_warlock",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1743338279530,
-      "tag": "0002_free_hardball",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1743338391272,
-      "tag": "0003_round_warstar",
+      "when": 1743743948764,
+      "tag": "0001_shiny_johnny_blaze",
       "breakpoints": true
     }
   ]

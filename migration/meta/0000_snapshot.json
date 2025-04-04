@@ -1,5 +1,5 @@
 {
-  "id": "6dc51818-2cdd-4cd0-8968-c101de5d3d63",
+  "id": "ea8d6209-8eb1-4938-aede-53b3aa749481",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -50,6 +50,53 @@
           "tableTo": "wallets",
           "columnsFrom": [
             "walletID"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.game_stats": {
+      "name": "game_stats",
+      "schema": "",
+      "columns": {
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "total_bet_amount": {
+          "name": "total_bet_amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "0::bigint"
+        },
+        "total_won_amount": {
+          "name": "total_won_amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "0::bigint"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "game_stats_account_id_users_id_fk": {
+          "name": "game_stats_account_id_users_id_fk",
+          "tableFrom": "game_stats",
+          "tableTo": "users",
+          "columnsFrom": [
+            "account_id"
           ],
           "columnsTo": [
             "id"

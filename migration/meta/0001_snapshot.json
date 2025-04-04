@@ -1,6 +1,6 @@
 {
-  "id": "49bb6837-8227-4336-87b9-020057d149d2",
-  "prevId": "6dc51818-2cdd-4cd0-8968-c101de5d3d63",
+  "id": "7afcf766-87ea-4950-a1ef-b36c664db702",
+  "prevId": "ea8d6209-8eb1-4938-aede-53b3aa749481",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -70,7 +70,7 @@
       "columns": {
         "account_id": {
           "name": "account_id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": true,
           "notNull": true
         },
@@ -546,13 +546,13 @@
         "txId": {
           "name": "txId",
           "type": "varchar",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "vout": {
           "name": "vout",
           "type": "integer",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "address": {

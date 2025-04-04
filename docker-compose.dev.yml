@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/kasino-on-kaspa/kasino-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     platform: linux/amd64
     ports:
       - "3000:3000"
@@ -18,6 +20,11 @@ services:
       - MASTER_MNEMONIC=pool opinion key horse upset tortoise tube miss world junior emotion acoustic
       - MASTER_PRIVATE_KEY=aa54792f0dd2cfcce030111476a4d3b083b109c5507a27649831bdaa24b564cb
       - MASTER_ADDRESS=kaspatest:qrwmxrezslrtux5fwltsh2dua3kqt6eytyuql9ck5p7jtapsw3nwwxmmyevvj
+      - PNPM_HOME=/app/.pnpm-store
+    volumes:
+      - .:/app
+      - pnpm_store:/app/.pnpm-store
+      - node_modules:/app/node_modules
     depends_on:
       db:
         condition: service_healthy
@@ -27,14 +34,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    volumes:
-      - ./start.sh:/app/start.sh
     entrypoint: []
     command: >
       sh -c "
-      apk add --no-cache netcat-openbsd &&
-      chmod +x /app/start.sh &&
-      /app/start.sh
+      apk add --no-cache netcat-openbsd postgresql-client &&
+      pnpm config set store-dir /app/.pnpm-store &&
+      while ! nc -z db 5432; do sleep 1; done &&
+      PGPASSWORD=postgres psql -h db -U postgres -c 'DROP DATABASE IF EXISTS kaspa_kasino;' &&
+      PGPASSWORD=postgres psql -h db -U postgres -c 'CREATE DATABASE kaspa_kasino;' &&
+      pnpm install &&
+      pnpm drizzle-kit generate &&
+      pnpm drizzle-kit push &&
+      pnpm run dev
       "
 
   db:
@@ -44,7 +55,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=kaspa_kasino
+      - POSTGRES_DB=postgres
       # Performance tuning
       - POSTGRES_MAX_CONNECTIONS=100
       - POSTGRES_SHARED_BUFFERS=256MB
@@ -81,6 +92,8 @@ services:
 
 volumes:
   postgres_data:
+  pnpm_store:
+  node_modules:
 
 networks:
   default:

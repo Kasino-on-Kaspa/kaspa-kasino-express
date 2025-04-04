@@ -13,6 +13,12 @@ CREATE TABLE "balance_log" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "game_stats" (
+	"account_id" text PRIMARY KEY NOT NULL,
+	"total_bet_amount" bigint DEFAULT 0::bigint,
+	"total_won_amount" bigint DEFAULT 0::bigint
+);
+--> statement-breakpoint
 CREATE TABLE "coinflip_results" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"sessionId" uuid NOT NULL,
@@ -93,6 +99,7 @@ CREATE TABLE "wallets" (
 );
 --> statement-breakpoint
 ALTER TABLE "balance_log" ADD CONSTRAINT "balance_log_walletID_wallets_id_fk" FOREIGN KEY ("walletID") REFERENCES "public"."wallets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "game_stats" ADD CONSTRAINT "game_stats_account_id_users_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "coinflip_results" ADD CONSTRAINT "coinflip_results_sessionId_sessions_id_fk" FOREIGN KEY ("sessionId") REFERENCES "public"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dieroll_result" ADD CONSTRAINT "dieroll_result_sessionId_sessions_id_fk" FOREIGN KEY ("sessionId") REFERENCES "public"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_users_id_fk" FOREIGN KEY ("user") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
