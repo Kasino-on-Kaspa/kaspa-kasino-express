@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - NETWORK=${NETWORK}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - KASPA_WSS_ENDPOINT=${KASPA_WSS_ENDPOINT}
+      - KASPA_GRPC_ENDPOINT=${KASPA_GRPC_ENDPOINT}
+      - MASTER_MNEMONIC=${MASTER_MNEMONIC}
+      - MASTER_PRIVATE_KEY=${MASTER_PRIVATE_KEY}
+      - MASTER_ADDRESS=${MASTER_ADDRESS}
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+networks:
+  default:
+    name: kaspa-network
+    driver: bridge 
