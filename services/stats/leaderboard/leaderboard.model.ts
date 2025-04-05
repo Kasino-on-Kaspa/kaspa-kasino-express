@@ -35,7 +35,7 @@ export class LeaderboardModel {
       .from(GameStatsSchema)
       .innerJoin(users, eq(GameStatsSchema.account_id, users.id))
       .limit(10);
-    console.log(leaderboard.length);
+    // console.log(leaderboard.length);
     return leaderboard as TLeaderboard[];
   }
 
