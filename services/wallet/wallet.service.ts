@@ -1,3 +1,5 @@
+global.WebSocket = require('ws'); 
+
 import { AccountStoreInstance } from "@/index";
 import { Service } from "@utils/service/service";
 import { Socket, Server } from "socket.io";
