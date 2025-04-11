@@ -20,7 +20,7 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   private _sessionId?: string;
   public ClientBetData?: TBetClientData;
   public ClientGameData?: TGameClientData;
-  public Payout?: bigint;
+  public Payout: bigint = BigInt(0);
   //#region Session Events
   public SessionStopEvent: ObservableEvent<void>;
   public SessionStartEvent: ObservableEvent<void>;

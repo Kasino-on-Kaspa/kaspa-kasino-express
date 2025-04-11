@@ -27,9 +27,8 @@ export class CoinflipFlipState extends SessionBaseState<CoinflipStateManager> {
 
     const result = resultNumber % 2 == 0 ? "HEADS" : "TAILS";
 
-    manager.SessionManager.UpdateLastLog({ result: result });
-    manager.SessionManager.SessionResultEvent.Raise(result);
-    manager.ChangeState(CoinflipSessionGameState.SETTLE);
+    manager.SessionManager.SetCurrentResult(result);
+    manager.ChangeState(CoinflipSessionGameState.CHOICE);
   }
 
   public ExitState(manager: CoinflipStateManager): void {}

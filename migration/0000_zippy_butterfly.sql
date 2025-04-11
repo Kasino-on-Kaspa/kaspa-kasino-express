@@ -1,6 +1,7 @@
 CREATE TYPE "public"."E_BALANCE_LOG_TYPE" AS ENUM('DEPOSIT', 'WITHDRAWAL', 'BET', 'BET_RETURN');--> statement-breakpoint
-CREATE TYPE "public"."CoinflipStatus" AS ENUM('CONTINUE', 'CASHOUT', 'PENDING', 'DEFEATED');--> statement-breakpoint
-CREATE TYPE "public"."CoinflipChoice" AS ENUM('HEADS', 'TAILS');--> statement-breakpoint
+CREATE TYPE "public"."CoinflipPlayerChoice" AS ENUM('HEADS', 'TAILS', 'CASHOUT');--> statement-breakpoint
+CREATE TYPE "public"."CoinflipSessionGameResult" AS ENUM('HEADS', 'TAILS');--> statement-breakpoint
+CREATE TYPE "public"."CoinflipSessionNext" AS ENUM('CONTINUE', 'SETTLED');--> statement-breakpoint
 CREATE TYPE "public"."DicerollCondition" AS ENUM('OVER', 'UNDER');--> statement-breakpoint
 CREATE TYPE "public"."DicerollStatus" AS ENUM('DRAW', 'WON', 'LOST');--> statement-breakpoint
 CREATE TYPE "public"."GameType" AS ENUM('DICEROLL', 'COINFLIP');--> statement-breakpoint
@@ -14,7 +15,7 @@ CREATE TABLE "balance_log" (
 );
 --> statement-breakpoint
 CREATE TABLE "game_stats" (
-	"account_id" text PRIMARY KEY NOT NULL,
+	"account_id" uuid PRIMARY KEY NOT NULL,
 	"total_bet_amount" bigint DEFAULT 0::bigint,
 	"total_won_amount" bigint DEFAULT 0::bigint
 );
@@ -22,12 +23,12 @@ CREATE TABLE "game_stats" (
 CREATE TABLE "coinflip_results" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"sessionId" uuid NOT NULL,
-	"playerChoice" "CoinflipChoice" NOT NULL,
-	"result" "CoinflipChoice" NOT NULL,
+	"playerChoice" "CoinflipPlayerChoice" NOT NULL,
+	"result" "CoinflipSessionGameResult" NOT NULL,
 	"level" integer NOT NULL,
 	"multiplier" integer NOT NULL,
-	"next" "CoinflipStatus" NOT NULL,
 	"client_won" boolean NOT NULL,
+	"next" "CoinflipSessionNext" NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

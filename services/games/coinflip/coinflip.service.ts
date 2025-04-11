@@ -3,11 +3,10 @@ import { Service } from "../../../utils/service/service";
 import { CoinflipController, TCoinflipAck } from "./coinflip.controller";
 import { BaseBetType } from "../types";
 import { z } from "zod";
-import { E_COINFLIP_OPTION } from "../../../schema/games/coinflip.schema";
 import {
   CoinFlipClientMessage,
 } from "./coinflip.messages";
-import { TCoinflipSessionJSON } from "./entities/coinflip.session";
+import { TCoinflipPlayerChoice, TCoinflipSessionClientGameData, TCoinflipSessionJSON } from "./entities/coinflip.session";
 import { CoinflipSessionGameState } from "./states";
 import { Express } from "express";
 const CoinflipNamespaceName = "/games/coinflip";
@@ -48,17 +47,10 @@ class CoinflipService extends Service {
     socket.on(
       CoinFlipClientMessage.FLIP_COIN,
       (
-        choice: (typeof E_COINFLIP_OPTION.enumValues)[number],
+        choice: TCoinflipPlayerChoice,
         ack: (ack: TCoinflipAck) => void
       ) => {
         this.coinflipController.HandleFlip(socket, choice, ack);
-      }
-    );
-
-    socket.on(
-      CoinFlipClientMessage.SESSION_NEXT,
-      (option: "CASHOUT" | "CONTINUE", ack: (ack: TCoinflipAck) => void) => {
-        this.coinflipController.HandleNextChoice(socket, option, ack);
       }
     );
   }

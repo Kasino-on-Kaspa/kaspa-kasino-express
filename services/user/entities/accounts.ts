@@ -54,6 +54,9 @@ export class AccountStore {
 
   
   private RemoveUserStoredInstance(account_id: string) {
+    if (!this._userAccounts[account_id]) {
+      return;
+    }
     this._userAccounts[account_id].IsDeleted = true;
     delete this._userAccounts[account_id];
   }

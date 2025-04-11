@@ -42,7 +42,7 @@ export class CoinflipStartState extends SessionBaseState<CoinflipStateManager> {
       "BET"
     );
 
-    manager.ChangeState(CoinflipSessionGameState.FLIP_CHOICE);
+    manager.ChangeState(CoinflipSessionGameState.FLIP);
   }
 
   public ExitState(manager: CoinflipStateManager): void {}

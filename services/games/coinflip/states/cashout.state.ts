@@ -1,6 +1,7 @@
 import { SessionBaseState } from "@utils/session/base.state";
 import { CoinflipSessionGameState } from ".";
 import { CoinflipStateManager } from "../entities/state.manager";
+import { CoinflipSession } from "../entities/coinflip.session";
 
 export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager> {
   protected _stateName: string = CoinflipSessionGameState.CASHOUT;
@@ -11,6 +12,7 @@ export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager>
   }
 
   public async HandleCashout(manager: CoinflipStateManager): Promise<void> {
+    
     if (!manager.SessionManager.LastLog || manager.SessionManager.LastLog.result != manager.SessionManager.LastLog.playerChoice) {
       return;
     }
@@ -19,15 +21,16 @@ export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager>
       throw new Error("Client bet data not found");
     }
     let netMultiplier = manager.SessionManager.ClientBetData!.multiplier / (100 * 100);
-    console.log("netMultiplier", netMultiplier);
-    console.log("level", manager.SessionManager.Level);
-    let payout = BigInt(Math.floor(Number(manager.SessionManager.ClientBetData!.bet) * (netMultiplier ** (manager.SessionManager.Level - 1))));
-    console.log("payout", payout);
-    manager.SessionManager.Payout = payout;
+    let payout = BigInt(Math.floor(Number(manager.SessionManager.ClientBetData!.bet) * Math.fround(netMultiplier ** (manager.SessionManager.Level - 1))));
+    this.SetSessionPayout(manager.SessionManager, payout);
     manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
-
-    manager.ChangeState(CoinflipSessionGameState.END);
+    manager.SessionManager.SetCurrentNext("SETTLED");
+    manager.ChangeState(CoinflipSessionGameState.NEXT);
     return;
+  }
+
+  private SetSessionPayout(sessionManager: CoinflipSession, payout: bigint) {
+    sessionManager.Payout = payout;
   }
 
   public ExitState(manager: CoinflipStateManager): void {

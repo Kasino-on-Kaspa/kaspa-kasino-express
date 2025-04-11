@@ -13,27 +13,21 @@ export class CoinflipSettleState extends SessionBaseState<CoinflipStateManager> 
   }
 
   public async HandleSettle(manager: CoinflipStateManager) {
-    let lastLog = manager.SessionManager.LastLog!;
-    let result = lastLog.result;
-    let playerChoice = lastLog.playerChoice;
-
-    if (result != playerChoice) {
-      manager.SessionManager.UpdateLastLog({ nextSelection: "DEFEATED" });
-      manager.SessionManager.Payout = -manager.SessionManager.ClientBetData!.bet;
-      await manager.SessionManager.AddLastLogToDB();
-      manager.ChangeState(CoinflipSessionGameState.END);
-      return;
-    }
-    let level = manager.SessionManager.Level;
-    if (level >= manager.SessionManager.MAX_LEVEL) {
-      manager.SessionManager.UpdateLastLog({ nextSelection: "CASHOUT" });
-      await manager.SessionManager.AddLastLogToDB();
-      manager.ChangeState(CoinflipSessionGameState.CASHOUT);
-      return;
-    }
+    console.log("Settle state", {
+      result: manager.SessionManager.CurrentResult,
+      choice: manager.SessionManager.CurrentChoice,
+      isWon: manager.SessionManager.CurrentResult == manager.SessionManager.CurrentChoice,
+    });
     
-    manager.ChangeState(CoinflipSessionGameState.NEXT_CHOICE);
-    return;
+    if (manager.SessionManager.CurrentResult == manager.SessionManager.CurrentChoice) {
+      manager.SessionManager.SetCurrentNext("CONTINUE");
+    }
+    else {
+      manager.SessionManager.Payout = -manager.SessionManager.ClientBetData!.bet;
+      manager.SessionManager.SetCurrentNext("SETTLED");
+    }
+
+    manager.ChangeState(CoinflipSessionGameState.NEXT);
   }
 
   public ExitState(manager: CoinflipStateManager): void {}

@@ -1,5 +1,5 @@
 {
-  "id": "ea8d6209-8eb1-4938-aede-53b3aa749481",
+  "id": "f284a8ca-975a-4e12-a06c-4248225f5f9b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -70,7 +70,7 @@
       "columns": {
         "account_id": {
           "name": "account_id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": true,
           "notNull": true
         },
@@ -130,14 +130,14 @@
         },
         "playerChoice": {
           "name": "playerChoice",
-          "type": "CoinflipChoice",
+          "type": "CoinflipPlayerChoice",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
         "result": {
           "name": "result",
-          "type": "CoinflipChoice",
+          "type": "CoinflipSessionGameResult",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -154,16 +154,16 @@
           "primaryKey": false,
           "notNull": true
         },
-        "next": {
-          "name": "next",
-          "type": "CoinflipStatus",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
         "client_won": {
           "name": "client_won",
           "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "next": {
+          "name": "next",
+          "type": "CoinflipSessionNext",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -666,22 +666,29 @@
         "BET_RETURN"
       ]
     },
-    "public.CoinflipStatus": {
-      "name": "CoinflipStatus",
+    "public.CoinflipPlayerChoice": {
+      "name": "CoinflipPlayerChoice",
       "schema": "public",
       "values": [
-        "CONTINUE",
-        "CASHOUT",
-        "PENDING",
-        "DEFEATED"
+        "HEADS",
+        "TAILS",
+        "CASHOUT"
       ]
     },
-    "public.CoinflipChoice": {
-      "name": "CoinflipChoice",
+    "public.CoinflipSessionGameResult": {
+      "name": "CoinflipSessionGameResult",
       "schema": "public",
       "values": [
         "HEADS",
         "TAILS"
+      ]
+    },
+    "public.CoinflipSessionNext": {
+      "name": "CoinflipSessionNext",
+      "schema": "public",
+      "values": [
+        "CONTINUE",
+        "SETTLED"
       ]
     },
     "public.DicerollCondition": {

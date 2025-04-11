@@ -3,18 +3,21 @@ import { SessionManager } from "@utils/session/session.manager";
 import { CoinflipStateManager } from "./state.manager";
 import {
   coinflip,
-  E_COINFLIP_NEXT_STATUS,
 } from "@schema/games/coinflip.schema";
 import { ObservableEvent } from "@utils/observables/event";
 import { DB } from "@/database";
-export type TCoinflipSessionClientGameData = "HEADS" | "TAILS";
+export type TCoinflipPlayerChoice = "HEADS" | "TAILS" | "CASHOUT";
+
+export type TCoinflipSessionClientGameData = "HEADS" | "TAILS" | "CASHOUT";
 
 export type TCoinflipSessionGameResult = "HEADS" | "TAILS";
 
 export type TCoinflipSessionLog = {
-  playerChoice: TCoinflipSessionClientGameData;
-  result?: TCoinflipSessionGameResult;
-  nextSelection?: (typeof E_COINFLIP_NEXT_STATUS.enumValues)[number];
+  playerChoice: TCoinflipPlayerChoice;
+  result: TCoinflipSessionGameResult;
+  level: number;
+  client_won: boolean;
+  next: "CONTINUE" | "SETTLED";
 };
 
 export type TCoinflipSessionJSON = {
@@ -35,9 +38,11 @@ export class CoinflipSession extends SessionManager<
   public readonly TCoinflipSessionLog: TCoinflipSessionLog[] = [];
 
   public readonly GameChoiceEvent: ObservableEvent<TCoinflipSessionClientGameData>;
-  public readonly GameNextSelectionEvent: ObservableEvent<
-    "CASHOUT" | "CONTINUE"
-  >;
+  
+  private _currentChoice?: TCoinflipSessionClientGameData;
+  private _currentNext?: "CONTINUE" | "SETTLED";
+  private _currentResult?: TCoinflipSessionGameResult;
+
   private _level: number;
   public readonly MAX_LEVEL: number;
 
@@ -53,7 +58,6 @@ export class CoinflipSession extends SessionManager<
     this.TCoinflipSessionLog = logs;
     this.GameChoiceEvent =
       new ObservableEvent<TCoinflipSessionClientGameData>();
-    this.GameNextSelectionEvent = new ObservableEvent<"CASHOUT" | "CONTINUE">();
     this.MAX_LEVEL = maxLevel;
   }
 
@@ -61,9 +65,42 @@ export class CoinflipSession extends SessionManager<
     return this._level;
   }
 
+  public get CurrentChoice() {
+    return this._currentChoice;
+  }
+
+  public get CurrentNext() {
+    return this._currentNext;
+  }
+
+  public get CurrentResult() {
+    return this._currentResult;
+  }
+
   public IncrementLevel() {
     this._level++;
   }
+
+  public ResetCurrentChoices() {
+    this._currentChoice = undefined;
+    this._currentNext = undefined;
+    this._currentResult = undefined;
+  }
+
+  public SetCurrentChoice(choice: TCoinflipSessionClientGameData) {
+    if (this._currentChoice) return;
+    this._currentChoice = choice;
+  }
+  
+  public SetCurrentResult(result: TCoinflipSessionGameResult) {
+    if (this._currentResult) return;
+    this._currentResult = result;
+  }
+  public SetCurrentNext(next: "CONTINUE" | "SETTLED") {
+    if (this._currentNext) return;
+    this._currentNext = next;
+  }
+  
 
   public get LastLog(): TCoinflipSessionLog|undefined {
     if (this.TCoinflipSessionLog.length < 0) 
@@ -72,63 +109,49 @@ export class CoinflipSession extends SessionManager<
     return this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1];
   }
 
-  public AddLog(log: TCoinflipSessionLog): void {
+  public async AddLog(log: TCoinflipSessionLog): Promise<boolean> {
+    let success = await this.AddLogToDB(log);
+    
+    if (!success) {
+      return false;
+    }
+
     this.TCoinflipSessionLog.push(log);
+    return true;
   }
 
-  public async AddLastLogToDB(): Promise<boolean> {
+  private async AddLogToDB(log: TCoinflipSessionLog): Promise<boolean> {
     if (!this.SessionId) {
       return false;
     }
-    
-    let log = this.LastLog;
-        
-    if (!log){
-      return false;
-    }
-    
-    
-    if (!log.nextSelection || !log.result) {
-      return false;
-    }
-    
     
     await DB.insert(coinflip)
       .values({
         sessionId: this.SessionId,
         playerChoice: log.playerChoice,
-        result: log.result,
         level: this.Level,
+        result: log.result,
         multiplier: this.ClientBetData!.multiplier,
-        next: log.nextSelection,
-        client_won: log.result == log.playerChoice,
-      }).onConflictDoUpdate({
-        set:{
-          next: log.nextSelection,
-        },
-        target: [coinflip.id],
+        client_won: log.client_won,
+        next: log.next,
       })
       .execute();
 
     return true;
   }
 
-  public UpdateLastLog({
-    result,
-    nextSelection,
-  }: {
-    result?: TCoinflipSessionGameResult;
-    nextSelection?: "DEFEATED" | "CONTINUE" | "CASHOUT" | "PENDING";
-  }): void {
+  private GetNextStatus(result: TCoinflipSessionGameResult, playerChoice: TCoinflipPlayerChoice) {
+    if (playerChoice == "CASHOUT") {
+      return "CASHOUT";
+    }
 
-    let oldLog = this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1] 
-    
-    this.TCoinflipSessionLog[this.TCoinflipSessionLog.length - 1] = {
-      playerChoice: oldLog.playerChoice,
-      result : result??oldLog.result,
-      nextSelection: nextSelection??oldLog.nextSelection,
-    };
+    if (result == playerChoice) {
+      return "CONTINUE";
+    }
+
+    return "DEFEATED";
   }
+
 
   public ToData(): TCoinflipSessionJSON {
     return {

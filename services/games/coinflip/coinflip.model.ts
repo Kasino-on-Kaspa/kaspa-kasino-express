@@ -44,15 +44,14 @@ export class CoinflipModel {
           .limit(1)
           .orderBy(desc(coinflip.createdAt));
           
-          if (pendingBet.length < 1) {
+          if (pendingBet.length == 0) {
             return session[0];
           }
-          console.log("Session", pendingBet);
 
-        if (pendingBet[0].next == "PENDING" || pendingBet[0].next == "CONTINUE") {
+        if (pendingBet[0].next == "CONTINUE") {
           return session[0];
         }
-
+        
         return undefined;
       }
     );
@@ -63,7 +62,10 @@ export class CoinflipModel {
     let sessionLogs = await DB.select({
       playerChoice: coinflip.playerChoice,
       result: coinflip.result,
-      nextSelection: coinflip.next,
+      level: coinflip.level,
+      multiplier: coinflip.multiplier,
+      client_won: coinflip.client_won,
+      next: coinflip.next,
     })
       .from(coinflip)
       .where(eq(coinflip.sessionId, sessionId))
