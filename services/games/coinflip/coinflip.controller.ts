@@ -192,10 +192,13 @@ export class CoinflipController {
 
   private GenerateSessionFromPendingSessionData(
     lastPendingSessionData: TPendingSessionData,
-    lastPendingSessionLog: TCoinflipSessionLog[],
+    lastPendingSessionLogs: TCoinflipSessionLog[],
     account: Account
   ): { session: CoinflipSession; resume_state: CoinflipSessionGameState } | undefined {
-    let session = new CoinflipSession(account, lastPendingSessionLog);
+    
+
+    let pendingLastLog = lastPendingSessionLogs[lastPendingSessionLogs.length - 1];
+    let session = new CoinflipSession(account, lastPendingSessionLogs,pendingLastLog.level);
     session.SessionId = lastPendingSessionData.id;
     session.ServerSeedHash = lastPendingSessionData.serverSeed;
 
@@ -205,16 +208,16 @@ export class CoinflipController {
       multiplier: this.GetMultiplier(),
     });
 
-    let manager: CoinflipStateManager;
     let lastLog = session.LastLog;  
-
+    
     if (lastLog && lastLog.next == "SETTLED") {
       return undefined;
     }
     
     let resume_state: CoinflipSessionGameState = CoinflipSessionGameState.FLIP;
-
-    manager = this.factory.CreateStateManager(session, resume_state);
+    
+    
+    let manager = this.factory.CreateStateManager(session, resume_state);
 
     session.SetStateManager(manager);
 
