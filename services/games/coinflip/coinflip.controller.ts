@@ -198,7 +198,7 @@ export class CoinflipController {
     
 
     let pendingLastLog = lastPendingSessionLogs[lastPendingSessionLogs.length - 1];
-    let session = new CoinflipSession(account, lastPendingSessionLogs,pendingLastLog.level);
+    let session = new CoinflipSession(account, lastPendingSessionLogs,pendingLastLog?.level);
     session.SessionId = lastPendingSessionData.id;
     session.ServerSeedHash = lastPendingSessionData.serverSeed;
 
