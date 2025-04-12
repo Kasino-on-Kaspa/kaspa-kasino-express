@@ -11,7 +11,6 @@ export class Wallet {
   private _address: string;
   private _balance: ObservableData<bigint>;
 
-  private _isUpdated: boolean = false;
 
   public readonly OnUpdate = new ObservableEvent<{balance: string}>();
 
