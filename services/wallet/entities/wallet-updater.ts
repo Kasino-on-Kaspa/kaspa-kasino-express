@@ -5,7 +5,7 @@ import { Wallet } from "@utils/account/wallet";
 import { ObservableEvent } from "@utils/observables/event";
 import { eq, sql } from "drizzle-orm";
 
-const INTERVAL_TIME = 600_000;
+const INTERVAL_TIME = 5000;
 
 export class WalletDBQueueHandler{
     
