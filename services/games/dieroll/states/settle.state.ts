@@ -3,6 +3,7 @@ import { DieRollGameState ,TDieRollGameState} from ".";
 import { DierollStateManager } from "../entities/state.manager";
 import { DB } from "@/database";
 import { dieroll } from "@schema/games/dieroll.schema";
+import { EventBus } from "@utils/eventbus";
 
 export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
   protected _stateName: TDieRollGameState = DieRollGameState.SETTLE;
@@ -28,19 +29,19 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
     
     if (isWon == "WON") {
       payout = BigInt(Math.floor(Number(manager.SessionManager.ClientBetData!.bet) * (manager.SessionManager.ClientBetData!.multiplier / (100 * 100))));
-      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
     }
     
     else if (isWon == "DRAW") {
       payout = manager.SessionManager.ClientBetData!.bet;
-      manager.SessionManager.AssociatedAccount.Wallet.AddBalance(payout, "BET_RETURN");
     }
     else {
       payout = -manager.SessionManager.ClientBetData!.bet;
     }
 
     manager.SessionManager.Payout = payout;
-
+    
+    EventBus.Instance.emit("wallet:update", {id: manager.SessionManager.AssociatedAccount.Wallet.id, delta: payout, reason: "BET_RETURN"});
+    
     manager.ChangeState(DieRollGameState.END);
   }
 

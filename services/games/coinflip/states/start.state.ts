@@ -3,6 +3,7 @@ import { CoinflipStateManager } from "../entities/state.manager";
 import { CoinflipSessionGameState } from ".";
 import { sessionsTable } from "@schema/session.schema";
 import { DB } from "@/database";
+import { EventBus } from "@utils/eventbus";
 
 export class CoinflipStartState extends SessionBaseState<CoinflipStateManager> {
   protected _stateName: string = CoinflipSessionGameState.START;
@@ -37,10 +38,7 @@ export class CoinflipStartState extends SessionBaseState<CoinflipStateManager> {
       roomId
     );
     
-    await manager.SessionManager.AssociatedAccount.Wallet.RemoveBalance(
-      manager.SessionManager.ClientBetData.bet,
-      "BET"
-    );
+    EventBus.Instance.emit("wallet:update", {id: manager.SessionManager.AssociatedAccount.Wallet.id, delta: -manager.SessionManager.ClientBetData.bet, reason: "BET"});
 
     manager.ChangeState(CoinflipSessionGameState.FLIP);
   }

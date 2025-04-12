@@ -42,6 +42,7 @@ export class CoinflipSession extends SessionManager<
   private _currentChoice?: TCoinflipSessionClientGameData;
   private _currentNext?: "CONTINUE" | "SETTLED";
   private _currentResult?: TCoinflipSessionGameResult;
+  private _currentClientIsWon?: boolean;
 
   private _level: number;
   public readonly MAX_LEVEL: number;
@@ -77,6 +78,10 @@ export class CoinflipSession extends SessionManager<
     return this._currentResult;
   }
 
+  public get CurrentClientIsWon() {
+    return this._currentClientIsWon;
+  }
+
   public IncrementLevel() {
     this._level++;
   }
@@ -99,6 +104,9 @@ export class CoinflipSession extends SessionManager<
   public SetCurrentNext(next: "CONTINUE" | "SETTLED") {
     if (this._currentNext) return;
     this._currentNext = next;
+  }
+  public SetCurrentClientIsWon(isWon: boolean) {
+    this._currentClientIsWon = isWon;
   }
   
 

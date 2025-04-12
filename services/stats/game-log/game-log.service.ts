@@ -14,7 +14,7 @@ export class GameLogService extends Service {
 
 
     public override ServerEventsHandler(){
-        EventBus.Instance.on("gamelog:new", (data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) => {
+        EventBus.Instance.on("game:completed", (data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) => {
             this.handleNewLog(data);
         });
     }

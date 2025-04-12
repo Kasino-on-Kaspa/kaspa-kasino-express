@@ -161,7 +161,7 @@ export class DieRollController {
     session.SessionCompleteEvent.RegisterEventListener(
       async () => {
 
-        EventBus.Instance.emit("gamelog:new", {
+        EventBus.Instance.emit("game:completed", {
           account: {username: account.Address,id: account.Id},
           bet: session.ClientBetData!.bet,
           payout: session.Payout!,

@@ -120,6 +120,7 @@ export class CoinflipController {
       return;
     }
     let betAmount = BigInt(bet_data.amount);
+    
     if (betAmount < 0n) {
       ack({ status: "ERROR", message: "Amount must be greater than 0" });
       return;
@@ -256,7 +257,7 @@ export class CoinflipController {
     session.SessionCompleteEvent.RegisterEventListener(
       async ({ account, result, bet, payout }) => {
         console.log("Session complete event", { account, result, bet, payout });
-        EventBus.Instance.emit("gamelog:new", {
+        EventBus.Instance.emit("game:completed", {
           account: { username: account.Address, id: account.Id },
           result,
           bet,

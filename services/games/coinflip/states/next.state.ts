@@ -14,7 +14,7 @@ export class CoinflipNextState extends SessionBaseState<CoinflipStateManager> {
     await manager.SessionManager.AddLog({
       result: manager.SessionManager.CurrentResult!,
       playerChoice: manager.SessionManager.CurrentChoice!,
-      client_won: manager.SessionManager.CurrentResult == manager.SessionManager.CurrentChoice,
+      client_won: manager.SessionManager.CurrentClientIsWon!,
       level: manager.SessionManager.Level,
       next: manager.SessionManager.CurrentNext!,
     });

@@ -3,6 +3,7 @@ import { DieRollGameState, TDieRollGameState } from "../states";
 import { DierollStateManager } from "../entities/state.manager";
 import { sessionsTable } from "@schema/session.schema";
 import { DB } from "@/database";
+import { EventBus } from "@utils/eventbus";
 
 export class DieRollStartState extends SessionBaseState<DierollStateManager> {
   protected _stateName: TDieRollGameState = DieRollGameState.START;
@@ -29,7 +30,7 @@ export class DieRollStartState extends SessionBaseState<DierollStateManager> {
     let roomId = manager.SessionManager.GetSessionRoomId();
 
     manager.SessionManager.AssociatedAccount.AssociatedSockets.Session.socketsJoin(roomId);
-    await manager.SessionManager.AssociatedAccount.Wallet.RemoveBalance(manager.SessionManager.ClientBetData.bet,"BET");
+    EventBus.Instance.emit("wallet:update", {id: manager.SessionManager.AssociatedAccount.Wallet.id, delta: -manager.SessionManager.ClientBetData.bet, reason: "BET"});
     
     manager.ChangeState(DieRollGameState.ROLL);
   }

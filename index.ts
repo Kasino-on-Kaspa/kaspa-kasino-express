@@ -12,9 +12,7 @@ import { AccountStore } from "./services/user/entities/accounts";
 
 import bodyParser from "body-parser";
 import { AuthorizedServices, UnauthorizedServices } from "./services";
-import { WalletDBQueueHandler } from "@utils/queue-manager/wallet-updater";
-import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
-import { kaspaToSompi, Keypair, NetworkType } from "@kcoin/kaspa-web3.js";
+
 import { Accumulator } from "@utils/withdrawal/accumulator";
 
 const cors = require("cors");
@@ -55,16 +53,10 @@ const io = new Server(server, {
   pingTimeout: 5000,
 });
 
-export const WalletDBQueueInstance = new WalletDBQueueHandler();
 
-export const AccountStoreInstance = new AccountStore(io, WalletDBQueueInstance);
+export const AccountStoreInstance = new AccountStore(io);
 
-WalletDBQueueInstance.InstantiateProcessQueueTimer();
 
-process.on("SIGINT", () => {
-  WalletDBQueueInstance.ClearProcessQueueTimer();
-  process.exit(0);
-});
 
 // const a1 = "kaspatest:qqyhh7ryudnqu3xk44xy5agxtp4ce7jfktad95uws3vcqdu0v9t8kjtra6z87"
 // const a2 = "kaspatest:qzzf2jv7v6a6fgz3etlc23527cktel99l7c34xfwl9nue34c4q292fqzvgkzk"

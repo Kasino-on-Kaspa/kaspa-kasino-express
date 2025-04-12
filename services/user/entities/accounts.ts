@@ -3,7 +3,7 @@ import { DB } from "../../../database";
 import { users } from "../../../schema/users.schema";
 import { Account } from "../../../utils/account";
 import { Socket, Server } from "socket.io";
-import { WalletDBQueueHandler } from "@utils/queue-manager/wallet-updater";
+import { EventBus } from "@utils/eventbus";
 
 const MIN_UPDATE_DELAY = 10000;
 
@@ -12,7 +12,6 @@ export class AccountStore {
   private _userAccounts: { [account_id: string]: Account } = {};
   
   private readonly io: Server;
-  private readonly walletDBQueue: WalletDBQueueHandler;
   
   public async AddUserHandshake(socket: Socket, account_id: string) {
     this._userHandshake[socket.id] = account_id;
@@ -30,9 +29,8 @@ export class AccountStore {
     return this._userHandshake 
   }
 
-  constructor(io: Server, walletDBQueue: WalletDBQueueHandler) {
+  constructor(io: Server) {
     this.io = io;
-    this.walletDBQueue = walletDBQueue;
   }
 
   private async GetAccountFromDB(account_id: string) {
@@ -41,7 +39,7 @@ export class AccountStore {
       .where(eq(users.id, account_id))
       .limit(1);
       
-    let account = await Account.InitAccount(result[0], this.io, this.walletDBQueue);
+    let account = await Account.InitAccount(result[0], this.io, this);
     this._userAccounts[account_id] = account;
 
     account.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => {
@@ -61,6 +59,7 @@ export class AccountStore {
     delete this._userAccounts[account_id];
   }
 
+ 
 
   //#region Getters
   public GetUserHandshake(socket_id: string) {

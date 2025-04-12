@@ -18,15 +18,17 @@ export class CoinflipSettleState extends SessionBaseState<CoinflipStateManager> 
       choice: manager.SessionManager.CurrentChoice,
       isWon: manager.SessionManager.CurrentResult == manager.SessionManager.CurrentChoice,
     });
-    
-    if (manager.SessionManager.CurrentResult == manager.SessionManager.CurrentChoice) {
+    let isWon = manager.SessionManager.CurrentResult == manager.SessionManager.CurrentChoice;
+    if (isWon) {
       manager.SessionManager.SetCurrentNext("CONTINUE");
     }
     else {
       manager.SessionManager.Payout = -manager.SessionManager.ClientBetData!.bet;
       manager.SessionManager.SetCurrentNext("SETTLED");
     }
-
+    
+    manager.SessionManager.SetCurrentClientIsWon(isWon);
+    
     manager.ChangeState(CoinflipSessionGameState.NEXT);
   }
 

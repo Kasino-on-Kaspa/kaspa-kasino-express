@@ -2,23 +2,26 @@ import { Server, Socket } from "socket.io";
 import { users } from "../../schema/users.schema";
 import { AccountSockets } from "./sockets";
 import { Wallet } from "./wallet";
-import { WalletDBQueueHandler } from "@utils/queue-manager/wallet-updater";
+import { AccountStore } from "@services/user/entities/accounts";
 export class Account {
   private _id: string;
   private _address: string;
   private _username: string | null;
   private _wallet: Wallet;
-
+  
+  private _referral: string | null;
+  private _referral_account: Account | null;
   private isDeleted: boolean = false;
 
   public readonly AssociatedSockets: AccountSockets;
 
-  constructor(user: typeof users.$inferSelect, wallet: Wallet, io: Server) {
+  constructor(user: typeof users.$inferSelect, wallet: Wallet, referral: string | null,referral_account: Account | null, io: Server) {
     this._id = user.id;
     this._address = user.address;
     this._username = user.username;
     this._wallet = wallet;
-
+    this._referral = referral;
+    this._referral_account = referral_account;
     this.AssociatedSockets = new AccountSockets(io, this._id);
 
     this.AssociatedSockets.OnSocketAdded.RegisterEventListener(
@@ -31,10 +34,17 @@ export class Account {
   public static async InitAccount(
     user: typeof users.$inferSelect,
     io: Server,
-    walletDBQueue: WalletDBQueueHandler
+    accountStore: AccountStore
   ) {
-    let wallet = await Wallet.InitWallet(user.wallet, walletDBQueue);
-    return new Account(user, wallet, io);
+    let refereal_account: Account | null = null;
+    
+    if (user.referredBy) {
+      refereal_account = accountStore.GetUserFromAccountID(user.referredBy);
+    }
+
+    let wallet = await Wallet.InitWallet(user.wallet);
+
+    return new Account(user, wallet, user.referredBy, refereal_account, io);
   }
 
   private RegisterSocketEvents(socket: Socket) {
@@ -49,6 +59,10 @@ export class Account {
     socket.on("disconnect", async () => {
       this.AssociatedSockets.RemoveSocket(socket);
     });
+  }
+
+  public get Referral() {
+    return this._referral;
   }
 
   public get Address() {

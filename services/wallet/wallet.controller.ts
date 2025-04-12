@@ -2,12 +2,31 @@ import { DB } from "../../database";
 import { eq, and } from "drizzle-orm";
 import { WalletBalanceProvider } from "../../utils/wallet/balance";
 import { utxos } from "../../schema/utxos.schema";
-import { AccountStoreInstance, WalletDBQueueInstance } from "../..";
+import { AccountStoreInstance } from "../..";
 import { rpcClient } from "../../utils/wallet";
 import { Socket } from "socket.io";
 import { WithdrawalQueue } from "@utils/withdrawal/withdrawal-queue";
+import { WalletDBQueueHandler } from "./entities/wallet-updater";
 
 export class WalletController {
+  private WalletDBQueueInstance = new WalletDBQueueHandler();
+  
+  constructor() {
+    this.WalletDBQueueInstance.InstantiateProcessQueueTimer();
+    process.on("SIGINT", () => {
+      this.WalletDBQueueInstance.ClearProcessQueueTimer();
+      process.exit(0);
+    });
+  }
+
+  public HandleWalletUpdate(id: string, delta: bigint, reason: "BET_RETURN"| "BET"|"DEPOSIT"|"WITHDRAWAL" ) {
+    this.WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(id, delta, reason);
+  }
+
+  public get WalletBalanceUpdatedEvent() {
+    return this.WalletDBQueueInstance.WalletBalanceUpdatedEvent;
+  }
+
   async updateWalletBalance(socket: Socket) {
     const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     
@@ -70,15 +89,9 @@ export class WalletController {
 
     if (balanceDelta <= 0) return;
 
-    if (!account.IsDeleted)
-      return await account.Wallet.AddBalance(balanceDelta, "DEPOSIT");
-
-    let oldBalance = account.Wallet.balance.GetData();
-    let newBalance = oldBalance + balanceDelta;
-    WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(
+    this.WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(
       account.Wallet.id,
-      oldBalance,
-      newBalance,
+      balanceDelta,      
       "DEPOSIT"
     );
   }
@@ -95,8 +108,14 @@ export class WalletController {
   ) {
     const account = AccountStoreInstance.GetUserFromHandshake(socket.id);
     if (!account) return;
+    
+    this.WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(account.Wallet.id, -amount, "WITHDRAWAL");
 
-    await account.Wallet.RemoveBalance(amount, "WITHDRAWAL");
     WithdrawalQueue.Instance.add(user_address, amount, account!.Id);
   }
+
+  public GetWalletDelta(id: string) {
+    return this.WalletDBQueueInstance.GetBalanceDeltaFromWalletID(id);
+  }
+
 }
