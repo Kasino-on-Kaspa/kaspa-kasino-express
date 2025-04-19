@@ -11,7 +11,7 @@ export class ReferralModel {
     if (res.length <= 0) return null;
     return res[0].referral;
   }
-  
+
   public async GetRefferalWalletID(accountID: string) {
     let res = await DB.select({ wallet: users.wallet })
       .from(users)
