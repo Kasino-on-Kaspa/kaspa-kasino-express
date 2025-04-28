@@ -43,6 +43,7 @@ export class DieRollController {
     ) => void
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+    
     let session = this.model.GetSession(account.Id);
 
     if (session) {
@@ -63,6 +64,12 @@ export class DieRollController {
     ack: (ack: TDieRollAck) => void
   ) {
     let account = AccountStoreInstance.GetUserFromHandshake(socket.id);
+
+    if (!account) {
+      ack({ status: "ERROR", message: "No account found" });
+      return;
+    }
+    
     let session = this.model.GetSession(account.Id);
 
     if (!session) {
