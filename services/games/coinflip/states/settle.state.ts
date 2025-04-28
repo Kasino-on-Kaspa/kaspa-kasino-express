@@ -24,6 +24,7 @@ export class CoinflipSettleState extends SessionBaseState<CoinflipStateManager> 
     }
     else {
       manager.SessionManager.Payout = -manager.SessionManager.ClientBetData!.bet;
+      manager.SessionManager.SessionResult = "LOSE";
       manager.SessionManager.SetCurrentNext("SETTLED");
     }
     

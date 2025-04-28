@@ -10,7 +10,7 @@ export class CoinflipEndState extends SessionBaseState<CoinflipStateManager> {
       account: manager.SessionManager.AssociatedAccount,
       payout: manager.SessionManager.Payout!,
       bet: manager.SessionManager.ClientBetData!.bet,
-      result: manager.SessionManager.LastLog!.result == manager.SessionManager.LastLog!.playerChoice ? "WIN" : "LOSE",
+      result: manager.SessionManager.SessionResult!,
     });
   }
 

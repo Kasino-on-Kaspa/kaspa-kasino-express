@@ -17,6 +17,7 @@ export class DieRollEndState extends SessionBaseState<DierollStateManager> {
     manager.SessionManager.SessionCompleteEvent.Raise({
       account: manager.SessionManager.AssociatedAccount,
       payout: manager.SessionManager.Payout!,
+      result: manager.SessionManager.SessionResult!,
       bet: manager.SessionManager.ClientBetData!.bet,
     });
   }

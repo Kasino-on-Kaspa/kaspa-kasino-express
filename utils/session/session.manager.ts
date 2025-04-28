@@ -21,6 +21,8 @@ export abstract class SessionManager<TGameClientData,TGameResult,TStateManager e
   public ClientBetData?: TBetClientData;
   public ClientGameData?: TGameClientData;
   public Payout: bigint = BigInt(0);
+  public SessionResult?:"WIN" | "LOSE" | "DRAW"
+  
   //#region Session Events
   public SessionStopEvent: ObservableEvent<void>;
   public SessionStartEvent: ObservableEvent<void>;

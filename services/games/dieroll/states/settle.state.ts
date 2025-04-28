@@ -26,20 +26,23 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
     }).execute();
     
     let payout:bigint;
-    
+    let session_result:"WIN" | "LOSE" | "DRAW"
     if (isWon == "WON") {
+      session_result = "WIN"
       payout = BigInt(Math.floor(Number(manager.SessionManager.ClientBetData!.bet) * (manager.SessionManager.ClientBetData!.multiplier / (100 * 100))));
     }
     
     else if (isWon == "DRAW") {
+      session_result = "DRAW"
       payout = manager.SessionManager.ClientBetData!.bet;
     }
     else {
+      session_result = "LOSE"
       payout = -manager.SessionManager.ClientBetData!.bet;
     }
 
     manager.SessionManager.Payout = payout;
-    
+    manager.SessionManager.SessionResult = session_result;
     EventBus.Instance.emit("wallet:update", {id: manager.SessionManager.AssociatedAccount.Wallet.id, delta: payout, reason: "BET_RETURN"});
     
     manager.ChangeState(DieRollGameState.END);

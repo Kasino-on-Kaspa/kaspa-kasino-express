@@ -25,7 +25,6 @@ export class Wallet {
   private RegisterEventListeners() {
     EventBus.Instance.on("wallet:updated", async ({id, delta}) => {
       this.HandleWalletUpdated(id, delta);
-      console.log("wallet:updated", id, delta);
     });
   }
 

@@ -172,6 +172,7 @@ export class DieRollController {
           account: {username: account.Address,id: account.Id},
           bet: session.ClientBetData!.bet,
           payout: session.Payout!,
+          result: session.SessionResult!,
         });
 
         account.AssociatedSockets.Session.to(session.GetSessionRoomId()).emit(

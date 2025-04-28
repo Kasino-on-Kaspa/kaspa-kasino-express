@@ -21,6 +21,8 @@ export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager>
     if (!manager.SessionManager.ClientBetData) {
       throw new Error("Client bet data not found");
     }
+
+    
     
     let netMultiplier = manager.SessionManager.ClientBetData!.multiplier / (100 * 100);
     let payout = BigInt(Math.floor(Number(manager.SessionManager.ClientBetData!.bet) * Math.fround(netMultiplier ** (manager.SessionManager.Level - 1))));
@@ -31,6 +33,7 @@ export class CoinflipCashoutState extends SessionBaseState<CoinflipStateManager>
     
     manager.SessionManager.SetCurrentClientIsWon(true)
     manager.SessionManager.SetCurrentNext("SETTLED");
+    manager.SessionManager.SessionResult = "WIN";
     manager.ChangeState(CoinflipSessionGameState.NEXT);
     return;
   }
