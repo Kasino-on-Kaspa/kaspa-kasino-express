@@ -43,7 +43,9 @@ export class DieRollSettleState extends SessionBaseState<DierollStateManager> {
 
     manager.SessionManager.Payout = payout;
     manager.SessionManager.SessionResult = session_result;
-    EventBus.Instance.emit("wallet:update", {id: manager.SessionManager.AssociatedAccount.Wallet.id, delta: payout, reason: "BET_RETURN"});
+    if (session_result == "WIN" || session_result == "DRAW") {
+      EventBus.Instance.emit("wallet:update", {id: manager.SessionManager.AssociatedAccount.Wallet.id, delta: payout, reason: "BET_RETURN"});
+    }
     
     manager.ChangeState(DieRollGameState.END);
   }

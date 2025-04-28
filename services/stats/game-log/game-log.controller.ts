@@ -13,7 +13,6 @@ export class GameLogController {
     }
 
     public handleNewLog(data: {account: {username: string,id: string},result: "WIN" | "LOSE" | "DRAW", bet:number,payout:number}) {
-        console.log(data,data.result)
         if (data.result == "WIN") {
             this.gameLogModel.UpdateOrAddStats({
                 account_id: data.account.id,
