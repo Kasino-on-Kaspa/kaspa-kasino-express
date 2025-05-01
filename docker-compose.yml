@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/kasino-on-kaspa/kasino-backend:latest
+    image: ghcr.io/kasino-on-kaspa/kaspa-kasino-express:latest
     platform: linux/amd64
     ports:
       - "3000:3000"
@@ -11,7 +11,6 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/kaspa_kasino?sslmode=disable
       - PGSSLMODE=disable
       - JWT_SECRET=your_secret_key_here
-      - CORS_ORIGIN=http://localhost:5173
       - KASPA_WSS_ENDPOINT=ws://65.21.153.228:18210
       - KASPA_GRPC_ENDPOINT=65.21.153.228:16210
       - NETWORK=kaspatest

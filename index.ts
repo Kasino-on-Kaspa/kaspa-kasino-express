@@ -25,15 +25,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:8080",
-      "http://127.0.0.1:8080",
-    ],
+    origin: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+    exposedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(bodyParser.json());
@@ -43,12 +39,7 @@ app.use("/users", userRoutes);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:8080",
-      "http://127.0.0.1:8080",
-    ],
+    origin: true,
     methods: ["GET", "POST"],
     credentials: true,
   },
