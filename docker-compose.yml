@@ -32,8 +32,9 @@ services:
     entrypoint: []
     command: >
       sh -c "
-      apk add --no-cache netcat-openbsd &&
-      chmod +x /app/start.sh &&
+      apt-get update && 
+      apt-get install -y netcat-openbsd && 
+      chmod +x /app/start.sh && 
       /app/start.sh
       "
 
