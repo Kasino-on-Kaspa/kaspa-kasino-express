@@ -22,15 +22,22 @@ export class ReferralController {
     payout: number;
   }) {
     if (data.result == "DRAW") return;
-    let account = AccountStoreInstance.GetUserFromAccountID(data.account.id);
-    let refferal: string | null = null;
 
-    if (account) refferal = account.Referral;
-    else
-      refferal = await this.RefferalModel.GetRefferalAccountID(data.account.id);
+    // First get the user's referral code
+    const userResult = await DB.select({ referredBy: users.referredBy })
+      .from(users)
+      .where(eq(users.id, data.account.id))
+      .limit(1);
 
-    if (!refferal) return;
-    let refferalWallet = await this.RefferalModel.GetRefferalWalletID(refferal);
+    if (!userResult.length || !userResult[0].referredBy) return;
+
+    const referrerCode = userResult[0].referredBy;
+    let refferalWallet = await this.RefferalModel.GetRefferalWalletID(
+      referrerCode
+    );
+
+    if (!refferalWallet) return;
+
     let payout: number;
 
     if (data.result == "WIN")
@@ -43,7 +50,7 @@ export class ReferralController {
 
     // Track referral earnings
     await DB.insert(referralEarnings).values({
-      referrer: refferal,
+      referrer: referrerCode,
       referred: data.account.id,
       amount: BigInt(payout),
       gameResult: data.result,
@@ -69,8 +76,6 @@ export class ReferralController {
         .from(referralEarnings)
         .where(eq(referralEarnings.referrer, referralCode)),
     ]);
-
-    console.log(earnings[0], totalReferrals[0]);
 
     return {
       totalReferrals: totalReferrals[0].count || 0,
