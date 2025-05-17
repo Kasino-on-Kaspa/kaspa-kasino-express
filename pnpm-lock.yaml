@@ -15,8 +15,8 @@ importers:
         specifier: ^1.4.26
         version: 1.4.26(bitcore-lib@8.25.47)
       '@kcoin/kaspa-web3.js':
-        specifier: 1.0.0
-        version: 1.0.0
+        specifier: ^1.1.1
+        version: 1.1.1
       '@tanstack/react-table':
         specifier: ^8.21.2
         version: 8.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -560,8 +560,8 @@ packages:
   '@kaspa/wallet@1.4.26':
     resolution: {integrity: sha512-OpPE/xm56F1JeX+XN/2fzrQApdZ8oILOXwUhz9DunCcBfghQoR/aszWBjaSkKs2k16K5e+ZGKyz81XtVJ7VYKQ==}
 
-  '@kcoin/kaspa-web3.js@1.0.0':
-    resolution: {integrity: sha512-ZptTGbeNbdL16IwiyGmLMT6ML+n+GFr0tAE2NsA0MQeUZOaM+I3irPvZT0SnwuU+3XI6TEwCXjSPFEToXvHzBQ==}
+  '@kcoin/kaspa-web3.js@1.1.1':
+    resolution: {integrity: sha512-ZaA1qB3YnYTkRlXmvA8lgwP9smHFqCjqV7J2Ba5XEUDD2oaD561OLb6WN+PiGhe0O2JIjgysSI+ocZw1KQYBNQ==}
 
   '@noble/curves@1.8.1':
     resolution: {integrity: sha512-warwspo+UYUPep0Q+vtdVB4Ugn8GGQj8iyB3gnRWsztmUHTI3S1nhdiWNsPUGL0vud7JlRRk1XEu7Lq1KGTnMQ==}
@@ -1957,7 +1957,7 @@ snapshots:
     transitivePeerDependencies:
       - bitcore-lib
 
-  '@kcoin/kaspa-web3.js@1.0.0':
+  '@kcoin/kaspa-web3.js@1.1.1':
     dependencies:
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1

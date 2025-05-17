@@ -56,11 +56,11 @@ export const AccountStoreInstance = new AccountStore(io);
 // const a1 = "kaspatest:qqyhh7ryudnqu3xk44xy5agxtp4ce7jfktad95uws3vcqdu0v9t8kjtra6z87"
 // const a2 = "kaspatest:qzzf2jv7v6a6fgz3etlc23527cktel99l7c34xfwl9nue34c4q292fqzvgkzk"
 
-// Accumulator.Instance.sync().then(() => {
-//   Accumulator.Instance.accumulate().then(() => {
-//     console.log("Accumulated");
-//   });
-// });
+Accumulator.Instance.sync().then(() => {
+  Accumulator.Instance.accumulate().then(() => {
+    console.log("Accumulated");
+  });
+});
 
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);
