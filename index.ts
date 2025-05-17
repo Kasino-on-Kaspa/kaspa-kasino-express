@@ -5,8 +5,8 @@ import { Server } from "socket.io";
 import authRoutes from "./services/auth/auth.routes";
 import userRoutes from "./services/user/user.routes";
 import {
-  socketAuthMiddleware,
-  TAuthenticatedSocket,
+	socketAuthMiddleware,
+	TAuthenticatedSocket,
 } from "./services/auth/socket.middleware";
 import { AccountStore } from "./services/user/entities/accounts";
 
@@ -24,13 +24,13 @@ const server = createServer(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
-  cors({
-    origin: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
-    exposedHeaders: ["Content-Type", "Authorization"],
-  })
+	cors({
+		origin: true,
+		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+		credentials: true,
+		allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+		exposedHeaders: ["Content-Type", "Authorization"],
+	})
 );
 app.use(bodyParser.json());
 // Routes
@@ -38,30 +38,23 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 
 const io = new Server(server, {
-  cors: {
-    origin: true,
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-  transports: ["websocket", "polling"],
-  pingInterval: 2000,
-  pingTimeout: 5000,
+	cors: {
+		origin: true,
+		methods: ["GET", "POST"],
+		credentials: true,
+	},
+	transports: ["websocket", "polling"],
+	pingInterval: 2000,
+	pingTimeout: 5000,
 });
 
-
 export const AccountStoreInstance = new AccountStore(io);
-
-
 
 // const a1 = "kaspatest:qqyhh7ryudnqu3xk44xy5agxtp4ce7jfktad95uws3vcqdu0v9t8kjtra6z87"
 // const a2 = "kaspatest:qzzf2jv7v6a6fgz3etlc23527cktel99l7c34xfwl9nue34c4q292fqzvgkzk"
 
-Accumulator.Instance.sync().then(() => {
-  Accumulator.Instance.accumulate().then(() => {
-    console.log("Accumulated");
-  });
-});
-
+Accumulator.Instance.startAccumulation(30000);
+console.log("Accumulator started");
 // Apply socket authentication middleware
 io.use(socketAuthMiddleware);
 
@@ -69,13 +62,13 @@ AuthorizedServices(io, app);
 UnauthorizedServices(io, app);
 
 io.on("connection", async (socket: TAuthenticatedSocket) => {
-  console.log(`User connected: ${socket.data.user.address}`);
+	console.log(`User connected: ${socket.data.user.address}`);
 });
 
 process.on("SIGINT", () => {
-  process.exit(0);
+	process.exit(0);
 });
 
 server.listen(3000, () => {
-  console.log("server running at http://localhost:3000");
+	console.log("server running at http://localhost:3000");
 });

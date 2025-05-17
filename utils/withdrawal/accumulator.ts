@@ -27,6 +27,18 @@ export class Accumulator {
 		return this.utxos;
 	}
 
+	public startAccumulation(interval: number) {
+		// Accumulate UTXOs every 30 seconds
+		setInterval(async () => {
+			try {
+				await this.accumulate();
+			} catch (error) {
+				console.error("Error during accumulation:", error);
+			}
+		}
+		, 30000);
+	}
+
 	public async accumulate() {
 		// Ensure UTXOs are synced
 		await this.sync();
