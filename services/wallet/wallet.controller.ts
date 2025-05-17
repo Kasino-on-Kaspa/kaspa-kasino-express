@@ -19,7 +19,7 @@ export class WalletController {
     });
   }
 
-  public HandleWalletUpdate(id: string, delta: bigint, reason: "BET_RETURN"| "BET"|"DEPOSIT"|"WITHDRAWAL" ) {
+  public HandleWalletUpdate(id: string, delta: bigint, reason: "BET_RETURN"| "BET"|"DEPOSIT"|"WITHDRAWAL"|"WITHDRAWAL_RETURN" ) {
     this.WalletDBQueueInstance.AddOrUpdateWalletBalanceTask(id, delta, reason);
   }
 

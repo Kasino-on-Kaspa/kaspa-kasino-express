@@ -17,7 +17,7 @@ export class WalletDBQueueHandler{
     private timer: NodeJS.Timeout | null = null;
 
     
-    public async AddOrUpdateWalletBalanceTask(walletID: string, delta: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN" | "REFERRAL_RETURN") {
+    public async AddOrUpdateWalletBalanceTask(walletID: string, delta: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"| "BET_RETURN" | "REFERRAL_RETURN" | "WITHDRAWAL_RETURN") {
 
         this.WalletBalanceUpdatedEvent.Raise({id: walletID, delta: delta});
         
@@ -34,7 +34,7 @@ export class WalletDBQueueHandler{
         this.walletQueue[index].update.delta += delta;
     }
 
-    private async AddBalanceLog(walletID: string, delta: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN" | "REFERRAL_RETURN") {
+    private async AddBalanceLog(walletID: string, delta: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN" | "REFERRAL_RETURN" | "WITHDRAWAL_RETURN") {
         await DB.insert(balance_log).values({walletID: walletID, amount: delta, type: reason});
     }
 
