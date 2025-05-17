@@ -36,15 +36,16 @@ export class Account {
     io: Server,
     accountStore: AccountStore
   ) {
-    let refereal_account: Account | null = null;
-    
+    let referal_account: Account | null = null;
+    let reffered_by: string | null = null;
     if (user.referredBy) {
-      refereal_account = accountStore.GetUserFromAccountID(user.referredBy);
+      reffered_by = await accountStore.GetAccountByReferralID(user.referredBy)
+      referal_account = accountStore.GetUserFromAccountID(reffered_by);
     }
 
     let wallet = await Wallet.InitWallet(user.wallet);
 
-    return new Account(user, wallet, user.referredBy, refereal_account, io);
+    return new Account(user, wallet!, reffered_by, referal_account, io);
   }
 
   private RegisterSocketEvents(socket: Socket) {

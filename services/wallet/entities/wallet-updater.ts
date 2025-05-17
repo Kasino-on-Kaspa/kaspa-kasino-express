@@ -18,7 +18,7 @@ export class WalletDBQueueHandler{
 
     
     public async AddOrUpdateWalletBalanceTask(walletID: string, delta: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"| "BET_RETURN" | "REFERRAL_RETURN" | "WITHDRAWAL_RETURN") {
-
+        
         this.WalletBalanceUpdatedEvent.Raise({id: walletID, delta: delta});
         
 
@@ -31,7 +31,7 @@ export class WalletDBQueueHandler{
             this.walletTasks[walletID] = newLength - 1;
         } 
         index = this.walletTasks[walletID];        
-        this.walletQueue[index].update.delta += delta;
+        this.walletQueue[index].update.delta += BigInt(delta);
     }
 
     private async AddBalanceLog(walletID: string, delta: bigint, reason: "DEPOSIT"|"WITHDRAWAL"|"BET"|"BET_RETURN" | "REFERRAL_RETURN" | "WITHDRAWAL_RETURN") {
@@ -68,6 +68,7 @@ export class WalletDBQueueHandler{
             while (currentQueue.length > 0) {
                 let task = currentQueue.shift();
                 if (!task) return;
+                console.log(task)
                 await tx.update(wallets).set({balance: sql`balance + ${task.update.delta}`}).where(eq(wallets.id, task.walletID));
                 this.RemoveWalletTask(task.walletID);
             }

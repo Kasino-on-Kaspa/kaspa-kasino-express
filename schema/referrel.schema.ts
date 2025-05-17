@@ -5,8 +5,8 @@ export const referralEarnings = p.pgTable("referral_earnings", {
   id: p.uuid().primaryKey().defaultRandom(),
 
   referrer: p
-    .varchar()
-    .references(() => users.referralCode)
+    .uuid()
+    .references(() => users.id)
     .notNull(),
 
   referred: p

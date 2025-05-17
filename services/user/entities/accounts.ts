@@ -8,6 +8,7 @@ import { EventBus } from "@utils/eventbus";
 const MIN_UPDATE_DELAY = 10000;
 
 export class AccountStore {
+  
   private _userHandshake: { [socket_id: string]: string } = {};
   private _userAccounts: { [account_id: string]: Account } = {};
   
@@ -43,7 +44,6 @@ export class AccountStore {
     this._userAccounts[account_id] = account;
 
     account.AssociatedSockets.OnAllSocketsDisconnect.RegisterEventListener(async () => {
-
       this.RemoveUserStoredInstance(account_id);
     });
     
@@ -72,6 +72,10 @@ export class AccountStore {
 
   public GetUserFromAccountID(account_id: string) {
     return this._userAccounts[account_id];
+  }
+  public async GetAccountByReferralID(code: string) {
+    let result = await DB.select({id: users.id}).from(users).where(eq(users.referralCode, code))
+    return result[0].id
   }
   //#endregion
 }

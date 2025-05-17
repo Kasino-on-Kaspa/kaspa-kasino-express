@@ -31,10 +31,11 @@ export class ReferralController {
 
     if (!userResult.length || !userResult[0].referredBy) return;
 
-    const referrerCode = userResult[0].referredBy;
+    const referrer = await AccountStoreInstance.GetAccountByReferralID(userResult[0].referredBy);
     let refferalWallet = await this.RefferalModel.GetRefferalWalletID(
-      referrerCode
+      referrer
     );
+    console.log("RefferalWallet :" , refferalWallet)
 
     if (!refferalWallet) return;
 
@@ -42,24 +43,25 @@ export class ReferralController {
 
     if (data.result == "WIN")
       payout =
-        (data.payout * this.WIN_REFERRAL_PAYOUT_PERCENTAGE) / (100 * 100);
+        (Number(data.payout) * this.WIN_REFERRAL_PAYOUT_PERCENTAGE) / (100 * 100);
     else
       payout =
-        (Math.abs(data.payout) * this.LOSE_REFERRAL_PAYOUT_PERCENTAGE) /
+        (Math.abs(Number(data.payout)) * this.LOSE_REFERRAL_PAYOUT_PERCENTAGE) /
         (100 * 100);
 
     // Track referral earnings
+    console.log(referrer,data.account.id)
     await DB.insert(referralEarnings).values({
-      referrer: referrerCode,
+      referrer: referrer,
       referred: data.account.id,
       amount: BigInt(payout),
       gameResult: data.result,
     });
 
     EventBus.Instance.emit("wallet:update", {
-      walletID: refferalWallet,
-      balance: payout,
-      type: "REFFEAL_RETURN",
+      id: refferalWallet,
+      delta: payout,
+      reason: "REFERRAL_RETURN",
     });
   }
 
