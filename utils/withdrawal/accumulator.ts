@@ -19,10 +19,6 @@ export class Accumulator {
 		return Accumulator.instance;
 	}
 
-	public async addUtxos(utxos: RpcUtxosByAddressesEntry[]) {
-		this.utxos = [...this.utxos, ...utxos];
-	}
-
 	public async getUtxos() {
 		return this.utxos;
 	}
@@ -36,7 +32,7 @@ export class Accumulator {
 				console.error("Error during accumulation:", error);
 			}
 		}
-		, 30000);
+		, interval);
 	}
 
 	public async accumulate() {
