@@ -5,6 +5,7 @@ import { ObservableData } from "@utils/observables/data";
 import { ObservableEvent } from "@utils/observables/event";
 import { EventBus } from "@utils/eventbus";
 import { resolve } from "path";
+import { bigint } from "drizzle-orm/gel-core";
 
 export class Wallet {
   private _id: string;
@@ -30,7 +31,7 @@ export class Wallet {
 
   private HandleWalletUpdated(id: string, delta: bigint) {
     if (id !== this._id) return;
-    this._balance.SetData(this._balance.GetData() + delta);
+    this._balance.SetData(BigInt(this._balance.GetData()) + BigInt(delta));
     this.OnUpdate.Raise({balance: this._balance.GetData().toString()});
   }
 
